@@ -1,0 +1,13 @@
+A1 - https://www.instagram.com/10pwarmups/reel/DYvv3sWzHDf/
+A4 - https://www.instagram.com/10pwarmups/reel/DYS60K2zLUd/
+B3 - https://www.instagram.com/10pwarmups/reel/DYS7nLJzvgx/
+B4 - https://www.instagram.com/10pwarmups/reel/DYy1VwczXkF/
+C3 - https://www.instagram.com/10pwarmups/reel/DY00ra8ztRy/
+D3 - https://www.instagram.com/10pwarmups/reel/DY3IoeJTus3/
+E3 - https://www.instagram.com/10pwarmups/reel/DYigVR0TqZr/
+E4 - https://www.instagram.com/10pwarmups/reel/DZBeSE1TSAS/
+F3 - https://www.instagram.com/10pwarmups/reel/DYlDbx2To12/
+F4 - https://www.instagram.com/10pwarmups/reel/DZD23WOzNca/
+G3 - https://www.instagram.com/10pwarmups/reel/DYdXgXKTu0K/
+G4 - https://www.instagram.com/10pwarmups/reel/DZGc-XCTcsI/
+H4 - https://www.instagram.com/10pwarmups/reel/DYf2_gaT1R5/
