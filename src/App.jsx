@@ -66,6 +66,8 @@ export default function App() {
           onDeckSelect={setStatsForDeck}
         />
       )}
+      <div style={{marginBottom: '1em', color: 'gray'}}>(c) 0xreentrant 2026</div>
+
     </div>
   )
 }
