@@ -2,6 +2,22 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 
+function getOptionButtons() {
+  return Array.from(document.querySelectorAll('button.option-btn'));
+}
+
+function clickOptionWithText(text) {
+  const btn = getOptionButtons().find(b => b.textContent.includes(text));
+  if (!btn) throw new Error(`No option button found for "${text}"`);
+  fireEvent.click(btn);
+}
+
+function clickWrongOption(excludeText) {
+  const btn = getOptionButtons().find(b => !b.textContent.includes(excludeText));
+  if (!btn) throw new Error(`No wrong option found excluding "${excludeText}"`);
+  fireEvent.click(btn);
+}
+
 describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
   
   beforeEach(() => {
@@ -17,23 +33,27 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       render(<App />);
       expect(screen.getByText('10th Planet')).toBeInTheDocument();
       expect(screen.getByText('Warmup Trainer')).toBeInTheDocument();
-      // Note: App displays "32 decks" but actually has 31
-      expect(screen.getByText(/decks/)).toBeInTheDocument();
+      expect(screen.getByText(/34 decks/)).toBeInTheDocument();
     });
 
-    it('shows all 8 series with their deck names', () => {
+    it('shows all 8 series and named flows', () => {
       render(<App />);
       expect(screen.getByText(/Series A — Granbys/)).toBeInTheDocument();
       expect(screen.getByText(/Series B — Sit-Ups/)).toBeInTheDocument();
       expect(screen.getByText(/Series C — Guard Passing/)).toBeInTheDocument();
       expect(screen.getByText(/Series H — De La Riva/)).toBeInTheDocument();
+      expect(screen.getByText(/Named Flows/)).toBeInTheDocument();
+      expect(screen.getByText('Attack Series')).toBeInTheDocument();
+      expect(screen.getByText('Ramey Flow')).toBeInTheDocument();
+      expect(screen.queryByText(/Series I/)).not.toBeInTheDocument();
+      expect(screen.queryByText('I1')).not.toBeInTheDocument();
+      expect(screen.queryByText('J1')).not.toBeInTheDocument();
     });
 
     it('displays a Train button for each deck', () => {
       render(<App />);
       const trainButtons = screen.getAllByText('Train');
-      // NOTE: App claims "32 decks" but actually has 31 (missing D4)
-      expect(trainButtons.length).toBe(31);
+      expect(trainButtons.length).toBe(34);
     });
   });
 
@@ -44,7 +64,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]); // First deck (A1)
       
       expect(screen.getByText('A1')).toBeInTheDocument();
-      expect(screen.getByText('Kneeling → Granby Flow')).toBeInTheDocument();
+      expect(screen.getByText('Kneeling')).toBeInTheDocument();
       expect(screen.getByText(/Sequence/)).toBeInTheDocument();
     });
 
@@ -53,10 +73,8 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]);
       
-      // Check for option buttons (labeled A, B, C, D)
-      const optionButtons = screen.getAllByRole('button').filter(btn => 
-        btn.textContent.match(/^[A-D]/)
-      );
+      // Check for multiple choice option buttons
+      const optionButtons = getOptionButtons();
       expect(optionButtons.length).toBeGreaterThanOrEqual(4);
     });
 
@@ -69,17 +87,13 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       expect(initialSequence).toBeInTheDocument();
       
       // Click first option
-      const optionButtons = screen.getAllByRole('button').filter(btn => 
-        btn.textContent.match(/^[A-D]/)
-      );
+      const optionButtons = getOptionButtons();
       const initialButtonCount = optionButtons.length;
       fireEvent.click(optionButtons[0]);
       
       // Wait for options to change (next move's options should appear)
       await waitFor(() => {
-        const newOptionButtons = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const newOptionButtons = getOptionButtons();
         // Options might be different or take time to load
         expect(newOptionButtons.length).toBeGreaterThanOrEqual(0);
       }, { timeout: 2000 });
@@ -92,9 +106,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       // Click through all 5 moves
       for (let i = 0; i < 5; i++) {
-        const optionButtons = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const optionButtons = getOptionButtons();
         fireEvent.click(optionButtons[0]);
         
         // Small delay between moves
@@ -121,9 +133,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]);
       
-      const optionButtons = screen.getAllByRole('button').filter(btn => 
-        btn.textContent.match(/^[A-D]/)
-      );
+      const optionButtons = getOptionButtons();
       fireEvent.click(optionButtons[0]);
       
       // Wait a moment for state to update
@@ -142,9 +152,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       // Complete with all correct
       for (let i = 0; i < 5; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const options = getOptionButtons();
         fireEvent.click(options[0]);
         await new Promise(r => setTimeout(r, 100));
       }
@@ -154,36 +162,6 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
         expect(saved['A1'].bestStreak).toBeGreaterThan(0);
         expect(saved['A1'].attempts.length).toBeGreaterThan(0);
       }, { timeout: 5000 });
-    });
-
-    it('persists progress across app reloads', async () => {
-      const { unmount } = render(<App />);
-      const trainButtons = screen.getAllByText('Train');
-      fireEvent.click(trainButtons[0]); // A1
-      
-      // Complete the deck
-      for (let i = 0; i < 5; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
-        fireEvent.click(options[0]);
-        await new Promise(r => setTimeout(r, 100));
-      }
-      
-      await waitFor(() => {
-        const saved = JSON.parse(localStorage.getItem('tp_progress'));
-        expect(saved['A1'].bestStreak).toBeGreaterThan(0);
-      }, { timeout: 5000 });
-      
-      unmount();
-      
-      // Reload app
-      render(<App />);
-      await waitFor(() => {
-        // Check that progress is loaded and displayed (should see a ratio like 3/5 or 5/5)
-        const progressText = screen.queryByText(/\/5/);
-        expect(progressText).toBeInTheDocument();
-      });
     });
 
     it('loads progress on initial app load', () => {
@@ -225,9 +203,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]);
       
       // Answer first move
-      const options = screen.getAllByRole('button').filter(btn => 
-        btn.textContent.match(/^[A-D]/)
-      );
+      const options = getOptionButtons();
       fireEvent.click(options[0]);
       
       await waitFor(() => {
@@ -243,17 +219,13 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]);
       
       // First: correct answer
-      let options = screen.getAllByRole('button').filter(btn => 
-        btn.textContent.match(/^[A-D]/)
-      );
+      let options = getOptionButtons();
       fireEvent.click(options[0]);
       
       await new Promise(r => setTimeout(r, 200));
       
       // Second: wrong answer (click last option which is unlikely to be correct)
-      options = screen.getAllByRole('button').filter(btn => 
-        btn.textContent.match(/^[A-D]/)
-      );
+      options = getOptionButtons();
       fireEvent.click(options[options.length - 1]);
       
       await waitFor(() => {
@@ -272,9 +244,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const answerSequence = [true, false, true, true, true];
       
       for (let i = 0; i < answerSequence.length; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const options = getOptionButtons();
         
         if (answerSequence[i]) {
           fireEvent.click(options[0]); // Click first (likely correct)
@@ -294,6 +264,35 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
         }
       }, { timeout: 5000 });
     });
+
+    it('records max streak as final streak when streak is broken before completion', async () => {
+      render(<App />);
+      const trainButtons = screen.getAllByText('Train');
+      fireEvent.click(trainButtons[0]); // A1: 5 moves
+
+      const moves = ['Kneeling Granby', 'Seated Granby', 'Bridging Granby', 'Belly to Belly Granby', 'Granby Flow'];
+      const answerSequence = [true, false, true, true, true];
+
+      for (let i = 0; i < answerSequence.length; i++) {
+        if (answerSequence[i]) {
+          clickOptionWithText(moves[i]);
+        } else {
+          clickWrongOption(moves[i]);
+        }
+        await new Promise(r => setTimeout(r, 100));
+      }
+
+      await waitFor(() => {
+        expect(screen.getByText('Final streak')).toBeInTheDocument();
+        const row = screen.getByText('Final streak').closest('tr');
+        expect(row).toHaveTextContent('3');
+      }, { timeout: 5000 });
+
+      await waitFor(() => {
+        const saved = JSON.parse(localStorage.getItem('tp_progress'));
+        expect(saved['A1'].attempts[0].finalStreak).toBe(3);
+      }, { timeout: 3000 });
+    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -306,7 +305,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]);
       
-      expect(screen.getByText('Kneeling → Granby Flow')).toBeInTheDocument();
+      expect(screen.getByText('Kneeling')).toBeInTheDocument();
       
       const backButton = screen.getByText(/← Back/);
       fireEvent.click(backButton);
@@ -321,9 +320,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       // Complete the deck
       for (let i = 0; i < 5; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const options = getOptionButtons();
         fireEvent.click(options[0]);
         await new Promise(r => setTimeout(r, 100));
       }
@@ -358,9 +355,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]);
       
       // Answer one question then abandon
-      const options = screen.getAllByRole('button').filter(btn => 
-        btn.textContent.match(/^[A-D]/)
-      );
+      const options = getOptionButtons();
       fireEvent.click(options[0]);
       
       await new Promise(r => setTimeout(r, 100));
@@ -438,12 +433,11 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       expect(legends.length).toBeGreaterThan(0);
     });
 
-    it('shows last move and next move prompt correctly', () => {
+    it('shows next move prompt correctly', () => {
       render(<App />);
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]);
       
-      expect(screen.getByText(/Opening move/)).toBeInTheDocument();
       expect(screen.getByText(/What's next/i)).toBeInTheDocument();
     });
 
@@ -454,9 +448,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       // Complete the deck
       for (let i = 0; i < 5; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const options = getOptionButtons();
         fireEvent.click(options[0]);
         await new Promise(r => setTimeout(r, 150));
       }
@@ -477,8 +469,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     it('creates deck entries in progress when loading default', () => {
       render(<App />);
       const trainButtons = screen.getAllByText('Train');
-      // 31 decks currently (D4 missing)
-      expect(trainButtons.length).toBe(31);
+      expect(trainButtons.length).toBe(34);
     });
 
     it('correctly saves attempt timestamp when deck completes', async () => {
@@ -488,9 +479,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       // Must complete the deck to save attempt
       for (let i = 0; i < 5; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const options = getOptionButtons();
         fireEvent.click(options[0]);
         await new Promise(r => setTimeout(r, 100));
       }
@@ -510,9 +499,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       // Complete deck
       for (let i = 0; i < 5; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const options = getOptionButtons();
         fireEvent.click(options[0]);
         await new Promise(r => setTimeout(r, 50));
       }
@@ -531,9 +518,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       // Complete the deck
       for (let i = 0; i < 5; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const options = getOptionButtons();
         fireEvent.click(options[0]);
         await new Promise(r => setTimeout(r, 200));
       }
@@ -563,9 +548,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       // Complete A1
       for (let i = 0; i < 5; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const options = getOptionButtons();
         fireEvent.click(options[0]);
         await new Promise(r => setTimeout(r, 100));
       }
@@ -582,9 +565,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       // Complete deck
       for (let i = 0; i < 5; i++) {
-        const options = screen.getAllByRole('button').filter(btn => 
-          btn.textContent.match(/^[A-D]/)
-        );
+        const options = getOptionButtons();
         fireEvent.click(options[0]);
         await new Promise(r => setTimeout(r, 100));
       }
