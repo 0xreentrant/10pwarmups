@@ -20,6 +20,10 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack })
 
       <fieldset style={{ marginBottom: 14 }}>
         <legend>Sequence ({moveIdx}/{total})</legend>
+        <div style={{ marginBottom: 10, fontSize: 11, display: "flex", gap: 16 }}>
+          <span className="partner-a">■ Person A</span>
+          <span className="partner-b">■ Person B</span>
+        </div>
         <div>
           {deck.moves.map((move, i) => {
             const answered = session.moveSequence[i]

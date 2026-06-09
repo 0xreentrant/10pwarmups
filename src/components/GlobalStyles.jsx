@@ -12,7 +12,7 @@ export default function GlobalStyles() {
         --accent:    #c0392b;
         --green:     #27ae60;
         --partner-a:rgb(93, 226, 93);
-        --partner-b:rgb(41, 54, 240);
+        --partner-b: rgb(120, 165, 255);
         --font-disp: 'Barlow Condensed', sans-serif;
         --font-body: 'IBM Plex Mono', monospace;
       }

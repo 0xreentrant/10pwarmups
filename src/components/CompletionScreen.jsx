@@ -5,13 +5,12 @@ import { deckLabel, formatDuration, nextDeckId } from "../utils/deckUtils"
 export default function CompletionScreen({ deck, session, progress, onNext, onHome, onTryAgain, onStats }) {
   const total = deck.moves.length
   const correct = session.moveSequence.filter(x => x.correct).length
-  const wrong = session.moveSequence.filter(x => !x.correct)
   const duration = session.finalAttempt ? session.finalAttempt.duration : 0
   const finalStreak = session.finalAttempt?.finalStreak ?? session.currentStreak
   const bestStreak = progress[deck.id]?.bestStreak ?? finalStreak
   const nid = nextDeckId(deck.id)
   const nextDeck = nid ? DECKS.find(d => d.id === nid) : null
-  const perfect = wrong.length === 0
+  const perfect = correct === total
 
   return (
     <div style={{ paddingTop: 20, paddingBottom: 48 }}>
@@ -43,7 +42,6 @@ export default function CompletionScreen({ deck, session, progress, onNext, onHo
             <tr className="stat-row"><td>Correct</td><td>{correct}/{total}</td></tr>
             <tr className="stat-row"><td>Final streak</td><td>{finalStreak}</td></tr>
             <tr className="stat-row"><td>Best streak</td><td>{progress[deck.id]?.bestStreak ?? 0}/{total}</td></tr>
-            <tr className="stat-row"><td>Wrong</td><td>{wrong.length === 0 ? "—" : wrong.map(w => `M${w.moveIndex + 1}`).join(", ")}</td></tr>
             <tr className="stat-row"><td>Time</td><td>{formatDuration(duration)}</td></tr>
           </tbody>
         </table>

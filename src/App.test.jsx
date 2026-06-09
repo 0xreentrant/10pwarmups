@@ -455,7 +455,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       
       await waitFor(() => {
         // Should see result metrics like "Correct", "Final streak", etc.
-        const resultsElements = screen.queryAllByText(/Correct|Final streak|Best streak|Wrong|Time/);
+        const resultsElements = screen.queryAllByText(/Correct|Final streak|Best streak|Time/);
         expect(resultsElements.length).toBeGreaterThan(0);
       }, { timeout: 8000 });
     });
