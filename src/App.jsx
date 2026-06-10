@@ -5,7 +5,7 @@ import ProgressScreen from "./components/ProgressScreen"
 import TrainingScreen from "./components/TrainingScreen"
 import { DECKS } from "./data/decks"
 import { useAppState } from "./useAppState"
-import { generateOptions, nextDeckId } from "./utils/deckUtils"
+import { nextDeckId, precomputeDeckOptions } from "./utils/deckUtils"
 
 export default function App() {
   const {
@@ -24,7 +24,7 @@ export default function App() {
     handleBackHome,
     cancelReset,
     setStatsForDeck,
-  } = useAppState(DECKS, generateOptions)
+  } = useAppState(DECKS, precomputeDeckOptions)
 
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 16px" }}>

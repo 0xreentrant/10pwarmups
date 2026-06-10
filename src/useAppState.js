@@ -5,9 +5,9 @@ import { inspect } from "./xstateInspector"
 
 export { getDefaultProgress } from "./appMachine"
 
-export function useAppState(decks, generateOptions) {
+export function useAppState(decks, precomputeDeckOptions) {
   const [snapshot, send] = useMachine(appMachine, {
-    input: { decks, generateOptions },
+    input: { decks, precomputeDeckOptions },
     inspect,
   })
 

@@ -6,25 +6,51 @@ export function deckLabel(deck) {
   return deck.series ? deck.id : deck.name
 }
 
-export function generateOptions(correctMove, correctDeckId) {
-  const pool = []
-  DECKS.forEach(d => {
-    if (d.id === correctDeckId) return
-    d.moves.forEach(mv => pool.push(mv))
-  })
-  const shuffledPool = pool.sort(() => Math.random() - 0.5)
-  const wrongs = []
-  const seen = new Set([correctMove.text])
-  for (const mv of shuffledPool) {
-    if (!seen.has(mv.text)) { seen.add(mv.text); wrongs.push(mv) }
-    if (wrongs.length === 3) break
+function shuffleArray(items) {
+  const arr = [...items]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    const tmp = arr[i]
+    arr[i] = arr[j]
+    arr[j] = tmp
   }
-  while (wrongs.length < 3) wrongs.push({ text: "Unknown Move " + wrongs.length, partner: "A" })
-  const opts = [
+  return arr
+}
+
+export function createDistractorPool(decks) {
+  const names = new Set()
+  decks.forEach(d => {
+    d.moves.forEach(mv => names.add(mv.text))
+  })
+  return shuffleArray([...names])
+}
+
+function pickDistractors(poolState, answerText, decks) {
+  const chosen = []
+  while (chosen.length < 3) {
+    if (poolState.cursor >= poolState.pool.length) {
+      poolState.pool = createDistractorPool(decks)
+      poolState.cursor = 0
+    }
+    const name = poolState.pool[poolState.cursor++]
+    if (name === answerText) continue
+    if (chosen.includes(name)) continue
+    chosen.push(name)
+  }
+  return chosen
+}
+
+function buildQuestionOptions(correctMove, poolState, decks) {
+  const distractors = pickDistractors(poolState, correctMove.text, decks)
+  return shuffleArray([
     { ...correctMove, correct: true },
-    ...wrongs.map(mv => ({ ...mv, correct: false }))
-  ]
-  return opts.sort(() => Math.random() - 0.5)
+    ...distractors.map(text => ({ text, correct: false })),
+  ])
+}
+
+export function precomputeDeckOptions(deck, decks) {
+  const poolState = { pool: createDistractorPool(decks), cursor: 0 }
+  return deck.moves.map(move => buildQuestionOptions(move, poolState, decks))
 }
 
 export function formatRelativeDate(iso) {

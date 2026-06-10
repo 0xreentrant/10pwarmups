@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
 
+const A1_MOVES = ['Kneeling Granby', 'Seated Granby', 'Bridging Granby', 'Belly to Belly Granby', 'Granby Flow'];
+
 function getOptionButtons() {
   return Array.from(document.querySelectorAll('button.option-btn'));
 }
@@ -16,6 +18,13 @@ function clickWrongOption(excludeText) {
   const btn = getOptionButtons().find(b => !b.textContent.includes(excludeText));
   if (!btn) throw new Error(`No wrong option found excluding "${excludeText}"`);
   fireEvent.click(btn);
+}
+
+async function answerDeckMoves(moves, delay = 100) {
+  for (let i = 0; i < moves.length; i++) {
+    clickOptionWithText(moves[i]);
+    if (delay > 0) await new Promise(r => setTimeout(r, delay));
+  }
 }
 
 describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
@@ -73,9 +82,23 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]);
       
-      // Check for multiple choice option buttons
       const optionButtons = getOptionButtons();
-      expect(optionButtons.length).toBeGreaterThanOrEqual(4);
+      expect(optionButtons.length).toBe(4);
+      expect(screen.getByRole('button', { name: /Kneeling Granby/i })).toBeInTheDocument();
+    });
+
+    it('always includes the correct next move in precomputed options', async () => {
+      render(<App />);
+      const trainButtons = screen.getAllByText('Train');
+      fireEvent.click(trainButtons[0]);
+
+      const moves = A1_MOVES;
+      for (let i = 0; i < moves.length - 1; i++) {
+        expect(getOptionButtons().some(b => b.textContent.includes(moves[i]))).toBe(true);
+        clickOptionWithText(moves[i]);
+        await new Promise(r => setTimeout(r, 50));
+      }
+      expect(getOptionButtons().some(b => b.textContent.includes(moves[moves.length - 1]))).toBe(true);
     });
 
     it('advances to next move when option is clicked', async () => {
@@ -87,9 +110,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       expect(initialSequence).toBeInTheDocument();
       
       // Click first option
-      const optionButtons = getOptionButtons();
-      const initialButtonCount = optionButtons.length;
-      fireEvent.click(optionButtons[0]);
+      clickOptionWithText(A1_MOVES[0]);
       
       // Wait for options to change (next move's options should appear)
       await waitFor(() => {
@@ -105,20 +126,12 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]); // A1: 5 moves
       
       // Click through all 5 moves
-      for (let i = 0; i < 5; i++) {
-        const optionButtons = getOptionButtons();
-        fireEvent.click(optionButtons[0]);
-        
-        // Small delay between moves
-        await new Promise(r => setTimeout(r, 100));
-      }
+      await answerDeckMoves(A1_MOVES);
       
-      // Should reach completion screen
+      // Answering every move correctly reaches the completion screen with a perfect result
       await waitFor(() => {
-        const heading = screen.queryByRole('heading', { level: 2 });
-        if (heading) {
-          expect(heading.textContent).toMatch(/Perfect|Complete/);
-        }
+        const heading = screen.getByRole('heading', { level: 2 });
+        expect(heading.textContent).toMatch(/Perfect/);
       }, { timeout: 3000 });
     });
   });
@@ -133,10 +146,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]);
       
-      const optionButtons = getOptionButtons();
-      fireEvent.click(optionButtons[0]);
-      
-      // Wait a moment for state to update
+      clickOptionWithText(A1_MOVES[0]);
       await new Promise(r => setTimeout(r, 100));
       
       const saved = JSON.parse(localStorage.getItem('tp_progress'));
@@ -151,11 +161,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]); // A1
       
       // Complete with all correct
-      for (let i = 0; i < 5; i++) {
-        const options = getOptionButtons();
-        fireEvent.click(options[0]);
-        await new Promise(r => setTimeout(r, 100));
-      }
+      await answerDeckMoves(A1_MOVES);
       
       await waitFor(() => {
         const saved = JSON.parse(localStorage.getItem('tp_progress'));
@@ -202,12 +208,9 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]);
       
-      // Answer first move
-      const options = getOptionButtons();
-      fireEvent.click(options[0]);
-      
+      clickOptionWithText(A1_MOVES[0]);
+
       await waitFor(() => {
-        // After clicking, should have updated the streak display
         const badges = screen.getAllByText(/🔥/);
         expect(badges.length).toBeGreaterThan(0);
       }, { timeout: 1000 });
@@ -218,18 +221,13 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]);
       
-      // First: correct answer
-      let options = getOptionButtons();
-      fireEvent.click(options[0]);
+      clickOptionWithText(A1_MOVES[0]);
       
       await new Promise(r => setTimeout(r, 200));
       
-      // Second: wrong answer (click last option which is unlikely to be correct)
-      options = getOptionButtons();
-      fireEvent.click(options[options.length - 1]);
+      clickWrongOption(A1_MOVES[1]);
       
       await waitFor(() => {
-        // After wrong answer, streak should be 0
         const badges = screen.getAllByText(/🔥/);
         expect(badges.length).toBeGreaterThan(0);
       }, { timeout: 1000 });
@@ -240,29 +238,26 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]); // A1: 5 moves
       
-      // Answer pattern: correct, wrong, correct, correct, correct
       const answerSequence = [true, false, true, true, true];
       
       for (let i = 0; i < answerSequence.length; i++) {
-        const options = getOptionButtons();
-        
         if (answerSequence[i]) {
-          fireEvent.click(options[0]); // Click first (likely correct)
+          clickOptionWithText(A1_MOVES[i]);
         } else {
-          fireEvent.click(options[options.length - 1]); // Click last (likely wrong)
+          clickWrongOption(A1_MOVES[i]);
         }
         
         await new Promise(r => setTimeout(r, 100));
       }
       
-      // Should show completion with wrong move info
+      // The single wrong answer (move index 1) must be recorded as a non-perfect completion
       await waitFor(() => {
-        // At least should complete and show results
-        const heading = screen.queryByRole('heading', { level: 2 });
-        if (heading) {
-          expect(heading.textContent).toMatch(/Perfect|Complete/);
-        }
+        const heading = screen.getByRole('heading', { level: 2 });
+        expect(heading.textContent).toMatch(/Complete/);
       }, { timeout: 5000 });
+
+      const saved = JSON.parse(localStorage.getItem('tp_progress'));
+      expect(saved['A1'].attempts[0].wrongMoves).toContain(1);
     });
 
     it('records max streak as final streak when streak is broken before completion', async () => {
@@ -270,7 +265,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]); // A1: 5 moves
 
-      const moves = ['Kneeling Granby', 'Seated Granby', 'Bridging Granby', 'Belly to Belly Granby', 'Granby Flow'];
+      const moves = A1_MOVES;
       const answerSequence = [true, false, true, true, true];
 
       for (let i = 0; i < answerSequence.length; i++) {
@@ -319,11 +314,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]); // A1
       
       // Complete the deck
-      for (let i = 0; i < 5; i++) {
-        const options = getOptionButtons();
-        fireEvent.click(options[0]);
-        await new Promise(r => setTimeout(r, 100));
-      }
+      await answerDeckMoves(A1_MOVES);
       
       await waitFor(() => {
         expect(screen.getByText('Try again')).toBeInTheDocument();
@@ -355,8 +346,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]);
       
       // Answer one question then abandon
-      const options = getOptionButtons();
-      fireEvent.click(options[0]);
+      clickOptionWithText(A1_MOVES[0]);
       
       await new Promise(r => setTimeout(r, 100));
       
@@ -447,11 +437,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]); // A1
       
       // Complete the deck
-      for (let i = 0; i < 5; i++) {
-        const options = getOptionButtons();
-        fireEvent.click(options[0]);
-        await new Promise(r => setTimeout(r, 150));
-      }
+      await answerDeckMoves(A1_MOVES, 150);
       
       await waitFor(() => {
         // Should see result metrics like "Correct", "Final streak", etc.
@@ -478,11 +464,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]); // A1
       
       // Must complete the deck to save attempt
-      for (let i = 0; i < 5; i++) {
-        const options = getOptionButtons();
-        fireEvent.click(options[0]);
-        await new Promise(r => setTimeout(r, 100));
-      }
+      await answerDeckMoves(A1_MOVES);
       
       await waitFor(() => {
         const saved = JSON.parse(localStorage.getItem('tp_progress'));
@@ -498,11 +480,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const startTime = Date.now();
       
       // Complete deck
-      for (let i = 0; i < 5; i++) {
-        const options = getOptionButtons();
-        fireEvent.click(options[0]);
-        await new Promise(r => setTimeout(r, 50));
-      }
+      await answerDeckMoves(A1_MOVES, 50);
       
       await waitFor(() => {
         const saved = JSON.parse(localStorage.getItem('tp_progress'));
@@ -517,11 +495,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]); // A1
       
       // Complete the deck
-      for (let i = 0; i < 5; i++) {
-        const options = getOptionButtons();
-        fireEvent.click(options[0]);
-        await new Promise(r => setTimeout(r, 200));
-      }
+      await answerDeckMoves(A1_MOVES, 200);
       
       await waitFor(() => {
         const saved = JSON.parse(localStorage.getItem('tp_progress'));
@@ -547,11 +521,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]); // A1
       
       // Complete A1
-      for (let i = 0; i < 5; i++) {
-        const options = getOptionButtons();
-        fireEvent.click(options[0]);
-        await new Promise(r => setTimeout(r, 100));
-      }
+      await answerDeckMoves(A1_MOVES);
       
       await waitFor(() => {
         expect(screen.getByText(/Next:/)).toBeInTheDocument();
@@ -564,11 +534,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(trainButtons[0]);
       
       // Complete deck
-      for (let i = 0; i < 5; i++) {
-        const options = getOptionButtons();
-        fireEvent.click(options[0]);
-        await new Promise(r => setTimeout(r, 100));
-      }
+      await answerDeckMoves(A1_MOVES);
       
       await waitFor(() => {
         const homeButtons = screen.getAllByText(/← Home/);

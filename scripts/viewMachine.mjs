@@ -2,6 +2,7 @@ import { createActor } from "xstate"
 import { createWebSocketInspector } from "@statelyai/inspect"
 import { createInspectorServer } from "@statelyai/inspect/server"
 import { appMachine } from "../src/appMachine.js"
+import { precomputeDeckOptions } from "../src/utils/deckUtils.js"
 
 const mockDecks = [
   {
@@ -17,18 +18,6 @@ const mockDecks = [
     ],
   },
 ]
-
-function generateOptions(correctMove) {
-  const wrongs = [
-    { text: "Wrong Move 1", partner: "A", correct: false },
-    { text: "Wrong Move 2", partner: "B", correct: false },
-    { text: "Wrong Move 3", partner: "A", correct: false },
-  ]
-  return [
-    { ...correctMove, correct: true },
-    ...wrongs,
-  ].sort(() => Math.random() - 0.5)
-}
 
 globalThis.localStorage = {
   store: {},
@@ -49,7 +38,7 @@ const inspector = createWebSocketInspector({
 
 const actor = createActor(appMachine, {
   inspect: inspector.inspect,
-  input: { decks: mockDecks, generateOptions },
+  input: { decks: mockDecks, precomputeDeckOptions },
 })
 
 actor.start()

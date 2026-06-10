@@ -76,13 +76,15 @@ const appMachineSetup = setup({
     startDeck: assign(({ context, event }) => {
       const d = context.decks.find(x => x.id === event.deckId)
       if (!d) return {}
+      const allOptions = context.precomputeDeckOptions(d, context.decks)
       return {
         currentDeckId: event.deckId,
         session: {
           moveSequence: [],
           currentStreak: 0,
           startTime: Date.now(),
-          options: context.generateOptions(d.moves[0], event.deckId),
+          allOptions,
+          options: allOptions[0],
           locked: false,
         },
       }
@@ -105,7 +107,7 @@ const appMachineSetup = setup({
           ...context.session,
           moveSequence: newSeq,
           currentStreak: newStreak,
-          options: context.generateOptions(d.moves[nextMoveIdx], d.id),
+          options: context.session.allOptions[nextMoveIdx],
           locked: false,
         },
       }
@@ -195,7 +197,7 @@ export const appMachine = appMachineSetup.createMachine({
   id: "app",
   context: ({ input }) => ({
     decks: input.decks,
-    generateOptions: input.generateOptions,
+    precomputeDeckOptions: input.precomputeDeckOptions,
     progress: loadProgress(input.decks),
     currentDeckId: null,
     session: null,
