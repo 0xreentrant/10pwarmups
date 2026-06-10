@@ -1,11 +1,17 @@
+import { useEffect } from "react"
 import { getLongestStreak } from "../appMachine"
 import DeckLink from "./DeckLink"
 import MoveLabel from "./MoveLabel"
+import * as analytics from "../utils/analytics"
 
 export default function TrainingScreen({ deck, session, onOptionClick, onBack }) {
   const moveIdx = session.moveSequence.length
   const total = deck.moves.length
   const sessionBestStreak = Math.max(getLongestStreak(session.moveSequence), session.currentStreak)
+
+  useEffect(() => {
+    analytics.pageview(`/training/${deck.id}`)
+  }, [])
 
   return (
     <div style={{ paddingTop: 20, paddingBottom: 48 }}>
@@ -54,7 +60,15 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack })
         </div>
       </fieldset>
 
-      <button className="btn-ghost" onClick={onBack}>← Back</button>
+      <button className="btn-ghost" onClick={() => {
+        analytics.event({
+          action: 'test_abandoned',
+          category: 'Training',
+          label: `${deck.id} - ${deck.name}`,
+          value: moveIdx
+        })
+        onBack()
+      }}>← Back</button>
     </div>
   )
 }

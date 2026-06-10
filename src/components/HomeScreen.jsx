@@ -1,5 +1,7 @@
+import { useEffect } from "react"
 import DeckLink from "./DeckLink"
 import { DECKS, SERIES } from "../data/decks"
+import * as analytics from "../utils/analytics"
 
 const NAMED_FLOWS = DECKS.filter(d => !d.series)
 
@@ -26,13 +28,24 @@ function DeckRow({ deck, progress, onDeckClick, showId }) {
         <progress value={prog.bestStreak} max={total} style={{ marginTop: 5 }} />
       </td>
       <td style={{ padding: "8px 0", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-        <button className="btn-primary" onClick={() => onDeckClick(deck.id)}>Train</button>
+        <button className="btn-primary" onClick={() => {
+          analytics.event({
+            action: 'deck_selected',
+            category: 'Training',
+            label: `${deck.id} - ${deck.name}`
+          })
+          onDeckClick(deck.id)
+        }}>Train</button>
       </td>
     </tr>
   )
 }
 
 export default function HomeScreen({ progress, onDeckClick, onStats, onReset, resetConfirm, onCancelReset }) {
+  useEffect(() => {
+    analytics.pageview('/home')
+  }, [])
+
   return (
     <div style={{ paddingTop: 28, paddingBottom: 48 }}>
       <h1 style={{ marginBottom: 4 }}>10th Planet</h1>

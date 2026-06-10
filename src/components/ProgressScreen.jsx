@@ -1,5 +1,7 @@
+import { useEffect } from "react"
 import { DECKS } from "../data/decks"
 import { deckLabel, formatRelativeDate } from "../utils/deckUtils"
+import * as analytics from "../utils/analytics"
 
 function AllDecksOverview({ progress, onDeckSelect }) {
   const completedDecks = DECKS.filter(d => {
@@ -104,6 +106,10 @@ function DeckProgress({ deck, prog }) {
 export default function ProgressScreen({ deckId, progress, onBack, onDeckSelect }) {
   const deck = deckId ? DECKS.find(d => d.id === deckId) : null
   const prog = deck ? progress[deck.id] : null
+
+  useEffect(() => {
+    analytics.pageview(deckId ? `/progress/${deckId}` : '/progress')
+  }, [deckId])
 
   return (
     <div style={{ paddingTop: 20, paddingBottom: 48 }}>

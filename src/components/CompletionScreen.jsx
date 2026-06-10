@@ -1,6 +1,8 @@
+import { useEffect } from "react"
 import MoveLabel from "./MoveLabel"
 import { DECKS } from "../data/decks"
 import { deckLabel, formatDuration, nextDeckId } from "../utils/deckUtils"
+import * as analytics from "../utils/analytics"
 
 export default function CompletionScreen({ deck, session, progress, onNext, onHome, onTryAgain, onStats }) {
   const total = deck.moves.length
@@ -11,6 +13,16 @@ export default function CompletionScreen({ deck, session, progress, onNext, onHo
   const nid = nextDeckId(deck.id)
   const nextDeck = nid ? DECKS.find(d => d.id === nid) : null
   const perfect = correct === total
+
+  useEffect(() => {
+    analytics.pageview(`/completion/${deck.id}`)
+    analytics.event({
+      action: 'test_completed',
+      category: 'Training',
+      label: `${deck.id} - ${deck.name}`,
+      value: finalStreak
+    })
+  }, [])
 
   return (
     <div style={{ paddingTop: 20, paddingBottom: 48 }}>
