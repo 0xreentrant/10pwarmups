@@ -19,7 +19,7 @@ function m(text, partner) { return { text, partner }; }
 const DECKS = [
   {
     id: "A1", series: "A", name: "Kneeling",
-    link: "https://www.instagram.com/p/DYvv3sWzHDf/",
+    link: "https://www.instagram.com/10thplanetdenver/reel/CyeMgsQJ_Cn/",
     moves: [
       m("Kneeling Granby", "A"),
       m("Seated Granby", "A"),
@@ -30,7 +30,7 @@ const DECKS = [
   },
   {
     id: "A2", series: "A", name: "Standing Knee Slice",
-    link: "https://www.instagram.com/p/DXEpgaDEyOe/",
+    link: "https://www.instagram.com/p/DZWYB6rzaPd/",
     moves: [
       m("Standing Knee Slice", "A"),
       m("¼ Z", "B"),
@@ -66,7 +66,7 @@ const DECKS = [
   },
   {
     id: "A3", series: "A", name: "Stalk",
-    link: "https://www.instagram.com/p/DXuWYFfkyOl/",
+    link: "https://www.instagram.com/10thplanetdenver/reel/C4OdKZTpo51/",
     moves: [
       m("Stalk", "A"),
       m("Reach", "B"),
@@ -100,7 +100,7 @@ const DECKS = [
   },
   {
     id: "A4", series: "A", name: "Inverted Guard",
-    link: "https://www.instagram.com/p/DYS60K2zLUd/",
+    link: "https://www.instagram.com/10pwarmups/reel/DYS60K2zLUd/",
     moves: [
       m("Cross Wrist Control", "A"),
       m("Inverted Guard", "A"),
@@ -123,7 +123,7 @@ const DECKS = [
   },
   {
     id: "B1", series: "B", name: "Black Mamba",
-    link: "https://www.instagram.com/p/DXEpJhHE_WB/",
+    link: "https://www.instagram.com/10thplanetdenver/reel/CwSlKG3oNsT/",
     moves: [
       m("Black Mamba", "A"),
       m("Shin to Shin", "A"),
@@ -175,7 +175,7 @@ const DECKS = [
   },
   {
     id: "B3", series: "B", name: "Stalk",
-    link: "https://www.instagram.com/p/DYS7nLJzvgx/",
+    link: "https://www.instagram.com/10pwarmups/reel/DYS7nLJzvgx/",
     moves: [
       m("Stalk", "A"),
       m("Reach", "B"),
@@ -202,7 +202,7 @@ const DECKS = [
   },
   {
     id: "B4", series: "B", name: "Standing Knee Slice",
-    link: "https://www.instagram.com/p/DYy1VwczXkF/",
+    link: "https://www.instagram.com/10pwarmups/reel/DYy1VwczXkF/",
     moves: [
       m("Standing Knee Slice", "A"),
       m("¼ Capture", "B"),
@@ -287,7 +287,7 @@ const DECKS = [
   },
   {
     id: "C3", series: "C", name: "Z Guard",
-    link: "https://www.instagram.com/p/DY00ra8ztRy/",
+    link: "https://www.instagram.com/10thplanetdenver/reel/C6ZbJb-p944/",
     moves: [
       m("Z Guard", "A"),
       m("Z-Stuff", "B"),
@@ -381,7 +381,7 @@ const DECKS = [
   },
   {
     id: "D3", series: "D", name: "Double Ankle Toss",
-    link: "https://www.instagram.com/p/DY3IoeJTus3/",
+    link: "https://www.instagram.com/10pwarmups/reel/DY3IoeJTus3/",
     moves: [
       m("Double Ankle Toss", "A"),
       m("Plank on the Knees", "A"),
@@ -404,7 +404,7 @@ const DECKS = [
   },
   {
     id: "D4", series: "D", name: "Double Ankle Toss",
-    link: "https://www.instagram.com/p/DXI6R7JE4d1/",
+    link: "https://www.instagram.com/10thplanetdenver/reel/C4te3ITpbuz/",
     moves: [
       m("Double Ankle Toss", "A"),
       m("Snap Back", "A"),
@@ -455,7 +455,7 @@ const DECKS = [
   },
   {
     id: "E2", series: "E", name: "Tripod Pass",
-    link: "https://www.instagram.com/p/DXX5F-fk1Ln/",
+    link: "https://www.instagram.com/p/DVH7UbqkyNn/",
     moves: [
       m("Tripod Pass", "A"),
       m("¼ Shell", "B"),
@@ -476,7 +476,7 @@ const DECKS = [
   },
   {
     id: "E3", series: "E", name: "Tripod Pass",
-    link: "https://www.instagram.com/p/DYigVR0TqZr/",
+    link: "https://www.instagram.com/10pwarmups/reel/DYigVR0TqZr/",
     moves: [
       m("Tripod Pass", "B"),
       m("¼ Z", "B"),
@@ -498,7 +498,7 @@ const DECKS = [
   },
   {
     id: "E4", series: "E", name: "Open Z",
-    link: "https://www.instagram.com/p/DZBeSE1TSAS/",
+    link: "https://www.instagram.com/10pwarmups/reel/DZBeSE1TSAS/",
     moves: [
       m("Open Z Mobility", "B"),
       m("Z Guard", "A"),
@@ -522,7 +522,7 @@ const DECKS = [
   },
   {
     id: "F1", series: "F", name: "Head & Arm",
-    link: "https://www.instagram.com/p/DVD4UfLkxJC/",
+    link: "https://www.instagram.com/10thplanetdenver/reel/CwilfusI6I_/",
     moves: [
       m("Head & Arm", "B"),
       m("Lockdown", "A"),
@@ -573,7 +573,7 @@ const DECKS = [
   },
   {
     id: "F3", series: "F", name: "Sit Up Guard",
-    link: "https://www.instagram.com/p/DYlDbx2To12/",
+    link: "https://www.instagram.com/10pwarmups/reel/DYlDbx2To12/",
     moves: [
       m("Sit Up Guard", "B"),
       m("Combat Base", "A"),
@@ -604,7 +604,7 @@ const DECKS = [
   },
   {
     id: "F4", series: "F", name: "Sit Up Guard",
-    link: "https://www.instagram.com/p/DZD23WOzNca/",
+    link: "https://www.instagram.com/10thplanetdenver/reel/CyT1kxpJEUP/",
     moves: [
       m("Sit Up Guard", "A"),
       m("2 on 1", "A"),
@@ -670,7 +670,7 @@ const DECKS = [
   },
   {
     id: "G3", series: "G", name: "Z Stuff",
-    link: "https://www.instagram.com/p/DYdXgXKTu0K/",
+    link: "https://www.instagram.com/10thplanetdenver/reel/CxrALTYJqGP/",
     moves: [
       m("Z Stuff", "A"),
       m("Toe Hold Attempt", "A"),
@@ -699,7 +699,7 @@ const DECKS = [
   },
   {
     id: "G4", series: "G", name: "Lockdown",
-    link: "https://www.instagram.com/p/DZGc-XCTcsI/",
+    link: "https://www.instagram.com/10pwarmups/reel/DZGc-XCTcsI/",
     moves: [
       m("Lockdown", "B"),
       m("Head & Arm", "A"),
@@ -789,7 +789,7 @@ const DECKS = [
   },
   {
     id: "H4", series: "H", name: "Spiral",
-    link: "https://www.instagram.com/p/DYf2_gaT1R5/",
+    link: "https://www.instagram.com/10thplanetdenver/reel/CyPB9zLp_Ij/",
     moves: [
       m("Spiral", "A"),
       m("De La Riva", "A"),
