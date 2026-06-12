@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import { getLongestStreak } from "../appMachine"
 import DeckLink from "./DeckLink"
-import MoveLabel from "./MoveLabel"
+import OptionMoveText from "./OptionMoveText"
 import MoveList from "./MoveList"
 import * as analytics from "../utils/analytics"
 
@@ -47,7 +47,7 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack })
               className="btn option-btn"
               onClick={() => onOptionClick(i)}
             >
-              <MoveLabel move={opt} monochrome />
+              <OptionMoveText move={opt} />
             </button>
           ))}
         </div>
