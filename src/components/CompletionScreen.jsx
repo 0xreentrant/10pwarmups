@@ -4,6 +4,9 @@ import { DECKS } from "../data/decks"
 import { deckLabel, formatDuration, nextDeckId } from "../utils/deckUtils"
 import * as analytics from "../utils/analytics"
 
+const STAT_LABEL = "py-1 text-xs text-muted"
+const STAT_VALUE = "py-1 pl-5 text-xs text-text font-semibold"
+
 export default function CompletionScreen({ deck, session, progress, onNext, onHome, onTryAgain, onStats }) {
   const total = deck.moves.length
   const correct = session.moveSequence.filter(x => x.correct).length
@@ -25,14 +28,14 @@ export default function CompletionScreen({ deck, session, progress, onNext, onHo
   }, [])
 
   return (
-    <div style={{ paddingTop: 20, paddingBottom: 48 }}>
-      {deck.series && <span className="deck-id" style={{ display: "block", marginBottom: 4 }}>{deck.id}</span>}
-      <h2 style={{ marginBottom: 2, color: perfect ? "var(--green)" : "var(--text)" }}>
+    <div className="pt-5 pb-12">
+      {deck.series && <span className="block mb-1 font-disp font-extrabold text-base tracking-wide text-muted min-w-8">{deck.id}</span>}
+      <h2 className={`mb-0.5 ${perfect ? "text-green" : "text-text"}`}>
         {perfect ? "Perfect" : "Complete"}
       </h2>
-      <p className="meta" style={{ marginBottom: 20 }}>{deck.name}</p>
+      <p className="text-[11px] text-muted mt-0.5 mb-5">{deck.name}</p>
 
-      <fieldset style={{ marginBottom: 14 }}>
+      <fieldset className="mb-3.5">
         <legend>Sequence</legend>
         <MoveList
           deck={deck}
@@ -41,20 +44,20 @@ export default function CompletionScreen({ deck, session, progress, onNext, onHo
         />
       </fieldset>
 
-      <fieldset style={{ marginBottom: 20 }}>
+      <fieldset className="mb-5">
         <legend>Results</legend>
-        <div className="streak-badge" style={{ marginBottom: 12 }}>🔥 {bestStreak}</div>
-        <table style={{ width: "100%" }}>
+        <div className="font-disp font-bold text-lg tracking-wide text-accent mb-3">🔥 {bestStreak}</div>
+        <table className="w-full">
           <tbody>
-            <tr className="stat-row"><td>Correct</td><td>{correct}/{total}</td></tr>
-            <tr className="stat-row"><td>Final streak</td><td>{finalStreak}</td></tr>
-            <tr className="stat-row"><td>Best streak</td><td>{progress[deck.id]?.bestStreak ?? 0}/{total}</td></tr>
-            <tr className="stat-row"><td>Time</td><td>{formatDuration(duration)}</td></tr>
+            <tr><td className={STAT_LABEL}>Correct</td><td className={STAT_VALUE}>{correct}/{total}</td></tr>
+            <tr><td className={STAT_LABEL}>Final streak</td><td className={STAT_VALUE}>{finalStreak}</td></tr>
+            <tr><td className={STAT_LABEL}>Best streak</td><td className={STAT_VALUE}>{progress[deck.id]?.bestStreak ?? 0}/{total}</td></tr>
+            <tr><td className={STAT_LABEL}>Time</td><td className={STAT_VALUE}>{formatDuration(duration)}</td></tr>
           </tbody>
         </table>
       </fieldset>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <div className="flex flex-col gap-2">
         {nextDeck && <button className="btn btn-primary" onClick={onNext}>Next: {deckLabel(nextDeck)} — {nextDeck.name}</button>}
         <button className="btn" onClick={onTryAgain}>Try again</button>
         <button className="btn" onClick={onStats}>Progress history</button>

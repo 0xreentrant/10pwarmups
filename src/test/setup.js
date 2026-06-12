@@ -1,6 +1,18 @@
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 
+class IntersectionObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  configurable: true,
+  value: IntersectionObserverMock,
+})
+
 // Mock localStorage
 const localStorageMock = (() => {
   let store = {};

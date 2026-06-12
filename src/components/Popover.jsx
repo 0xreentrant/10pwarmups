@@ -17,7 +17,12 @@ export default function Popover({ open, onClose, titleId, popoverRef, children }
 
   return createPortal(
     <>
-      <div className="popover-backdrop" aria-hidden="true" onMouseDown={onClose} />
+      <div
+        className="popover-backdrop"
+        data-testid="popover-backdrop"
+        aria-hidden="true"
+        onMouseDown={onClose}
+      />
       <div
         ref={popoverRef}
         className="popover"

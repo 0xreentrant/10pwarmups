@@ -1,6 +1,9 @@
-export default function MoveLabel({ move, style }) {
+export default function MoveLabel({ move, className = "", monochrome = false }) {
+  const partnerClass = monochrome
+    ? ""
+    : move.partner === "B" ? "text-partner-b" : "text-partner-a"
   return (
-    <span className={move.partner === "B" ? "partner-b" : "partner-a"} style={style}>
+    <span className={`${partnerClass} ${className}`.trim()}>
       {move.text}
     </span>
   )

@@ -3,6 +3,11 @@ import { DECKS } from "../data/decks"
 import { deckLabel, formatRelativeDate } from "../utils/deckUtils"
 import * as analytics from "../utils/analytics"
 
+const TABLE_HEAD = "text-left py-1.5 font-disp text-[0.65rem] tracking-[0.15em] uppercase text-muted font-semibold border-b border-border"
+const TABLE_HEAD_PAD = `${TABLE_HEAD} pl-3.5`
+const STAT_LABEL = "py-1 text-xs text-muted"
+const STAT_VALUE = "py-1 pl-5 text-xs text-text font-semibold"
+
 function AllDecksOverview({ progress, onDeckSelect }) {
   const completedDecks = DECKS.filter(d => {
     const p = progress[d.id]
@@ -12,22 +17,22 @@ function AllDecksOverview({ progress, onDeckSelect }) {
 
   return (
     <div>
-      <fieldset style={{ marginBottom: 16 }}>
+      <fieldset className="mb-4">
         <legend>Overall</legend>
-        <table style={{ width: "100%" }}>
+        <table className="w-full">
           <tbody>
-            <tr className="stat-row"><td>Completed</td><td>{completedDecks}/{DECKS.length}</td></tr>
-            <tr className="stat-row"><td>Total attempts</td><td>{totalAttempts}</td></tr>
+            <tr><td className={STAT_LABEL}>Completed</td><td className={STAT_VALUE}>{completedDecks}/{DECKS.length}</td></tr>
+            <tr><td className={STAT_LABEL}>Total attempts</td><td className={STAT_VALUE}>{totalAttempts}</td></tr>
           </tbody>
         </table>
       </fieldset>
-      <span className="section-label">All Decks</span>
-      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+      <span className="block font-disp text-[0.65rem] font-bold tracking-[0.2em] uppercase text-muted mb-2">All Decks</span>
+      <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th style={{ textAlign: "left", padding: "6px 0", fontFamily: "var(--font-disp)", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--muted)", fontWeight: 600, borderBottom: "1px solid var(--border)" }}>Deck</th>
-            <th style={{ textAlign: "left", padding: "6px 14px", fontFamily: "var(--font-disp)", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--muted)", fontWeight: 600, borderBottom: "1px solid var(--border)" }}>Best</th>
-            <th style={{ textAlign: "left", padding: "6px 0", fontFamily: "var(--font-disp)", fontSize: "0.65rem", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--muted)", fontWeight: 600, borderBottom: "1px solid var(--border)" }}>Attempts</th>
+            <th className={TABLE_HEAD}>Deck</th>
+            <th className={TABLE_HEAD_PAD}>Best</th>
+            <th className={TABLE_HEAD}>Attempts</th>
           </tr>
         </thead>
         <tbody>
@@ -35,15 +40,17 @@ function AllDecksOverview({ progress, onDeckSelect }) {
             const p = progress[d.id] || { bestStreak: 0, attempts: [] }
             const done = p.bestStreak === d.moves.length
             return (
-              <tr key={d.id} style={{ borderBottom: "1px solid #1a1a1a" }}>
-                <td style={{ padding: "5px 0" }}>
-                  <button className="btn btn-ghost" style={{ padding: 0, color: done ? "var(--green)" : "var(--muted)", textDecoration: "underline", fontSize: "0.85rem", fontFamily: "var(--font-disp)", fontWeight: 700 }}
-                    onClick={() => onDeckSelect(d.id)}>
+              <tr key={d.id} className="border-b border-surface">
+                <td className="py-1.5">
+                  <button
+                    className={`btn btn-ghost p-0 underline text-[0.85rem] font-disp font-bold ${done ? "text-green" : "text-muted"}`}
+                    onClick={() => onDeckSelect(d.id)}
+                  >
                     {deckLabel(d)}
                   </button>
                 </td>
-                <td style={{ padding: "5px 14px", fontSize: 12, color: "var(--muted)" }}>{p.bestStreak}/{d.moves.length}</td>
-                <td style={{ padding: "5px 0", fontSize: 12, color: "var(--muted)" }}>{p.attempts.length}</td>
+                <td className="py-1.5 pl-3.5 text-xs text-muted">{p.bestStreak}/{d.moves.length}</td>
+                <td className="py-1.5 text-xs text-muted">{p.attempts.length}</td>
               </tr>
             )
           })}
@@ -57,24 +64,24 @@ function DeckProgress({ deck, prog }) {
   const total = deck.moves.length
   return (
     <div>
-      <span className="deck-id" style={{ display: "block", marginBottom: 2 }}>{deck.id}</span>
-      <h3 style={{ marginBottom: 16 }}>{deck.name}</h3>
-      <fieldset style={{ marginBottom: 16 }}>
+      <span className="block mb-0.5 font-disp font-extrabold text-base tracking-wide text-muted min-w-8">{deck.id}</span>
+      <h3 className="mb-4">{deck.name}</h3>
+      <fieldset className="mb-4">
         <legend>Summary</legend>
-        <table style={{ width: "100%" }}>
+        <table className="w-full">
           <tbody>
-            <tr className="stat-row"><td>Best streak</td><td>{prog.bestStreak}/{total}</td></tr>
-            <tr className="stat-row"><td>Total attempts</td><td>{prog.attempts.length}</td></tr>
-            <tr className="stat-row"><td>Last played</td><td>{formatRelativeDate(prog.lastAttemptDate) || "—"}</td></tr>
+            <tr><td className={STAT_LABEL}>Best streak</td><td className={STAT_VALUE}>{prog.bestStreak}/{total}</td></tr>
+            <tr><td className={STAT_LABEL}>Total attempts</td><td className={STAT_VALUE}>{prog.attempts.length}</td></tr>
+            <tr><td className={STAT_LABEL}>Last played</td><td className={STAT_VALUE}>{formatRelativeDate(prog.lastAttemptDate) || "—"}</td></tr>
           </tbody>
         </table>
       </fieldset>
 
       {prog.attempts.length === 0
-        ? <p className="meta">No attempts yet.</p>
+        ? <p className="text-[11px] text-muted mt-0.5">No attempts yet.</p>
         : <fieldset>
             <legend>Attempt history</legend>
-            <table className="attempts-table" style={{ width: "100%" }}>
+            <table className="attempts-table w-full">
               <thead>
                 <tr>
                   <th>#</th>
@@ -112,16 +119,16 @@ export default function ProgressScreen({ deckId, progress, onBack, onDeckSelect 
   }, [deckId])
 
   return (
-    <div style={{ paddingTop: 20, paddingBottom: 48 }}>
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 20 }}>
-        <button className="btn btn-ghost" onClick={onBack} style={{ padding: "6px 0" }}>←</button>
+    <div className="pt-5 pb-12">
+      <div className="flex gap-3 items-center mb-5">
+        <button className="btn btn-ghost py-1.5 px-0" onClick={onBack}>←</button>
         <h2>Progress</h2>
       </div>
 
-      <div style={{ marginBottom: 18 }}>
-        <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <span className="section-label" style={{ margin: 0, whiteSpace: "nowrap" }}>Deck</span>
-          <select value={deckId || ""} onChange={e => onDeckSelect(e.target.value || null)} style={{ flex: 1 }}>
+      <div className="mb-[18px]">
+        <label className="flex items-center gap-2.5">
+          <span className="font-disp text-[0.65rem] font-bold tracking-[0.2em] uppercase text-muted m-0 whitespace-nowrap">Deck</span>
+          <select value={deckId || ""} onChange={e => onDeckSelect(e.target.value || null)} className="flex-1">
             <option value="">— All decks —</option>
             {DECKS.map(d => (
               <option key={d.id} value={d.id}>{d.series ? `${d.id}: ` : ""}{d.name}</option>

@@ -1,10 +1,20 @@
-import { useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import DeckLink from "./DeckLink"
 import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS, SERIES } from "../data/decks"
 import * as analytics from "../utils/analytics"
 
 const NAMED_FLOWS = DECKS.filter(d => !d.series)
+
+const SERIES_NAV_LINK = "font-disp font-bold text-[0.85rem] tracking-widest uppercase text-muted no-underline transition-colors hover:text-accent"
+
+const SCROLL_TOP_BTN = [
+  "fixed z-50 bottom-6 w-11 h-11 rounded-full border-0 bg-surface shadow-[0_4px_16px_rgba(0,0,0,0.4)]",
+  "flex items-center justify-center origin-center",
+  "right-[max(16px,calc(50%-240px+16px))]",
+  "transition-[opacity,transform] duration-300 ease-in-out",
+  "hover:bg-[color-mix(in_srgb,var(--color-surface),white_8%)]",
+].join(" ")
 
 function DeckRow({ deck, progress, onDeckClick, showId }) {
   const prog = progress[deck.id] || { currentStreak: 0, bestStreak: 0, attempts: [] }
@@ -18,17 +28,17 @@ function DeckRow({ deck, progress, onDeckClick, showId }) {
   return (
     <tr>
       {showId && (
-        <td style={{ padding: "8px 0", verticalAlign: "top", width: 36 }}>
-          <span className="deck-id">{deck.id}</span>
+        <td className="py-2 align-top w-9">
+          <span className="font-disp font-extrabold text-base tracking-wide text-muted min-w-8">{deck.id}</span>
         </td>
       )}
-      <td style={{ padding: "8px 10px 8px 0", verticalAlign: "top" }} colSpan={showId ? 1 : 2}>
-        <div className="deck-name">{deck.name}</div>
+      <td className="py-2 pr-2.5 align-top" colSpan={showId ? 1 : 2}>
+        <div className="font-disp font-semibold text-base tracking-tight">{deck.name}</div>
         <DeckLink link={deck.link} />
-        <div className="meta">{prog.bestStreak}/{total} · {label}</div>
-        <progress value={prog.bestStreak} max={total} style={{ marginTop: 5 }} />
+        <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} · {label}</div>
+        <progress value={prog.bestStreak} max={total} className="mt-1.5" />
       </td>
-      <td style={{ padding: "8px 0", verticalAlign: "middle", whiteSpace: "nowrap" }}>
+      <td className="py-2 align-middle whitespace-nowrap">
         <button className="btn btn-primary" onClick={() => {
           analytics.event({
             action: 'deck_selected',
@@ -43,30 +53,54 @@ function DeckRow({ deck, progress, onDeckClick, showId }) {
 }
 
 export default function HomeScreen({ progress, onDeckClick, onStats, onReset, resetConfirm, onCancelReset }) {
+  const seriesNavRef = useRef(null)
+  const [showScrollTop, setShowScrollTop] = useState(false)
+
   useEffect(() => {
     analytics.pageview('/home')
   }, [])
 
-  return (
-    <div style={{ paddingTop: 28, paddingBottom: 48 }}>
-      <h1 style={{ marginBottom: 4 }}>10th Planet</h1>
-      <h1 style={{ marginBottom: 6, color: "var(--accent)" }}>Warmup Trainer</h1>
-      <p className="meta" style={{ marginBottom: 20, letterSpacing: "0.06em" }}>openthesystem.app</p>
-      <p className="meta" style={{ marginBottom: 32, letterSpacing: "0.1em", textTransform: "uppercase" }}>34 decks · 8 series</p>
+  useEffect(() => {
+    const nav = seriesNavRef.current
+    if (!nav) return
 
-      <nav className="series-nav">
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const { bottom } = entry.boundingClientRect
+        setShowScrollTop(prev => {
+          if (bottom < -24) return true
+          if (bottom >= 0) return false
+          return prev
+        })
+      },
+      { threshold: 0 }
+    )
+    observer.observe(nav)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div className="pt-7 pb-12">
+      <h1 className="mb-1">10th Planet</h1>
+      <h1 className="mb-1.5 text-accent">Warmup Trainer</h1>
+      <p className="text-[11px] text-muted mt-0.5 mb-5 tracking-wide">openthesystem.app</p>
+      <p className="text-[11px] text-muted mt-0.5 mb-8 tracking-widest uppercase">34 decks · 8 series</p>
+
+      <nav ref={seriesNavRef} className="flex justify-between items-center gap-1 mb-7 border-y border-border py-2">
         {SERIES.map(series => (
-          <a key={series.id} href={`#series-${series.id}`}>{series.id}</a>
+          <a key={series.id} href={`#series-${series.id}`} className={SERIES_NAV_LINK}>{series.id}</a>
         ))}
-        {NAMED_FLOWS.length > 0 && <a href="#named-flows">Named Flows</a>}
+        {NAMED_FLOWS.length > 0 && <a href="#named-flows" className={SERIES_NAV_LINK}>Named Flows</a>}
       </nav>
 
       {SERIES.map(series => {
         const seriesDecks = DECKS.filter(d => d.series === series.id)
         return (
-          <div key={series.id} id={`series-${series.id}`} className="series-section" style={{ marginBottom: 28 }}>
-            <div className="series-heading">Series {series.id} — {series.name}</div>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <div key={series.id} id={`series-${series.id}`} className="scroll-mt-3 mb-7">
+            <div className="font-disp font-bold text-[0.7rem] tracking-[0.18em] uppercase text-muted pt-1 pb-1.5 border-b border-border mb-1">
+              Series {series.id} — {series.name}
+            </div>
+            <table className="w-full border-collapse">
               <tbody>
                 {seriesDecks.map(d => (
                   <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} showId />
@@ -78,9 +112,11 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
       })}
 
       {NAMED_FLOWS.length > 0 && (
-        <div id="named-flows" className="series-section" style={{ marginBottom: 28 }}>
-          <div className="series-heading">Named Flows</div>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div id="named-flows" className="scroll-mt-3 mb-7">
+          <div className="font-disp font-bold text-[0.7rem] tracking-[0.18em] uppercase text-muted pt-1 pb-1.5 border-b border-border mb-1">
+            Named Flows
+          </div>
+          <table className="w-full border-collapse">
             <tbody>
               {NAMED_FLOWS.map(d => (
                 <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} showId={false} />
@@ -91,7 +127,7 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
       )}
 
       <hr />
-      <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+      <div className="flex gap-2 mt-3 flex-wrap">
         <button className="btn" onClick={onStats}>Stats</button>
         <button
           className="btn"
@@ -103,6 +139,24 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
         onConfirm={onReset}
         onCancel={onCancelReset}
       />
+      <button
+        type="button"
+        aria-label="Scroll to top"
+        aria-hidden={!showScrollTop}
+        tabIndex={showScrollTop ? 0 : -1}
+        onClick={() => window.scrollTo({ top: 0 })}
+        className={[
+          SCROLL_TOP_BTN,
+          showScrollTop
+            ? "opacity-100 scale-100 pointer-events-auto"
+            : "opacity-0 scale-90 pointer-events-none",
+        ].join(" ")}
+      >
+        <span
+          aria-hidden
+          className="block w-2.5 h-2.5 border-t-2 border-l-2 border-text translate-y-0.5 rotate-45"
+        />
+      </button>
     </div>
   )
 }
