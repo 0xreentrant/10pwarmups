@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 
 export function useMoveNotesPopover() {
   const [moveIndex, setMoveIndex] = useState(null)
@@ -11,17 +11,6 @@ export function useMoveNotesPopover() {
   const open = useCallback(index => {
     setMoveIndex(index)
   }, [])
-
-  useEffect(() => {
-    if (moveIndex === null) return
-
-    function handleKeyDown(e) {
-      if (e.key === "Escape") close()
-    }
-
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [moveIndex, close])
 
   return { moveIndex, popoverRef, open, close }
 }

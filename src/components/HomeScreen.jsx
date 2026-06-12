@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import DeckLink from "./DeckLink"
+import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS, SERIES } from "../data/decks"
 import * as analytics from "../utils/analytics"
 
@@ -85,14 +86,16 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
       <hr />
       <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
         <button className="btn" onClick={onStats}>Stats</button>
-        {!resetConfirm
-          ? <button className="btn" onClick={onReset}>Reset all</button>
-          : <>
-              <button className="btn" onClick={onReset}>Confirm reset</button>
-              <button className="btn btn-ghost" onClick={onCancelReset}>Cancel</button>
-            </>
-        }
+        <button
+          className="btn"
+          onClick={() => { if (!resetConfirm) onReset() }}
+        >Reset all</button>
       </div>
+      <ResetConfirmPopover
+        open={resetConfirm}
+        onConfirm={onReset}
+        onCancel={onCancelReset}
+      />
     </div>
   )
 }

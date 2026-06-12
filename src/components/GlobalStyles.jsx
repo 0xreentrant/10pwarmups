@@ -234,14 +234,14 @@ export default function GlobalStyles() {
         text-decoration: underline;
       }
 
-      .move-notes-backdrop {
+      .popover-backdrop {
         position: fixed;
         inset: 0;
         z-index: 100;
         background: rgba(0, 0, 0, 0.55);
       }
 
-      .move-notes-popover {
+      .popover {
         position: fixed;
         top: 50%;
         left: 50%;
@@ -253,21 +253,21 @@ export default function GlobalStyles() {
         padding: 10px 12px;
         font-size: 12px;
       }
-      .move-notes-header {
+      .popover-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 8px;
         margin-bottom: 6px;
       }
-      .move-notes-title {
+      .popover-title {
         font-family: var(--font-disp);
         font-weight: 700;
         font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 0.04em;
       }
-      .move-notes-close {
+      .popover-close {
         background: none;
         border: none;
         padding: 0 2px;
@@ -277,10 +277,10 @@ export default function GlobalStyles() {
         line-height: 1;
         flex-shrink: 0;
       }
-      .move-notes-close:hover {
+      .popover-close:hover {
         color: var(--text);
       }
-      .move-notes-body {
+      .popover-body {
         margin: 0;
         color: var(--muted);
         line-height: 1.5;
