@@ -1,4 +1,4 @@
-export const APP_RELEASE_VERSION = "2026-06-11"
+export const APP_RELEASE_VERSION = "2026-06-12"
 
 export const WHATS_NEW_STORAGE_KEY = "tp_whats_new_seen"
 
