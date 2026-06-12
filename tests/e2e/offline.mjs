@@ -26,36 +26,53 @@ function getFreePort() {
   })
 }
 
-function waitForPreviewServer(proc, port) {
+function waitForHttp(url, timeoutMs = 60000) {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("Preview server did not start")), 30000)
-    const checkReady = chunk => {
-      const text = chunk.toString()
-      if (text.includes(`localhost:${port}`)) {
-        clearTimeout(timeout)
-        proc.stdout.off("data", checkReady)
-        proc.stderr.off("data", checkReady)
-        resolve()
+    const start = Date.now()
+    const poll = async () => {
+      try {
+        const res = await fetch(url)
+        if (res.ok) return resolve()
+      } catch {}
+      if (Date.now() - start >= timeoutMs) {
+        reject(new Error(`Server did not respond at ${url}`))
+        return
       }
+      setTimeout(poll, 250)
     }
-    proc.stdout.on("data", checkReady)
-    proc.stderr.on("data", checkReady)
-    proc.on("exit", code => {
-      if (code !== null && code !== 0) {
-        clearTimeout(timeout)
-        reject(new Error(`Preview server exited with code ${code}`))
-      }
-    })
+    poll()
   })
 }
 
 function startPreview(port) {
-  const viteBin = path.join(root, "node_modules", ".bin", "vite")
-  const proc = spawn(viteBin, ["preview", "--port", String(port), "--strictPort"], {
-    cwd: root,
-    stdio: ["ignore", "pipe", "pipe"],
+  const viteBin = path.join(root, "node_modules", "vite", "bin", "vite.js")
+  const host = "127.0.0.1"
+  const url = `http://${host}:${port}/`
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn(process.execPath, [
+      viteBin,
+      "preview",
+      "--host", host,
+      "--port", String(port),
+      "--strictPort",
+    ], {
+      cwd: root,
+      stdio: ["ignore", "pipe", "pipe"],
+    })
+
+    let stderr = ""
+    proc.stderr.on("data", chunk => { stderr += chunk.toString() })
+    proc.on("exit", code => {
+      if (code !== null && code !== 0) {
+        reject(new Error(`Preview server exited with code ${code}: ${stderr}`))
+      }
+    })
+
+    waitForHttp(url)
+      .then(() => resolve(proc))
+      .catch(reject)
   })
-  return waitForPreviewServer(proc, port).then(() => proc)
 }
 
 async function waitForServiceWorker(page) {
@@ -89,7 +106,7 @@ async function clickOptionWithText(page, text) {
 
 async function runOfflineE2E() {
   const port = await getFreePort()
-  const baseUrl = `http://localhost:${port}/`
+  const baseUrl = `http://127.0.0.1:${port}/`
   const preview = await startPreview(port)
   let browser
 
