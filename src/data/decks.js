@@ -27,11 +27,7 @@ const DECKS = [
       m("Bridging Granby", "A"),
       m("Belly to Belly Granby", "A"),
       m("Granby Flow", "A"),
-    ],
-    notes: {
-      0: "Start on knees, roll through the shoulder.",
-      4: "Chain all four granby variations together.",
-    },
+    ]
   },
   {
     id: "A2", series: "A", name: "Standing Knee Slice",
