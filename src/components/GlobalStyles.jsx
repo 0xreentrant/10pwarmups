@@ -1,7 +1,14 @@
+import "@fontsource/barlow-condensed/400.css"
+import "@fontsource/barlow-condensed/600.css"
+import "@fontsource/barlow-condensed/700.css"
+import "@fontsource/barlow-condensed/800.css"
+import "@fontsource/ibm-plex-mono/400.css"
+import "@fontsource/ibm-plex-mono/500.css"
+import "@fontsource/ibm-plex-mono/600.css"
+
 export default function GlobalStyles() {
   return (
     <style>{`
-      @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
       :root {
         --bg:        #0f0f0f;

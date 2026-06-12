@@ -9,22 +9,33 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
-    "machine:view": "node scripts/viewMachine.mjs"
+    "machine:view": "node scripts/viewMachine.mjs",
+    "test:lhci": "node scripts/run-lhci.mjs",
+    "test:e2e": "node tests/e2e/offline.mjs",
+    "test:all": "npm run test:run && npm run build && npm run test:lhci && npm run test:e2e"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
+  "overrides": {
+    "tslib": "2.8.1"
+  },
   "devDependencies": {
+    "@lhci/cli": "0.13.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^6.0.2",
     "jsdom": "^29.1.1",
     "vite": "^8.0.16",
-    "vitest": "^4.1.8"
+    "vite-plugin-pwa": "^1.3.0",
+    "vitest": "^4.1.8",
+    "wait-on": "^9.0.10"
   },
   "dependencies": {
+    "@fontsource/barlow-condensed": "^5.2.8",
+    "@fontsource/ibm-plex-mono": "^5.2.7",
     "@statelyai/inspect": "^0.7.1",
     "@xstate/react": "^6.1.0",
     "puppeteer": "^25.1.0",
