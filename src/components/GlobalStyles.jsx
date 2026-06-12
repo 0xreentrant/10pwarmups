@@ -53,6 +53,16 @@ export default function GlobalStyles() {
       p { margin: 0; }
 
       button {
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: none;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      .btn {
         font-family: var(--font-disp);
         font-weight: 700;
         font-size: 1rem;
@@ -62,11 +72,10 @@ export default function GlobalStyles() {
         color: var(--text);
         border: 1px solid var(--border);
         padding: 8px 14px;
-        cursor: pointer;
         transition: background 0.1s, border-color 0.1s;
       }
-      button:hover { background: #252525; border-color: #444; }
-      button:active { background: #2e2e2e; }
+      .btn:hover { background: #252525; border-color: #444; }
+      .btn:active { background: #2e2e2e; }
 
       fieldset {
         border: 1px solid var(--border);
@@ -211,6 +220,71 @@ export default function GlobalStyles() {
       .move-symbol { color: var(--muted); min-width: 14px; }
       .move-symbol.correct { color: var(--green); }
       .move-symbol.wrong   { color: var(--accent); }
+
+      .move-label-btn {
+        font-family: var(--font-body);
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: normal;
+        text-transform: none;
+        text-align: left;
+      }
+      .move-label-btn:hover .partner-a,
+      .move-label-btn:hover .partner-b {
+        text-decoration: underline;
+      }
+
+      .move-notes-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: rgba(0, 0, 0, 0.55);
+      }
+
+      .move-notes-popover {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 101;
+        width: min(448px, calc(100vw - 32px));
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+      .move-notes-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .move-notes-title {
+        font-family: var(--font-disp);
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .move-notes-close {
+        background: none;
+        border: none;
+        padding: 0 2px;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 1.1rem;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+      .move-notes-close:hover {
+        color: var(--text);
+      }
+      .move-notes-body {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
 
       .stat-row td { padding: 4px 0; font-size: 12px; color: var(--muted); }
       .stat-row td:last-child { padding-left: 20px; color: var(--text); font-weight: 600; }

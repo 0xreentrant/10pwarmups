@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { getLongestStreak } from "../appMachine"
 import DeckLink from "./DeckLink"
 import MoveLabel from "./MoveLabel"
+import MoveList from "./MoveList"
 import * as analytics from "../utils/analytics"
 
 export default function TrainingScreen({ deck, session, onOptionClick, onBack }) {
@@ -30,19 +31,11 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack })
           <span className="partner-a">■ Person A</span>
           <span className="partner-b">■ Person B</span>
         </div>
-        <div>
-          {deck.moves.map((move, i) => {
-            const answered = session.moveSequence[i]
-            if (i >= moveIdx) return null
-            const symCls = "move-symbol" + (answered?.correct ? " correct" : answered ? " wrong" : "")
-            return (
-              <div key={i} className="move-row">
-                <span className={symCls}>{answered?.correct ? "✓" : answered ? "✗" : "○"}</span>
-                <MoveLabel move={move} />
-              </div>
-            )
-          })}
-        </div>
+        <MoveList
+          deck={deck}
+          moveSequence={session.moveSequence}
+          visibleThroughIndex={moveIdx - 1}
+        />
       </fieldset>
 
       <fieldset style={{ marginBottom: 16 }}>
@@ -51,7 +44,7 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack })
           {session.options.map((opt, i) => (
             <button
               key={i}
-              className="option-btn"
+              className="btn option-btn"
               onClick={() => onOptionClick(i)}
             >
               <MoveLabel move={opt} />
@@ -60,7 +53,7 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack })
         </div>
       </fieldset>
 
-      <button className="btn-ghost" onClick={() => {
+      <button className="btn btn-ghost" onClick={() => {
         analytics.event({
           action: 'test_abandoned',
           category: 'Training',

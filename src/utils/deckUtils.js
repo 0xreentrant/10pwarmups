@@ -6,6 +6,11 @@ export function deckLabel(deck) {
   return deck.series ? deck.id : deck.name
 }
 
+export function getMoveNote(deck, moveIndex) {
+  const note = deck.notes?.[moveIndex]
+  return note?.trim() ? note : null
+}
+
 function shuffleArray(items) {
   const arr = [...items]
   for (let i = arr.length - 1; i > 0; i--) {
