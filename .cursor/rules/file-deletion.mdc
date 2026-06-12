@@ -1,0 +1,39 @@
+---
+description: Delete files via the Delete tool; never use shell rm
+alwaysApply: true
+---
+
+# File Deletion
+
+Always delete files through Cursor's file deletion flow (the Delete tool). Do not use shell commands to remove files.
+
+## Required
+
+- Use the **Delete** tool for every file removal
+- Delete one file per Delete tool call when removing multiple files
+- If a directory must be removed, delete its contents with Delete first, or ask the user to remove the directory in the IDE if the tool cannot handle it
+
+## Forbidden
+
+- `rm`, `rm -rf`, `rmdir`, `unlink`, or any shell command whose purpose is deleting files or directories
+- Piping to deletion utilities (e.g. `find … -delete`, `xargs rm`)
+
+## Examples
+
+```bash
+# BAD — shell deletion
+rm src/old-module.ts
+rm -rf tmp/cache
+find . -name "*.bak" -delete
+```
+
+```
+# GOOD — Delete tool
+Delete path: src/old-module.ts
+Delete path: tmp/cache/file1.json
+Delete path: tmp/cache/file2.json
+```
+
+## When blocked
+
+If Delete fails (permissions, path outside workspace, or directory removal), stop and tell the user what could not be deleted. Do not fall back to `rm`.
