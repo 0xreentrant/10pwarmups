@@ -54,10 +54,17 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
       <p className="meta" style={{ marginBottom: 20, letterSpacing: "0.06em" }}>openthesystem.app</p>
       <p className="meta" style={{ marginBottom: 32, letterSpacing: "0.1em", textTransform: "uppercase" }}>34 decks · 8 series</p>
 
+      <nav className="series-nav">
+        {SERIES.map(series => (
+          <a key={series.id} href={`#series-${series.id}`}>{series.id}</a>
+        ))}
+        {NAMED_FLOWS.length > 0 && <a href="#named-flows">Named Flows</a>}
+      </nav>
+
       {SERIES.map(series => {
         const seriesDecks = DECKS.filter(d => d.series === series.id)
         return (
-          <div key={series.id} style={{ marginBottom: 28 }}>
+          <div key={series.id} id={`series-${series.id}`} className="series-section" style={{ marginBottom: 28 }}>
             <div className="series-heading">Series {series.id} — {series.name}</div>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <tbody>
@@ -71,7 +78,7 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
       })}
 
       {NAMED_FLOWS.length > 0 && (
-        <div style={{ marginBottom: 28 }}>
+        <div id="named-flows" className="series-section" style={{ marginBottom: 28 }}>
           <div className="series-heading">Named Flows</div>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <tbody>

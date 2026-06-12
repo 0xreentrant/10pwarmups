@@ -187,6 +187,30 @@ export default function GlobalStyles() {
         margin-bottom: 4px;
       }
 
+      .series-nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 4px;
+        margin-bottom: 28px;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+        padding: 8px 0;
+      }
+      .series-nav a {
+        font-family: var(--font-disp);
+        font-weight: 700;
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+        text-decoration: none;
+        transition: color 0.1s;
+      }
+      .series-nav a:hover { color: var(--accent); }
+
+      .series-section { scroll-margin-top: 12px; }
+
       .btn-primary {
         background: var(--accent);
         color: var(--text-on-accent);
