@@ -49,7 +49,8 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
   return (
     <div style={{ paddingTop: 28, paddingBottom: 48 }}>
       <h1 style={{ marginBottom: 4 }}>10th Planet</h1>
-      <h1 style={{ marginBottom: 2, color: "var(--accent)" }}>Warmup Trainer</h1>
+      <h1 style={{ marginBottom: 6, color: "var(--accent)" }}>Warmup Trainer</h1>
+      <p className="meta" style={{ marginBottom: 20, letterSpacing: "0.06em" }}>openthesystem.app</p>
       <p className="meta" style={{ marginBottom: 32, letterSpacing: "0.1em", textTransform: "uppercase" }}>34 decks · 8 series</p>
 
       {SERIES.map(series => {
