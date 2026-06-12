@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { createDistractorPool, precomputeDeckOptions } from './utils/deckUtils'
+import type { Deck } from './types/domain'
 
-const mockDecks = [
+const mockDecks: Deck[] = [
   {
     id: 'A1',
+    name: 'Kneeling',
+    series: 'A',
     moves: [
       { text: 'Kneeling Granby', partner: 'A' },
       { text: 'Seated Granby', partner: 'A' },
@@ -12,6 +15,8 @@ const mockDecks = [
   },
   {
     id: 'B1',
+    name: 'Black Mamba',
+    series: 'B',
     moves: [
       { text: 'Black Mamba', partner: 'A' },
       { text: 'Kneeling Granby', partner: 'B' },
@@ -70,10 +75,11 @@ describe('precomputeDeckOptions', () => {
   })
 
   it('regenerates the distractor pool when the cursor is exhausted', () => {
-    const tinyDecks = [
-      { id: 'solo', moves: [{ text: 'OnlyMove', partner: 'A' }] },
+    const tinyDecks: Deck[] = [
+      { id: 'solo', name: 'Solo', moves: [{ text: 'OnlyMove', partner: 'A' }] },
       {
         id: 'pool',
+        name: 'Pool',
         moves: [
           { text: 'Alpha', partner: 'A' },
           { text: 'Beta', partner: 'B' },
@@ -81,9 +87,10 @@ describe('precomputeDeckOptions', () => {
         ],
       },
     ]
-    const longDeck = {
+    const longDeck: Deck = {
       id: 'long',
-      moves: Array.from({ length: 8 }, (_, i) => ({ text: `Move${i}`, partner: 'A' })),
+      name: 'Long',
+      moves: Array.from({ length: 8 }, (_, i) => ({ text: `Move${i}`, partner: 'A' as const })),
     }
     const allOptions = precomputeDeckOptions(longDeck, tinyDecks)
     allOptions.forEach((opts, i) => {

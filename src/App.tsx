@@ -33,7 +33,7 @@ export default function App() {
         <HomeScreen
           progress={progress}
           onDeckClick={startDeck}
-          onStats={openStats}
+          onStats={() => openStats()}
           onReset={handleReset}
           resetConfirm={resetConfirm}
           onCancelReset={cancelReset}

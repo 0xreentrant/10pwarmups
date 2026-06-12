@@ -5,15 +5,15 @@ import path from "path"
 const dist = path.resolve("dist")
 const base = "/"
 
-function distPath(file) {
+function distPath(file: string) {
   return path.join(dist, file)
 }
 
-function readDist(file) {
+function readDist(file: string) {
   return fs.readFileSync(distPath(file), "utf8")
 }
 
-function extractPrecacheUrls(swContent) {
+function extractPrecacheUrls(swContent: string) {
   const matches = [...swContent.matchAll(/url:"([^"]+)"/g)]
   return matches.map(m => m[1])
 }
@@ -34,8 +34,8 @@ describe("PWA build artifacts", () => {
     expect(manifest.display).toBe("standalone")
     expect(manifest.theme_color).toBe("#c0392b")
     expect(manifest.background_color).toBe("#0f0f0f")
-    expect(manifest.icons.some(i => i.sizes === "192x192")).toBe(true)
-    expect(manifest.icons.some(i => i.sizes === "512x512")).toBe(true)
+    expect(manifest.icons.some((i: { sizes: string }) => i.sizes === "192x192")).toBe(true)
+    expect(manifest.icons.some((i: { sizes: string }) => i.sizes === "512x512")).toBe(true)
   })
 
   it("includes iOS and Android icon files in dist", () => {

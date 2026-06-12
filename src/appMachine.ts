@@ -1,37 +1,38 @@
 import { setup, assign } from "xstate"
+import type { Deck, MoveAnswer, ProgressMap, QuestionOption, Session } from "./types/domain"
 
 const STORAGE_KEY = "tp_progress"
 
-const DECK_ID_MIGRATIONS = {
+const DECK_ID_MIGRATIONS: Record<string, string> = {
   I1: "attack-series",
   J1: "ramey-flow",
 }
 
-export function getDefaultProgress(decks) {
-  const p = {}
+export function getDefaultProgress(decks: Deck[]): ProgressMap {
+  const p: ProgressMap = {}
   decks.forEach(d => {
     p[d.id] = { currentStreak: 0, bestStreak: 0, lastAttemptDate: null, attempts: [] }
   })
   return p
 }
 
-export function loadProgress(decks) {
+export function loadProgress(decks: Deck[]): ProgressMap {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return getDefaultProgress(decks)
-    const parsed = JSON.parse(raw)
-    if (typeof parsed !== "object") return getDefaultProgress(decks)
+    const parsed = JSON.parse(raw) as Record<string, unknown>
+    if (typeof parsed !== "object" || parsed === null) return getDefaultProgress(decks)
     const base = getDefaultProgress(decks)
     Object.entries(DECK_ID_MIGRATIONS).forEach(([oldId, newId]) => {
       if (parsed[oldId] && !parsed[newId]) parsed[newId] = parsed[oldId]
       delete parsed[oldId]
     })
     Object.keys(base).forEach(id => { if (!parsed[id]) parsed[id] = base[id] })
-    return parsed
+    return parsed as ProgressMap
   } catch { return getDefaultProgress(decks) }
 }
 
-export function saveProgress(progress) {
+export function saveProgress(progress: ProgressMap) {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)) } catch {}
 }
 
@@ -39,7 +40,7 @@ function resetProgress() {
   try { localStorage.removeItem(STORAGE_KEY) } catch {}
 }
 
-export function getLongestStreak(moveSequence) {
+export function getLongestStreak(moveSequence: MoveAnswer[]): number {
   let longest = 0
   let current = 0
   moveSequence.forEach(answer => {
@@ -53,13 +54,47 @@ export function getLongestStreak(moveSequence) {
   return longest
 }
 
-function getDeck(context) {
+type PrecomputeDeckOptions = (deck: Deck, decks: Deck[]) => QuestionOption[][]
+
+interface AppContext {
+  decks: Deck[]
+  precomputeDeckOptions: PrecomputeDeckOptions
+  progress: ProgressMap
+  currentDeckId: string | null
+  session: Session | null
+  statsForDeck: string | null
+  statsReturnTo: "home" | "completion"
+  resetConfirm: boolean
+}
+
+interface AppInput {
+  decks: Deck[]
+  precomputeDeckOptions: PrecomputeDeckOptions
+}
+
+type AppEvent =
+  | { type: "START_DECK"; deckId: string }
+  | { type: "OPTION_CLICK"; optionIndex: number }
+  | { type: "OPEN_STATS"; deckId?: string }
+  | { type: "SET_STATS_DECK"; deckId: string | null }
+  | { type: "RESET" }
+  | { type: "CANCEL_RESET" }
+  | { type: "GO_HOME" }
+  | { type: "GO_BACK" }
+  | { type: "BACK_HOME" }
+
+function getDeck(context: AppContext): Deck | null {
   return context.currentDeckId
-    ? context.decks.find(d => d.id === context.currentDeckId)
+    ? context.decks.find(d => d.id === context.currentDeckId) ?? null
     : null
 }
 
 const appMachineSetup = setup({
+  types: {
+    context: {} as AppContext,
+    events: {} as AppEvent,
+    input: {} as AppInput,
+  },
   actions: {
     clearStorage: () => { resetProgress() },
     confirmReset: assign({ resetConfirm: true }),
@@ -69,11 +104,15 @@ const appMachineSetup = setup({
       progress: getDefaultProgress(context.decks),
     })),
     setStatsDeck: assign({
-      statsForDeck: ({ event }) => event.deckId,
+      statsForDeck: ({ event }) =>
+        event.type === "OPEN_STATS" || event.type === "SET_STATS_DECK"
+          ? (event.deckId ?? null)
+          : null,
     }),
     setStatsReturnHome: assign({ statsReturnTo: "home" }),
     setStatsReturnCompletion: assign({ statsReturnTo: "completion" }),
     startDeck: assign(({ context, event }) => {
+      if (event.type !== "START_DECK") return {}
       const d = context.decks.find(x => x.id === event.deckId)
       if (!d) return {}
       const allOptions = context.precomputeDeckOptions(d, context.decks)
@@ -94,6 +133,7 @@ const appMachineSetup = setup({
       session: null,
     }),
     advanceSession: assign(({ context, event }) => {
+      if (event.type !== "OPTION_CLICK") return {}
       const d = getDeck(context)
       if (!d || !context.session || context.session.locked) return {}
       const moveIdx = context.session.moveSequence.length
@@ -113,6 +153,7 @@ const appMachineSetup = setup({
       }
     }),
     completeSession: assign(({ context, event }) => {
+      if (event.type !== "OPTION_CLICK") return {}
       const d = getDeck(context)
       if (!d || !context.session || context.session.locked) return {}
       const moveIdx = context.session.moveSequence.length
@@ -178,7 +219,7 @@ const appMachineSetup = setup({
   },
   guards: {
     deckExists: ({ context, event }) =>
-      context.decks.some(x => x.id === event.deckId),
+      event.type === "START_DECK" && context.decks.some(x => x.id === event.deckId),
     resetConfirmed: ({ context }) => context.resetConfirm,
     sessionNotLocked: ({ context }) =>
       !!context.session && !context.session.locked,
@@ -202,7 +243,7 @@ export const appMachine = appMachineSetup.createMachine({
     currentDeckId: null,
     session: null,
     statsForDeck: null,
-    statsReturnTo: "home",
+    statsReturnTo: "home" as const,
     resetConfirm: false,
   }),
   initial: "home",

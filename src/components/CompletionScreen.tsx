@@ -2,9 +2,20 @@ import { useEffect } from "react"
 import MoveLabel from "./MoveLabel"
 import { DECKS } from "../data/decks"
 import { deckLabel, formatDuration, nextDeckId } from "../utils/deckUtils"
+import type { Deck, ProgressMap, Session } from "../types/domain"
 import * as analytics from "../utils/analytics"
 
-export default function CompletionScreen({ deck, session, progress, onNext, onHome, onTryAgain, onStats }) {
+interface CompletionScreenProps {
+  deck: Deck
+  session: Session
+  progress: ProgressMap
+  onNext: () => void
+  onHome: () => void
+  onTryAgain: () => void
+  onStats: () => void
+}
+
+export default function CompletionScreen({ deck, session, progress, onNext, onHome, onTryAgain, onStats }: CompletionScreenProps) {
   const total = deck.moves.length
   const correct = session.moveSequence.filter(x => x.correct).length
   const duration = session.finalAttempt ? session.finalAttempt.duration : 0
@@ -22,7 +33,7 @@ export default function CompletionScreen({ deck, session, progress, onNext, onHo
       label: `${deck.id} - ${deck.name}`,
       value: finalStreak
     })
-  }, [])
+  }, [deck.id, deck.name, finalStreak])
 
   return (
     <div style={{ paddingTop: 20, paddingBottom: 48 }}>

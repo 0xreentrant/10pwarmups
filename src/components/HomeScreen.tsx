@@ -1,11 +1,19 @@
 import { useEffect } from "react"
 import DeckLink from "./DeckLink"
 import { DECKS, SERIES } from "../data/decks"
+import type { Deck, ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
 
 const NAMED_FLOWS = DECKS.filter(d => !d.series)
 
-function DeckRow({ deck, progress, onDeckClick, showId }) {
+interface DeckRowProps {
+  deck: Deck
+  progress: ProgressMap
+  onDeckClick: (deckId: string) => void
+  showId: boolean
+}
+
+function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
   const prog = progress[deck.id] || { currentStreak: 0, bestStreak: 0, attempts: [] }
   const total = deck.moves.length
   const label = prog.attempts.length === 0
@@ -41,7 +49,16 @@ function DeckRow({ deck, progress, onDeckClick, showId }) {
   )
 }
 
-export default function HomeScreen({ progress, onDeckClick, onStats, onReset, resetConfirm, onCancelReset }) {
+interface HomeScreenProps {
+  progress: ProgressMap
+  onDeckClick: (deckId: string) => void
+  onStats: () => void
+  onReset: () => void
+  resetConfirm: boolean
+  onCancelReset: () => void
+}
+
+export default function HomeScreen({ progress, onDeckClick, onStats, onReset, resetConfirm, onCancelReset }: HomeScreenProps) {
   useEffect(() => {
     analytics.pageview('/home')
   }, [])

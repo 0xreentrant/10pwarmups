@@ -1,6 +1,10 @@
 import * as analytics from "../utils/analytics"
 
-export default function DeckLink({ link }) {
+interface DeckLinkProps {
+  link?: string
+}
+
+export default function DeckLink({ link }: DeckLinkProps) {
   if (!link) return null
   return (
     <a 

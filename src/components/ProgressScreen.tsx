@@ -1,9 +1,15 @@
 import { useEffect } from "react"
 import { DECKS } from "../data/decks"
 import { deckLabel, formatRelativeDate } from "../utils/deckUtils"
+import type { Deck, DeckProgress, ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
 
-function AllDecksOverview({ progress, onDeckSelect }) {
+interface AllDecksOverviewProps {
+  progress: ProgressMap
+  onDeckSelect: (deckId: string | null) => void
+}
+
+function AllDecksOverview({ progress, onDeckSelect }: AllDecksOverviewProps) {
   const completedDecks = DECKS.filter(d => {
     const p = progress[d.id]
     return p && p.bestStreak === d.moves.length
@@ -53,7 +59,12 @@ function AllDecksOverview({ progress, onDeckSelect }) {
   )
 }
 
-function DeckProgress({ deck, prog }) {
+interface DeckProgressProps {
+  deck: Deck
+  prog: DeckProgress
+}
+
+function DeckProgress({ deck, prog }: DeckProgressProps) {
   const total = deck.moves.length
   return (
     <div>
@@ -103,7 +114,14 @@ function DeckProgress({ deck, prog }) {
   )
 }
 
-export default function ProgressScreen({ deckId, progress, onBack, onDeckSelect }) {
+interface ProgressScreenProps {
+  deckId: string | null
+  progress: ProgressMap
+  onBack: () => void
+  onDeckSelect: (deckId: string | null) => void
+}
+
+export default function ProgressScreen({ deckId, progress, onBack, onDeckSelect }: ProgressScreenProps) {
   const deck = deckId ? DECKS.find(d => d.id === deckId) : null
   const prog = deck ? progress[deck.id] : null
 

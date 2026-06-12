@@ -2,16 +2,24 @@ import { useEffect } from "react"
 import { getLongestStreak } from "../appMachine"
 import DeckLink from "./DeckLink"
 import MoveLabel from "./MoveLabel"
+import type { Deck, Session } from "../types/domain"
 import * as analytics from "../utils/analytics"
 
-export default function TrainingScreen({ deck, session, onOptionClick, onBack }) {
+interface TrainingScreenProps {
+  deck: Deck
+  session: Session
+  onOptionClick: (optionIndex: number) => void
+  onBack: () => void
+}
+
+export default function TrainingScreen({ deck, session, onOptionClick, onBack }: TrainingScreenProps) {
   const moveIdx = session.moveSequence.length
   const total = deck.moves.length
   const sessionBestStreak = Math.max(getLongestStreak(session.moveSequence), session.currentStreak)
 
   useEffect(() => {
     analytics.pageview(`/training/${deck.id}`)
-  }, [])
+  }, [deck.id])
 
   return (
     <div style={{ paddingTop: 20, paddingBottom: 48 }}>

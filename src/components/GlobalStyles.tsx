@@ -242,5 +242,5 @@ export default function GlobalStyles() {
       .attempts-table tr:first-child td { color: var(--text); }
       .attempts-table tr:not(:first-child) td { color: var(--muted); }
     `}</style>
-  );
+  )
 }

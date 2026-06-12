@@ -3,7 +3,9 @@
 // Each move: { text: string, partner: "A" | "B" }
 // Partner B moves shown in red
 
-const SERIES = [
+import type { Deck, Move, Partner, Series } from "../types/domain"
+
+const SERIES: Series[] = [
   { id: "A", name: "Granbys" },
   { id: "B", name: "Sit-Ups & Takedowns" },
   { id: "C", name: "Guard Passing" },
@@ -14,9 +16,9 @@ const SERIES = [
   { id: "H", name: "De La Riva" },
 ];
 
-function m(text, partner) { return { text, partner }; }
+function m(text: string, partner: Partner): Move { return { text, partner }; }
 
-const DECKS = [
+const DECKS: Deck[] = [
   {
     id: "A1", series: "A", name: "Kneeling",
     link: "https://www.instagram.com/10thplanetdenver/reel/CyeMgsQJ_Cn/",

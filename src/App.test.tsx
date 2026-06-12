@@ -8,19 +8,19 @@ function getOptionButtons() {
   return Array.from(document.querySelectorAll('button.option-btn'));
 }
 
-function clickOptionWithText(text) {
+function clickOptionWithText(text: string) {
   const btn = getOptionButtons().find(b => b.textContent.includes(text));
   if (!btn) throw new Error(`No option button found for "${text}"`);
   fireEvent.click(btn);
 }
 
-function clickWrongOption(excludeText) {
+function clickWrongOption(excludeText: string) {
   const btn = getOptionButtons().find(b => !b.textContent.includes(excludeText));
   if (!btn) throw new Error(`No wrong option found excluding "${excludeText}"`);
   fireEvent.click(btn);
 }
 
-async function answerDeckMoves(moves, delay = 100) {
+async function answerDeckMoves(moves: string[], delay = 100) {
   for (let i = 0; i < moves.length; i++) {
     clickOptionWithText(moves[i]);
     if (delay > 0) await new Promise(r => setTimeout(r, delay));
@@ -149,7 +149,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       clickOptionWithText(A1_MOVES[0]);
       await new Promise(r => setTimeout(r, 100));
       
-      const saved = JSON.parse(localStorage.getItem('tp_progress'));
+      const saved = JSON.parse(localStorage.getItem('tp_progress')!);
       expect(saved).toBeDefined();
       expect(saved['A1']).toBeDefined();
       expect(typeof saved['A1'].currentStreak).toBe('number');
@@ -164,7 +164,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await answerDeckMoves(A1_MOVES);
       
       await waitFor(() => {
-        const saved = JSON.parse(localStorage.getItem('tp_progress'));
+        const saved = JSON.parse(localStorage.getItem('tp_progress')!);
         expect(saved['A1'].bestStreak).toBeGreaterThan(0);
         expect(saved['A1'].attempts.length).toBeGreaterThan(0);
       }, { timeout: 5000 });
@@ -256,7 +256,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
         expect(heading.textContent).toMatch(/Complete/);
       }, { timeout: 5000 });
 
-      const saved = JSON.parse(localStorage.getItem('tp_progress'));
+      const saved = JSON.parse(localStorage.getItem('tp_progress')!);
       expect(saved['A1'].attempts[0].wrongMoves).toContain(1);
     });
 
@@ -284,7 +284,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       }, { timeout: 5000 });
 
       await waitFor(() => {
-        const saved = JSON.parse(localStorage.getItem('tp_progress'));
+        const saved = JSON.parse(localStorage.getItem('tp_progress')!);
         expect(saved['A1'].attempts[0].finalStreak).toBe(3);
       }, { timeout: 3000 });
     });
@@ -354,7 +354,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(backButton);
       
       // Check that attempt was recorded
-      const saved = JSON.parse(localStorage.getItem('tp_progress'));
+      const saved = JSON.parse(localStorage.getItem('tp_progress')!);
       expect(saved['A1'].attempts.length).toBeGreaterThan(0);
       const lastAttempt = saved['A1'].attempts[saved['A1'].attempts.length - 1];
       expect(lastAttempt.abandoned).toBe(true);
@@ -378,7 +378,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(confirmButton);
       
       // Data should be cleared
-      const saved = JSON.parse(localStorage.getItem('tp_progress'));
+      const saved = JSON.parse(localStorage.getItem('tp_progress')!);
       expect(saved['A1'].bestStreak).toBe(0);
       expect(saved['A1'].attempts.length).toBe(0);
     });
@@ -467,7 +467,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await answerDeckMoves(A1_MOVES);
       
       await waitFor(() => {
-        const saved = JSON.parse(localStorage.getItem('tp_progress'));
+        const saved = JSON.parse(localStorage.getItem('tp_progress')!);
         expect(saved['A1'].lastAttemptDate).toBeTruthy();
       }, { timeout: 5000 });
     });
@@ -483,7 +483,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await answerDeckMoves(A1_MOVES, 50);
       
       await waitFor(() => {
-        const saved = JSON.parse(localStorage.getItem('tp_progress'));
+        const saved = JSON.parse(localStorage.getItem('tp_progress')!);
         const attempt = saved['A1'].attempts[0];
         expect(attempt.duration).toBeGreaterThanOrEqual(0);
       }, { timeout: 3000 });
@@ -498,7 +498,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await answerDeckMoves(A1_MOVES, 200);
       
       await waitFor(() => {
-        const saved = JSON.parse(localStorage.getItem('tp_progress'));
+        const saved = JSON.parse(localStorage.getItem('tp_progress')!);
         // After completing, should have at least one attempt recorded
         expect(saved['A1']).toBeDefined();
         expect(saved['A1'].attempts.length).toBeGreaterThan(0);
