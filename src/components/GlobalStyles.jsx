@@ -14,10 +14,13 @@ export default function GlobalStyles() {
         --bg:        #0f0f0f;
         --surface:   #1a1a1a;
         --border:    #2e2e2e;
+        --border-subtle: #1e1e1e;
         --text:      #e8e8e8;
+        --text-on-accent: #fff;
         --muted:     #666;
         --accent:    #c0392b;
         --green:     #27ae60;
+        --overlay:   rgba(0, 0, 0, 0.55);
         --partner-a:rgb(93, 226, 93);
         --partner-b: rgb(120, 165, 255);
         --font-disp: 'Barlow Condensed', sans-serif;
@@ -74,8 +77,11 @@ export default function GlobalStyles() {
         padding: 8px 14px;
         transition: background 0.1s, border-color 0.1s;
       }
-      .btn:hover { background: #252525; border-color: #444; }
-      .btn:active { background: #2e2e2e; }
+      .btn:hover {
+        background: color-mix(in srgb, var(--surface), white 5%);
+        border-color: color-mix(in srgb, var(--border), white 10%);
+      }
+      .btn:active { background: color-mix(in srgb, var(--surface), white 9%); }
 
       fieldset {
         border: 1px solid var(--border);
@@ -183,10 +189,13 @@ export default function GlobalStyles() {
 
       .btn-primary {
         background: var(--accent);
-        color: #fff;
+        color: var(--text-on-accent);
         border-color: var(--accent);
       }
-      .btn-primary:hover { background: #a93226; border-color: #a93226; }
+      .btn-primary:hover {
+        background: color-mix(in srgb, var(--accent) 88%, black);
+        border-color: color-mix(in srgb, var(--accent) 88%, black);
+      }
 
       .btn-ghost {
         background: transparent;
@@ -203,11 +212,11 @@ export default function GlobalStyles() {
         padding: 10px 14px;
         font-size: 0.95rem;
         border-color: var(--border);
-        color: #fff;
+        color: var(--text-on-accent);
       }
       .option-btn .partner-a,
       .option-btn .partner-b {
-        color: #fff;
+        color: var(--text-on-accent);
       }
 
       .move-row {
@@ -238,7 +247,7 @@ export default function GlobalStyles() {
         position: fixed;
         inset: 0;
         z-index: 100;
-        background: rgba(0, 0, 0, 0.55);
+        background: var(--overlay);
       }
 
       .popover {
@@ -320,7 +329,7 @@ export default function GlobalStyles() {
         border-bottom: 1px solid var(--border);
       }
       .attempts-table th:not(:first-child) { padding-left: 14px; }
-      .attempts-table td { padding: 5px 0; border-bottom: 1px solid #1e1e1e; font-size: 12px; }
+      .attempts-table td { padding: 5px 0; border-bottom: 1px solid var(--border-subtle); font-size: 12px; }
       .attempts-table td:not(:first-child) { padding-left: 14px; }
       .attempts-table tr:first-child td { color: var(--text); }
       .attempts-table tr:not(:first-child) td { color: var(--muted); }
