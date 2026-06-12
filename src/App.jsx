@@ -3,11 +3,14 @@ import GlobalStyles from "./components/GlobalStyles"
 import HomeScreen from "./components/HomeScreen"
 import ProgressScreen from "./components/ProgressScreen"
 import TrainingScreen from "./components/TrainingScreen"
+import WhatsNewPopover from "./components/WhatsNewPopover"
 import { DECKS } from "./data/decks"
+import { useWhatsNew } from "./hooks/useWhatsNew"
 import { useAppState } from "./useAppState"
 import { nextDeckId, precomputeDeckOptions } from "./utils/deckUtils"
 
 export default function App() {
+  const { open: whatsNewOpen, dismiss: dismissWhatsNew } = useWhatsNew()
   const {
     view,
     progress,
@@ -69,7 +72,7 @@ export default function App() {
       <div style={{marginBottom: '1em', color: 'gray'}}>
         (c) 0xreentrant 2026 · <a href="updates.html" style={{color: 'gray', textDecoration: 'none'}}>Latest Updates</a>
       </div>
-
+      <WhatsNewPopover open={whatsNewOpen} onDismiss={dismissWhatsNew} />
     </div>
   )
 }

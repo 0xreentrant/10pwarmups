@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import App from './App';
+import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from './data/whatsNew';
 
 const A1_MOVES = ['Kneeling Granby', 'Seated Granby', 'Bridging Granby', 'Belly to Belly Granby', 'Granby Flow'];
 
@@ -31,6 +32,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
   
   beforeEach(() => {
     localStorage.clear();
+    localStorage.setItem(WHATS_NEW_STORAGE_KEY, APP_RELEASE_VERSION);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

@@ -285,6 +285,15 @@ export default function GlobalStyles() {
         color: var(--muted);
         line-height: 1.5;
       }
+      .popover-body a {
+        color: var(--text);
+        text-decoration: underline;
+        text-decoration-color: var(--accent);
+        text-underline-offset: 2px;
+      }
+      .popover-body a:hover {
+        color: var(--accent);
+      }
 
       .stat-row td { padding: 4px 0; font-size: 12px; color: var(--muted); }
       .stat-row td:last-child { padding-left: 20px; color: var(--text); font-weight: 600; }
