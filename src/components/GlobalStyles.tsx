@@ -14,10 +14,13 @@ export default function GlobalStyles() {
         --bg:        #0f0f0f;
         --surface:   #1a1a1a;
         --border:    #2e2e2e;
+        --border-subtle: #1e1e1e;
         --text:      #e8e8e8;
+        --text-on-accent: #fff;
         --muted:     #666;
         --accent:    #c0392b;
         --green:     #27ae60;
+        --overlay:   rgba(0, 0, 0, 0.55);
         --partner-a:rgb(93, 226, 93);
         --partner-b: rgb(120, 165, 255);
         --font-disp: 'Barlow Condensed', sans-serif;
@@ -53,6 +56,16 @@ export default function GlobalStyles() {
       p { margin: 0; }
 
       button {
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: none;
+        font: inherit;
+        color: inherit;
+        cursor: pointer;
+      }
+
+      .btn {
         font-family: var(--font-disp);
         font-weight: 700;
         font-size: 1rem;
@@ -62,11 +75,13 @@ export default function GlobalStyles() {
         color: var(--text);
         border: 1px solid var(--border);
         padding: 8px 14px;
-        cursor: pointer;
         transition: background 0.1s, border-color 0.1s;
       }
-      button:hover { background: #252525; border-color: #444; }
-      button:active { background: #2e2e2e; }
+      .btn:hover {
+        background: color-mix(in srgb, var(--surface), white 5%);
+        border-color: color-mix(in srgb, var(--border), white 10%);
+      }
+      .btn:active { background: color-mix(in srgb, var(--surface), white 9%); }
 
       fieldset {
         border: 1px solid var(--border);
@@ -174,10 +189,13 @@ export default function GlobalStyles() {
 
       .btn-primary {
         background: var(--accent);
-        color: #fff;
+        color: var(--text-on-accent);
         border-color: var(--accent);
       }
-      .btn-primary:hover { background: #a93226; border-color: #a93226; }
+      .btn-primary:hover {
+        background: color-mix(in srgb, var(--accent) 88%, black);
+        border-color: color-mix(in srgb, var(--accent) 88%, black);
+      }
 
       .btn-ghost {
         background: transparent;
@@ -194,11 +212,11 @@ export default function GlobalStyles() {
         padding: 10px 14px;
         font-size: 0.95rem;
         border-color: var(--border);
-        color: #fff;
+        color: var(--text-on-accent);
       }
       .option-btn .partner-a,
       .option-btn .partner-b {
-        color: #fff;
+        color: var(--text-on-accent);
       }
 
       .move-row {
@@ -211,6 +229,80 @@ export default function GlobalStyles() {
       .move-symbol { color: var(--muted); min-width: 14px; }
       .move-symbol.correct { color: var(--green); }
       .move-symbol.wrong   { color: var(--accent); }
+
+      .move-label-btn {
+        font-family: var(--font-body);
+        font-size: 12px;
+        font-weight: 400;
+        letter-spacing: normal;
+        text-transform: none;
+        text-align: left;
+      }
+      .move-label-btn:hover .partner-a,
+      .move-label-btn:hover .partner-b {
+        text-decoration: underline;
+      }
+
+      .popover-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: var(--overlay);
+      }
+
+      .popover {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 101;
+        width: min(448px, calc(100vw - 32px));
+        background: var(--surface);
+        border: 1px solid var(--border);
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+      .popover-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .popover-title {
+        font-family: var(--font-disp);
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .popover-close {
+        background: none;
+        border: none;
+        padding: 0 2px;
+        cursor: pointer;
+        color: var(--muted);
+        font-size: 1.1rem;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+      .popover-close:hover {
+        color: var(--text);
+      }
+      .popover-body {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+      .popover-body a {
+        color: var(--text);
+        text-decoration: underline;
+        text-decoration-color: var(--accent);
+        text-underline-offset: 2px;
+      }
+      .popover-body a:hover {
+        color: var(--accent);
+      }
 
       .stat-row td { padding: 4px 0; font-size: 12px; color: var(--muted); }
       .stat-row td:last-child { padding-left: 20px; color: var(--text); font-weight: 600; }
@@ -237,7 +329,7 @@ export default function GlobalStyles() {
         border-bottom: 1px solid var(--border);
       }
       .attempts-table th:not(:first-child) { padding-left: 14px; }
-      .attempts-table td { padding: 5px 0; border-bottom: 1px solid #1e1e1e; font-size: 12px; }
+      .attempts-table td { padding: 5px 0; border-bottom: 1px solid var(--border-subtle); font-size: 12px; }
       .attempts-table td:not(:first-child) { padding-left: 14px; }
       .attempts-table tr:first-child td { color: var(--text); }
       .attempts-table tr:not(:first-child) td { color: var(--muted); }

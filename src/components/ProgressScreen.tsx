@@ -43,7 +43,7 @@ function AllDecksOverview({ progress, onDeckSelect }: AllDecksOverviewProps) {
             return (
               <tr key={d.id} style={{ borderBottom: "1px solid #1a1a1a" }}>
                 <td style={{ padding: "5px 0" }}>
-                  <button className="btn-ghost" style={{ padding: 0, color: done ? "var(--green)" : "var(--muted)", textDecoration: "underline", fontSize: "0.85rem", fontFamily: "var(--font-disp)", fontWeight: 700 }}
+                  <button className="btn btn-ghost" style={{ padding: 0, color: done ? "var(--green)" : "var(--muted)", textDecoration: "underline", fontSize: "0.85rem", fontFamily: "var(--font-disp)", fontWeight: 700 }}
                     onClick={() => onDeckSelect(d.id)}>
                     {deckLabel(d)}
                   </button>
@@ -132,7 +132,7 @@ export default function ProgressScreen({ deckId, progress, onBack, onDeckSelect 
   return (
     <div style={{ paddingTop: 20, paddingBottom: 48 }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 20 }}>
-        <button className="btn-ghost" onClick={onBack} style={{ padding: "6px 0" }}>←</button>
+        <button className="btn btn-ghost" onClick={onBack} style={{ padding: "6px 0" }}>←</button>
         <h2>Progress</h2>
       </div>
 

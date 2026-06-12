@@ -16,6 +16,7 @@ export interface Deck {
   name: string
   link?: string
   moves: Move[]
+  notes?: Record<number, string>
 }
 
 export interface MoveAnswer {

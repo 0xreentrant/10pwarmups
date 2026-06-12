@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createDistractorPool, precomputeDeckOptions } from './utils/deckUtils'
+import { createDistractorPool, getMoveNote, precomputeDeckOptions } from './utils/deckUtils'
 import type { Deck } from './types/domain'
 
 const mockDecks: Deck[] = [
@@ -24,6 +24,31 @@ const mockDecks: Deck[] = [
     ],
   },
 ]
+
+describe('getMoveNote', () => {
+  const deckWithNotes: Deck = {
+    id: 'T1',
+    name: 'Test',
+    moves: [{ text: 'Alpha', partner: 'A' }, { text: 'Beta', partner: 'B' }],
+    notes: { 0: 'First move note', 1: '   ' },
+  }
+
+  it('returns trimmed note when present', () => {
+    expect(getMoveNote(deckWithNotes, 0)).toBe('First move note')
+  })
+
+  it('returns null for blank note', () => {
+    expect(getMoveNote(deckWithNotes, 1)).toBe(null)
+  })
+
+  it('returns null for missing key', () => {
+    expect(getMoveNote(deckWithNotes, 2)).toBe(null)
+  })
+
+  it('returns null when deck has no notes object', () => {
+    expect(getMoveNote({ id: 'T2', name: 'Empty', moves: [] }, 0)).toBe(null)
+  })
+})
 
 describe('createDistractorPool', () => {
   it('collects unique move names from all decks without partner', () => {

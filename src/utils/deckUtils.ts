@@ -7,6 +7,11 @@ export function deckLabel(deck: Deck): string {
   return deck.series ? deck.id : deck.name
 }
 
+export function getMoveNote(deck: Deck, moveIndex: number): string | null {
+  const note = deck.notes?.[moveIndex]
+  return note?.trim() ? note : null
+}
+
 function shuffleArray<T>(items: T[]): T[] {
   const arr = [...items]
   for (let i = arr.length - 1; i > 0; i--) {

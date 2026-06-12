@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import DeckLink from "./DeckLink"
+import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS, SERIES } from "../data/decks"
 import type { Deck, ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
@@ -36,7 +37,7 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
         <progress value={prog.bestStreak} max={total} style={{ marginTop: 5 }} />
       </td>
       <td style={{ padding: "8px 0", verticalAlign: "middle", whiteSpace: "nowrap" }}>
-        <button className="btn-primary" onClick={() => {
+        <button className="btn btn-primary" onClick={() => {
           analytics.event({
             action: 'deck_selected',
             category: 'Training',
@@ -101,15 +102,17 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
 
       <hr />
       <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-        <button onClick={onStats}>Stats</button>
-        {!resetConfirm
-          ? <button onClick={onReset}>Reset all</button>
-          : <>
-              <button onClick={onReset}>Confirm reset</button>
-              <button className="btn-ghost" onClick={onCancelReset}>Cancel</button>
-            </>
-        }
+        <button className="btn" onClick={onStats}>Stats</button>
+        <button
+          className="btn"
+          onClick={() => { if (!resetConfirm) onReset() }}
+        >Reset all</button>
       </div>
+      <ResetConfirmPopover
+        open={resetConfirm}
+        onConfirm={onReset}
+        onCancel={onCancelReset}
+      />
     </div>
   )
 }

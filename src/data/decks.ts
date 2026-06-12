@@ -1,5 +1,6 @@
 // ─── DATA ────────────────────────────────────────────────────────────────────
-// Each deck: { id, series, name, link?, moves }
+// Each deck: { id, series, name, link?, moves, notes? }
+// notes?: Record<number, string> — keyed by move index within the deck
 // Each move: { text: string, partner: "A" | "B" }
 // Partner B moves shown in red
 
