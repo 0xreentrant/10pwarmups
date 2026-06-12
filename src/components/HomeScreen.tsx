@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 import DeckLink from "./DeckLink"
 import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS, SERIES } from "../data/decks"
@@ -70,7 +70,6 @@ interface HomeScreenProps {
 }
 
 export default function HomeScreen({ progress, onDeckClick, onStats, onReset, resetConfirm, onCancelReset }: HomeScreenProps) {
-  const seriesNavRef = useRef<HTMLElement>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
 
   useEffect(() => {
@@ -78,22 +77,13 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
   }, [])
 
   useEffect(() => {
-    const nav = seriesNavRef.current
-    if (!nav) return
+    const updateScrollTopVisibility = () => {
+      setShowScrollTop(window.scrollY > 260)
+    }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        const { bottom } = entry.boundingClientRect
-        setShowScrollTop(prev => {
-          if (bottom < -24) return true
-          if (bottom >= 0) return false
-          return prev
-        })
-      },
-      { threshold: 0 }
-    )
-    observer.observe(nav)
-    return () => observer.disconnect()
+    updateScrollTopVisibility()
+    window.addEventListener("scroll", updateScrollTopVisibility, { passive: true })
+    return () => window.removeEventListener("scroll", updateScrollTopVisibility)
   }, [])
 
   return (
@@ -103,7 +93,7 @@ export default function HomeScreen({ progress, onDeckClick, onStats, onReset, re
       <p className="text-[11px] text-muted mt-0.5 mb-5 tracking-wide">openthesystem.app</p>
       <p className="text-[11px] text-muted mt-0.5 mb-8 tracking-widest uppercase">34 decks · 8 series</p>
 
-      <nav ref={seriesNavRef} className="flex justify-between items-center gap-1 mb-7 border-y border-border py-2">
+      <nav className="flex justify-between items-center gap-1 mb-7 border-y border-border py-2">
         {SERIES.map(series => (
           <a key={series.id} href={`#series-${series.id}`} className={SERIES_NAV_LINK}>{series.id}</a>
         ))}
