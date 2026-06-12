@@ -1,9 +1,19 @@
+import { execSync } from "child_process"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
-const releaseVersion = new Date().toISOString().slice(0, 10)
+const releaseVersion = new Date().toISOString()
+
+function isBumpRetryPush() {
+  try {
+    const subject = execSync("git log -1 --format=%s", { encoding: "utf8" }).trim()
+    return subject === "chore: bump release version"
+  } catch {
+    return false
+  }
+}
 
 const whatsNewPath = path.join(root, "src/data/whatsNew.ts")
 let whatsNew = fs.readFileSync(whatsNewPath, "utf8")
@@ -11,7 +21,9 @@ const currentRelease = whatsNew.match(/APP_RELEASE_VERSION = "([^"]+)"/)?.[1]
 
 let changed = false
 
-if (currentRelease !== releaseVersion) {
+if (isBumpRetryPush()) {
+  console.log(`APP_RELEASE_VERSION already ${currentRelease} (bump commit ready to push)`)
+} else if (currentRelease !== releaseVersion) {
   whatsNew = whatsNew.replace(
     /export const APP_RELEASE_VERSION = "[^"]+"/,
     `export const APP_RELEASE_VERSION = "${releaseVersion}"`
