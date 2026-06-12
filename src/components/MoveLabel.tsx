@@ -1,14 +1,14 @@
-import type { CSSProperties } from "react"
 import type { Partner } from "../types/domain"
 
 interface MoveLabelProps {
   move: { text: string, partner?: Partner }
-  style?: CSSProperties
+  className?: string
 }
 
-export default function MoveLabel({ move, style }: MoveLabelProps) {
+export default function MoveLabel({ move, className = "" }: MoveLabelProps) {
+  const partnerClass = move.partner === "B" ? "text-partner-b" : "text-partner-a"
   return (
-    <span className={move.partner === "B" ? "partner-b" : "partner-a"} style={style}>
+    <span className={`${partnerClass} ${className}`.trim()}>
       {move.text}
     </span>
   )

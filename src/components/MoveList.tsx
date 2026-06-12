@@ -13,14 +13,18 @@ export default function MoveList({ deck, moveSequence, visibleThroughIndex }: Mo
   const { moveIndex, popoverRef, open, close } = useMoveNotesPopover()
 
   return (
-    <div className="move-list" style={{ position: "relative" }}>
+    <div className="relative">
       {deck.moves.map((move, i) => {
         if (i > visibleThroughIndex) return null
         const answered = moveSequence[i]
-        const symCls = "move-symbol" + (answered?.correct ? " correct" : answered ? " wrong" : "")
+        const symbolClass = answered?.correct
+          ? "text-green"
+          : answered
+          ? "text-accent"
+          : "text-muted"
         return (
-          <div key={i} className="move-row">
-            <span className={symCls}>{answered?.correct ? "✓" : answered ? "✗" : "○"}</span>
+          <div key={i} className="flex gap-2.5 py-0.5 items-baseline text-xs">
+            <span className={`min-w-3.5 ${symbolClass}`}>{answered?.correct ? "✓" : answered ? "✗" : "○"}</span>
             <button
               type="button"
               className="move-label-btn"

@@ -1,5 +1,4 @@
 import CompletionScreen from "./components/CompletionScreen"
-import GlobalStyles from "./components/GlobalStyles"
 import HomeScreen from "./components/HomeScreen"
 import ProgressScreen from "./components/ProgressScreen"
 import TrainingScreen from "./components/TrainingScreen"
@@ -30,8 +29,7 @@ export default function App() {
   } = useAppState(DECKS, precomputeDeckOptions)
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", padding: "0 16px" }}>
-      <GlobalStyles />
+    <div className="mx-auto max-w-[480px] px-4">
       {view === "home" && (
         <HomeScreen
           progress={progress}
@@ -69,8 +67,8 @@ export default function App() {
           onDeckSelect={setStatsForDeck}
         />
       )}
-      <div style={{marginBottom: '1em', color: 'gray'}}>
-        (c) 0xreentrant 2026 · <a href="updates.html" style={{color: 'gray', textDecoration: 'none'}}>Latest Updates</a>
+      <div className="mb-4 text-muted">
+        (c) 0xreentrant 2026 · <a href="updates.html" className="text-muted no-underline">Latest Updates</a>
       </div>
       <WhatsNewPopover open={whatsNewOpen} onDismiss={dismissWhatsNew} />
     </div>

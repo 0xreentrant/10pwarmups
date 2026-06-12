@@ -1,5 +1,17 @@
 import '@testing-library/jest-dom'
 
+class IntersectionObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  configurable: true,
+  value: IntersectionObserverMock,
+})
+
 const localStorageMock = (() => {
   let store: Record<string, string> = {}
   return {

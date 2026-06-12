@@ -38,7 +38,7 @@ describe('MoveList', () => {
     clickMoveLabel('Move Alpha')
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     expect(screen.getByText('Alpha coaching note')).toBeInTheDocument()
-    expect(document.querySelector('.popover-backdrop')).toBeInTheDocument()
+    expect(screen.getByTestId('popover-backdrop')).toBeInTheDocument()
   })
 
   it('shows empty state when move has no notes', () => {
@@ -64,7 +64,7 @@ describe('MoveList', () => {
   it('closes popover on backdrop click', () => {
     renderList()
     clickMoveLabel('Move Alpha')
-    fireEvent.mouseDown(document.querySelector('.popover-backdrop')!)
+    fireEvent.mouseDown(screen.getByTestId('popover-backdrop'))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

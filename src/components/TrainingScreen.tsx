@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import { getLongestStreak } from "../appMachine"
 import DeckLink from "./DeckLink"
-import MoveLabel from "./MoveLabel"
+import OptionMoveText from "./OptionMoveText"
 import MoveList from "./MoveList"
 import type { Deck, Session } from "../types/domain"
 import * as analytics from "../utils/analytics"
@@ -23,21 +23,21 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack }:
   }, [deck.id])
 
   return (
-    <div style={{ paddingTop: 20, paddingBottom: 48 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 20 }}>
+    <div className="pt-5 pb-12">
+      <div className="flex justify-between items-start mb-5">
         <div>
-          {deck.series && <span className="deck-id" style={{ display: "block", marginBottom: 2 }}>{deck.id}</span>}
+          {deck.series && <span className="block mb-0.5 font-disp font-extrabold text-base tracking-wide text-muted min-w-8">{deck.id}</span>}
           <h2>{deck.name}</h2>
           <DeckLink link={deck.link} />
         </div>
-        <div className="streak-badge">🔥 {sessionBestStreak}</div>
+        <div className="font-disp font-bold text-lg tracking-wide text-accent">🔥 {sessionBestStreak}</div>
       </div>
 
-      <fieldset style={{ marginBottom: 14 }}>
+      <fieldset className="mb-3.5">
         <legend>Sequence ({moveIdx}/{total})</legend>
-        <div style={{ marginBottom: 10, fontSize: 11, display: "flex", gap: 16 }}>
-          <span className="partner-a">■ Person A</span>
-          <span className="partner-b">■ Person B</span>
+        <div className="mb-2.5 text-[11px] flex gap-4">
+          <span className="text-partner-a">■ Person A</span>
+          <span className="text-partner-b">■ Person B</span>
         </div>
         <MoveList
           deck={deck}
@@ -46,16 +46,16 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack }:
         />
       </fieldset>
 
-      <fieldset style={{ marginBottom: 16 }}>
+      <fieldset className="mb-4">
         <legend>What's next?</legend>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <div className="flex flex-col gap-1.5">
           {session.options.map((opt, i) => (
             <button
               key={i}
               className="btn option-btn"
               onClick={() => onOptionClick(i)}
             >
-              <MoveLabel move={opt} />
+              <OptionMoveText move={opt} />
             </button>
           ))}
         </div>

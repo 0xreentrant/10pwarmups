@@ -7,10 +7,10 @@ interface DeckLinkProps {
 export default function DeckLink({ link }: DeckLinkProps) {
   if (!link) return null
   return (
-    <a 
-      className="deck-link" 
-      href={link} 
-      target="_blank" 
+    <a
+      className="inline-block text-[11px] text-muted no-underline tracking-wide mt-0.5 hover:text-accent hover:underline"
+      href={link}
+      target="_blank"
       rel="noopener noreferrer"
       onClick={() => {
         analytics.event({

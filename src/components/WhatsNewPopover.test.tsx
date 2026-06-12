@@ -13,7 +13,7 @@ describe("What's New popover", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument()
     expect(screen.getByText("What's New")).toBeInTheDocument()
     expect(screen.getByText(/Trainer works offline/)).toBeInTheDocument()
-    const link = screen.getByRole("link", { name: "install it to your phone like an app" })
+    const link = screen.getByRole("link", { name: /install it to your phone like an app/i })
     expect(link).toHaveAttribute("href", "https://support.google.com/chrome/answer/9658361")
     expect(link).toHaveAttribute("target", "_blank")
   })

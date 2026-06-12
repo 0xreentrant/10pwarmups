@@ -6,7 +6,10 @@ import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from './data/whatsNew';
 const A1_MOVES = ['Kneeling Granby', 'Seated Granby', 'Bridging Granby', 'Belly to Belly Granby', 'Granby Flow'];
 
 function getOptionButtons() {
-  return Array.from(document.querySelectorAll('button.option-btn'));
+  const legend = screen.getByText(/What's next/)
+  const fieldset = legend.closest('fieldset')
+  if (!fieldset) throw new Error('Options fieldset not found')
+  return Array.from(fieldset.querySelectorAll('button'))
 }
 
 function clickOptionWithText(text: string) {
@@ -53,7 +56,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       expect(screen.getByText(/Series B — Sit-Ups/)).toBeInTheDocument();
       expect(screen.getByText(/Series C — Guard Passing/)).toBeInTheDocument();
       expect(screen.getByText(/Series H — De La Riva/)).toBeInTheDocument();
-      expect(screen.getByText(/Named Flows/)).toBeInTheDocument();
+      expect(screen.getAllByText(/Named Flows/).length).toBeGreaterThan(0);
       expect(screen.getByText('Attack Series')).toBeInTheDocument();
       expect(screen.getByText('Ramey Flow')).toBeInTheDocument();
       expect(screen.queryByText(/Series I/)).not.toBeInTheDocument();
@@ -199,10 +202,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       fireEvent.click(trainButtons[0]);
       
-      // Verify streak badge exists (div with class streak-badge should contain fire emoji)
-      const badges = document.querySelectorAll('.streak-badge');
-      expect(badges.length).toBeGreaterThan(0);
-      expect(badges[0].textContent).toMatch(/🔥/);
+      expect(screen.getByText(/🔥/)).toBeInTheDocument();
     });
 
     it('increments streak for correct answers', async () => {
