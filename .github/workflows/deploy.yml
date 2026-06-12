@@ -26,7 +26,7 @@ jobs:
       - run: npm ci
       - run: npm run test:run
       - run: npm run build
-      - run: npm run test:lhci
+      - run: npm run test:pwa
       - run: npm run test:e2e
       - uses: actions/upload-pages-artifact@v3
         with:
