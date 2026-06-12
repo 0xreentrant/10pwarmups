@@ -5,7 +5,7 @@ import { fileURLToPath } from "url"
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 const releaseVersion = new Date().toISOString().slice(0, 10)
 
-const whatsNewPath = path.join(root, "src/data/whatsNew.js")
+const whatsNewPath = path.join(root, "src/data/whatsNew.ts")
 let whatsNew = fs.readFileSync(whatsNewPath, "utf8")
 const currentRelease = whatsNew.match(/APP_RELEASE_VERSION = "([^"]+)"/)?.[1]
 

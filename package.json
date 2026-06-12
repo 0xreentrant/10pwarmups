@@ -4,15 +4,16 @@
   "description": "",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc -b --noEmit && vite build",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "machine:view": "node scripts/viewMachine.mjs",
-    "test:pwa": "vitest run --config vitest.pwa.config.js",
+    "test:pwa": "vitest run --config vitest.pwa.config.ts",
     "test:e2e": "node tests/e2e/offline.mjs",
-    "test:all": "npm run test:run && npm run build && npm run test:pwa && npm run test:e2e"
+    "test:all": "npm run test:run && npm run build && npm run test:pwa && npm run test:e2e",
+    "type-check": "tsc -b --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -23,9 +24,13 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.2",
     "jsdom": "^29.1.1",
     "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
     "vite": "^8.0.16",
     "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.1.8"
