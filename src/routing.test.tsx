@@ -177,13 +177,37 @@ describe("routing", () => {
     }, { timeout: 5000 })
   })
 
-  it("does not render completed results when visiting completed URL without an active completed session", async () => {
-    await renderWithRouter("/A1/completed")
+  it("browser forward from home returns to completed results after backing out of completion", async () => {
+    const { router, history } = await renderWithRouter("/")
+    await startFirstDeck()
+    await answerDeckMoves(A1_MOVES)
 
     await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/A1/completed")
+    }, { timeout: 5000 })
+
+    history.back()
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/")
+      expect(screen.getByText("10th Planet")).toBeInTheDocument()
+    })
+
+    history.forward()
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/A1/completed")
+      expect(screen.getByRole("heading", { level: 2 }).textContent).toMatch(/Perfect/)
+    }, { timeout: 5000 })
+  })
+
+  it("redirects direct completed URL visits to home without an active completed session", async () => {
+    const { router } = await renderWithRouter("/A1/completed")
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/")
+      expect(screen.getByText("10th Planet")).toBeInTheDocument()
       expect(screen.queryByRole("heading", { level: 2, name: /Perfect|Complete/ })).not.toBeInTheDocument()
-      expect(screen.getByText("Summary")).toBeInTheDocument()
-      expect(screen.getByText("Kneeling")).toBeInTheDocument()
     })
   })
 

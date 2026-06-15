@@ -84,9 +84,21 @@ export type AppEvent =
   | { type: "RESET" }
   | { type: "CANCEL_RESET" }
   | { type: "GO_HOME" }
+  | { type: "RESTORE_COMPLETED" }
   | { type: "REQUEST_EXIT" }
   | { type: "CANCEL_EXIT" }
   | { type: "CONFIRM_EXIT" }
+
+export function hasRestorableCompletion(
+  snap: { value: unknown; context: AppContext },
+  deckId: string,
+): boolean {
+  return (
+    snap.context.currentDeckId === deckId &&
+    !!snap.context.session?.locked &&
+    !!snap.context.session.finalAttempt
+  )
+}
 
 function getDeck(context: AppContext): Deck | null {
   return context.currentDeckId
@@ -250,6 +262,8 @@ const appMachineSetup = setup({
       if (!d || !context.session) return false
       return context.session.moveSequence.length === d.moves.length - 1
     },
+    canRestoreCompleted: ({ context }) =>
+      !!context.session?.locked && !!context.session.finalAttempt && !!context.currentDeckId,
   },
 })
 
@@ -268,6 +282,10 @@ export const appMachine = appMachineSetup.createMachine({
   states: {
     home: {
       on: {
+        RESTORE_COMPLETED: {
+          guard: "canRestoreCompleted",
+          target: "completed",
+        },
         START_DECK: {
           guard: "deckExists",
           target: "training",
@@ -328,7 +346,6 @@ export const appMachine = appMachineSetup.createMachine({
         },
         GO_HOME: {
           target: "home",
-          actions: "clearSession",
         },
       },
     },

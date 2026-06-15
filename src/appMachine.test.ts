@@ -145,6 +145,29 @@ describe("appMachine", () => {
     expect(actor.getSnapshot().context.progress.A1.bestStreak).toBe(3)
   })
 
+  it("preserves completed session when returning home", () => {
+    const actor = makeActor()
+    completeDeck(actor)
+    actor.send({ type: "GO_HOME" })
+
+    const snap = actor.getSnapshot()
+    expect(snap.value).toBe("home")
+    expect(snap.context.currentDeckId).toBe("A1")
+    expect(snap.context.session?.locked).toBe(true)
+    expect(snap.context.session?.finalAttempt).toBeDefined()
+  })
+
+  it("restores completed state from a preserved session", () => {
+    const actor = makeActor()
+    completeDeck(actor)
+    actor.send({ type: "GO_HOME" })
+    actor.send({ type: "RESTORE_COMPLETED" })
+
+    const snap = actor.getSnapshot()
+    expect(snap.value).toBe("completed")
+    expect(snap.context.session?.finalAttempt).toBeDefined()
+  })
+
   it("requires confirmation before clearing all progress", () => {
     const actor = makeActor()
     completeDeck(actor)

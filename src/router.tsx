@@ -15,8 +15,10 @@ import ProgressScreen from "./components/ProgressScreen"
 import TrainingScreen from "./components/TrainingScreen"
 import WhatsNewPopover from "./components/WhatsNewPopover"
 import { appActor, getAppSnapshot } from "./appActor"
+import { hasRestorableCompletion } from "./appMachine"
 import { DECKS } from "./data/decks"
 import { useWhatsNew } from "./hooks/useWhatsNew"
+import { consumePopNavigation, trackRouterHistoryActions } from "./navigationHistory"
 import { nextDeckId } from "./utils/deckUtils"
 
 const rootRoute = createRootRoute({
@@ -68,18 +70,26 @@ const completedRoute = createRoute({
   path: "/completed",
   beforeLoad: ({ params }) => {
     const snap = getAppSnapshot()
-    if (snap.value === "completed" && snap.context.currentDeckId === params.deckId) {
+    const deckId = params.deckId
+    if (snap.value === "completed" && snap.context.currentDeckId === deckId) {
       return
+    }
+    if (hasRestorableCompletion(snap, deckId)) {
+      if (consumePopNavigation()) {
+        appActor.send({ type: "RESTORE_COMPLETED" })
+        return
+      }
+      throw redirect({ to: "/" })
     }
     if (
       snap.value === "training" &&
-      snap.context.currentDeckId === params.deckId &&
+      snap.context.currentDeckId === deckId &&
       snap.context.session &&
       !snap.context.session.locked
     ) {
-      throw redirect({ to: "/$deckId/training", params: { deckId: params.deckId } })
+      throw redirect({ to: "/$deckId/training", params: { deckId } })
     }
-    throw redirect({ to: "/$deckId", params: { deckId: params.deckId } })
+    throw redirect({ to: "/" })
   },
   component: CompletedRoute,
 })
@@ -108,6 +118,10 @@ declare module "@tanstack/react-router" {
 function RootLayout() {
   const routerInstance = useRouter()
   const { open: whatsNewOpen, dismiss: dismissWhatsNew } = useWhatsNew()
+
+  useEffect(() => {
+    return trackRouterHistoryActions(routerInstance.history)
+  }, [routerInstance])
 
   useEffect(() => {
     return routerInstance.history.block({
