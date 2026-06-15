@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createDistractorPool, getMoveNote, precomputeDeckOptions } from './utils/deckUtils'
+import { createDistractorPool, getMoveNote, homeSectionHash, precomputeDeckOptions } from './utils/deckUtils'
 import type { Deck } from './types/domain'
 
 const mockDecks: Deck[] = [
@@ -125,5 +125,15 @@ describe('precomputeDeckOptions', () => {
       expect(wrongTexts.every(t => t !== move.text)).toBe(true)
       expect(new Set(wrongTexts).size).toBe(3)
     })
+  })
+})
+
+describe('homeSectionHash', () => {
+  it('returns series section hash for series decks', () => {
+    expect(homeSectionHash(mockDecks[0])).toBe('series-A')
+  })
+
+  it('returns named flows hash for decks without a series', () => {
+    expect(homeSectionHash({ id: 'attack-series', name: 'Attack Series', moves: [] })).toBe('named-flows')
   })
 })

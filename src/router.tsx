@@ -19,7 +19,7 @@ import { hasRestorableCompletion } from "./appMachine"
 import { DECKS } from "./data/decks"
 import { useWhatsNew } from "./hooks/useWhatsNew"
 import { consumePopNavigation, trackRouterHistoryActions } from "./navigationHistory"
-import { nextDeckId } from "./utils/deckUtils"
+import { homeSectionHash, nextDeckId } from "./utils/deckUtils"
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -179,9 +179,11 @@ function HomeRoute() {
   const routerInstance = useRouter()
   const progress = useSelector(appActor, s => s.context.progress)
   const resetConfirm = useSelector(appActor, s => s.context.resetConfirm)
+  const scrollToSectionId = routerInstance.state.location.hash || undefined
 
   return (
     <HomeScreen
+      scrollToSectionId={scrollToSectionId}
       progress={progress}
       onDeckClick={deckId => {
         appActor.send({ type: "START_DECK", deckId })
@@ -255,7 +257,7 @@ function CompletedRoute() {
       }}
       onHome={() => {
         appActor.send({ type: "GO_HOME" })
-        routerInstance.navigate({ to: "/" })
+        routerInstance.navigate({ to: "/", hash: homeSectionHash(deck), hashScrollIntoView: false })
       }}
       onTryAgain={() => {
         appActor.send({ type: "START_DECK", deckId: deck.id })

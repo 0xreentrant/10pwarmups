@@ -7,6 +7,10 @@ export function deckLabel(deck: Deck): string {
   return deck.series ? deck.id : deck.name
 }
 
+export function homeSectionHash(deck: Deck): string {
+  return deck.series ? `series-${deck.series}` : "named-flows"
+}
+
 export function getMoveNote(deck: Deck, moveIndex: number): string | null {
   const note = deck.notes?.[moveIndex]
   return note?.trim() ? note : null

@@ -211,6 +211,24 @@ describe("routing", () => {
     })
   })
 
+  it("navigates home to the completed deck series section", async () => {
+    const { router } = await renderWithRouter("/")
+    await startFirstDeck()
+    await answerDeckMoves(A1_MOVES)
+
+    await waitFor(() => {
+      expect(screen.getByText(/← Home/)).toBeInTheDocument()
+    }, { timeout: 5000 })
+
+    fireEvent.click(screen.getByText(/← Home/))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/")
+      expect(router.state.location.hash).toBe("series-A")
+      expect(screen.getByText("10th Planet")).toBeInTheDocument()
+    })
+  })
+
   it("navigates to deck progress when Progress history is clicked from completion", async () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()

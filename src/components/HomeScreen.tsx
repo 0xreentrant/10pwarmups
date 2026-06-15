@@ -62,6 +62,7 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
 
 interface HomeScreenProps {
   progress: ProgressMap
+  scrollToSectionId?: string
   onDeckClick: (deckId: string) => void
   onStats: () => void
   onReset: () => void
@@ -69,12 +70,20 @@ interface HomeScreenProps {
   onCancelReset: () => void
 }
 
-export default function HomeScreen({ progress, onDeckClick, onStats, onReset, resetConfirm, onCancelReset }: HomeScreenProps) {
+export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, onStats, onReset, resetConfirm, onCancelReset }: HomeScreenProps) {
   const [showScrollTop, setShowScrollTop] = useState(false)
 
   useEffect(() => {
     analytics.pageview('/home')
   }, [])
+
+  useEffect(() => {
+    if (!scrollToSectionId) return
+    const section = document.getElementById(scrollToSectionId)
+    if (section && typeof section.scrollIntoView === "function") {
+      section.scrollIntoView()
+    }
+  }, [scrollToSectionId])
 
   useEffect(() => {
     const updateScrollTopVisibility = () => {
