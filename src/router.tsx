@@ -110,6 +110,29 @@ function RootLayout() {
   const { open: whatsNewOpen, dismiss: dismissWhatsNew } = useWhatsNew()
 
   useEffect(() => {
+    return routerInstance.history.block({
+      blockerFn: ({ action, nextLocation }) => {
+        const snap = getAppSnapshot()
+        const activeTrainingPath = snap.context.currentDeckId
+          ? `/${snap.context.currentDeckId}/training`
+          : null
+        const leavingActiveTraining =
+          snap.value === "training" &&
+          !!snap.context.session &&
+          !snap.context.session.locked &&
+          (action === "BACK" || nextLocation.pathname !== activeTrainingPath)
+
+        if (!leavingActiveTraining) return false
+        if (!snap.context.exitConfirm) {
+          appActor.send({ type: "REQUEST_EXIT" })
+        }
+        return true
+      },
+      enableBeforeUnload: false,
+    })
+  }, [routerInstance])
+
+  useEffect(() => {
     return routerInstance.subscribe("onResolved", () => {
       const path = routerInstance.state.location.pathname
       const snap = getAppSnapshot()
@@ -186,7 +209,7 @@ function TrainingRoute() {
         open={exitConfirm}
         onConfirm={() => {
           appActor.send({ type: "CONFIRM_EXIT" })
-          routerInstance.navigate({ to: "/" })
+          routerInstance.navigate({ to: "/", ignoreBlocker: true })
         }}
         onCancel={() => appActor.send({ type: "CANCEL_EXIT" })}
       />

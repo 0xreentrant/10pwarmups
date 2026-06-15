@@ -110,6 +110,19 @@ describe("routing", () => {
     expect(saved.A1.attempts[0].abandoned).toBe(true)
   })
 
+  it("blocks router navigation away from active training before the route changes", async () => {
+    const { router } = await renderWithRouter("/")
+    await startFirstDeck()
+    clickOptionWithText(A1_MOVES[0])
+    await new Promise(r => setTimeout(r, 100))
+
+    void router.navigate({ to: "/" })
+
+    await screen.findByText(/Leave this test/i)
+    expect(router.state.location.pathname).toBe("/A1/training")
+    expect(screen.queryByText("10th Planet")).not.toBeInTheDocument()
+  })
+
   it("cancelling exit warning keeps training active", async () => {
     await renderWithRouter("/")
     await startFirstDeck()
