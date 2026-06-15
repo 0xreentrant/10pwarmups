@@ -54,6 +54,13 @@ export function getLongestStreak(moveSequence: MoveAnswer[]): number {
   return longest
 }
 
+export function getActiveSessionElapsedMs(session: Session): number {
+  const now = Date.now()
+  const accumulatedPauseMs = session.accumulatedPauseMs ?? 0
+  const currentPauseMs = session.pausedAt ? now - session.pausedAt : 0
+  return now - session.startTime - accumulatedPauseMs - currentPauseMs
+}
+
 type PrecomputeDeckOptions = (deck: Deck, decks: Deck[]) => QuestionOption[][]
 
 interface AppContext {
@@ -62,9 +69,8 @@ interface AppContext {
   progress: ProgressMap
   currentDeckId: string | null
   session: Session | null
-  statsForDeck: string | null
-  statsReturnTo: "home" | "completion"
   resetConfirm: boolean
+  exitConfirm: boolean
 }
 
 interface AppInput {
@@ -72,16 +78,15 @@ interface AppInput {
   precomputeDeckOptions: PrecomputeDeckOptions
 }
 
-type AppEvent =
+export type AppEvent =
   | { type: "START_DECK"; deckId: string }
   | { type: "OPTION_CLICK"; optionIndex: number }
-  | { type: "OPEN_STATS"; deckId?: string }
-  | { type: "SET_STATS_DECK"; deckId: string | null }
   | { type: "RESET" }
   | { type: "CANCEL_RESET" }
   | { type: "GO_HOME" }
-  | { type: "GO_BACK" }
-  | { type: "BACK_HOME" }
+  | { type: "REQUEST_EXIT" }
+  | { type: "CANCEL_EXIT" }
+  | { type: "CONFIRM_EXIT" }
 
 function getDeck(context: AppContext): Deck | null {
   return context.currentDeckId
@@ -99,18 +104,12 @@ const appMachineSetup = setup({
     clearStorage: () => { resetProgress() },
     confirmReset: assign({ resetConfirm: true }),
     cancelReset: assign({ resetConfirm: false }),
+    confirmExit: assign({ exitConfirm: true }),
+    cancelExit: assign({ exitConfirm: false }),
     resetAll: assign(({ context }) => ({
       resetConfirm: false,
       progress: getDefaultProgress(context.decks),
     })),
-    setStatsDeck: assign({
-      statsForDeck: ({ event }) =>
-        event.type === "OPEN_STATS" || event.type === "SET_STATS_DECK"
-          ? (event.deckId ?? null)
-          : null,
-    }),
-    setStatsReturnHome: assign({ statsReturnTo: "home" }),
-    setStatsReturnCompletion: assign({ statsReturnTo: "completion" }),
     startDeck: assign(({ context, event }) => {
       if (event.type !== "START_DECK") return {}
       const d = context.decks.find(x => x.id === event.deckId)
@@ -122,9 +121,30 @@ const appMachineSetup = setup({
           moveSequence: [],
           currentStreak: 0,
           startTime: Date.now(),
+          pausedAt: null,
+          accumulatedPauseMs: 0,
           allOptions,
           options: allOptions[0],
           locked: false,
+        },
+      }
+    }),
+    pauseSession: assign(({ context }) => {
+      if (!context.session || context.session.pausedAt) return {}
+      return {
+        session: {
+          ...context.session,
+          pausedAt: Date.now(),
+        },
+      }
+    }),
+    resumeSession: assign(({ context }) => {
+      if (!context.session || !context.session.pausedAt) return {}
+      return {
+        session: {
+          ...context.session,
+          accumulatedPauseMs: context.session.accumulatedPauseMs + (Date.now() - context.session.pausedAt),
+          pausedAt: null,
         },
       }
     }),
@@ -161,7 +181,7 @@ const appMachineSetup = setup({
       const correct = opt.correct
       const newStreak = correct ? context.session.currentStreak + 1 : 0
       const newSeq = [...context.session.moveSequence, { moveIndex: moveIdx, correct }]
-      const duration = Math.floor((Date.now() - context.session.startTime) / 1000)
+      const duration = Math.floor(getActiveSessionElapsedMs(context.session) / 1000)
       const wrongMoves = newSeq.filter(x => !x.correct).map(x => x.moveIndex)
       const longestStreak = getLongestStreak(newSeq)
       const attempt = {
@@ -193,7 +213,7 @@ const appMachineSetup = setup({
     recordAbandonedAttempt: assign(({ context }) => {
       const d = getDeck(context)
       if (!d || !context.session || context.session.moveSequence.length === 0) return {}
-      const duration = Math.floor((Date.now() - context.session.startTime) / 1000)
+      const duration = Math.floor(getActiveSessionElapsedMs(context.session) / 1000)
       const wrongMoves = context.session.moveSequence.filter(x => !x.correct).map(x => x.moveIndex)
       const longestStreak = getLongestStreak(context.session.moveSequence)
       const attempt = {
@@ -230,7 +250,6 @@ const appMachineSetup = setup({
       if (!d || !context.session) return false
       return context.session.moveSequence.length === d.moves.length - 1
     },
-    returnToCompletion: ({ context }) => context.statsReturnTo === "completion",
   },
 })
 
@@ -242,9 +261,8 @@ export const appMachine = appMachineSetup.createMachine({
     progress: loadProgress(input.decks),
     currentDeckId: null,
     session: null,
-    statsForDeck: null,
-    statsReturnTo: "home" as const,
     resetConfirm: false,
+    exitConfirm: false,
   }),
   initial: "home",
   states: {
@@ -254,10 +272,6 @@ export const appMachine = appMachineSetup.createMachine({
           guard: "deckExists",
           target: "training",
           actions: "startDeck",
-        },
-        OPEN_STATS: {
-          target: "progress",
-          actions: ["setStatsReturnHome", "setStatsDeck"],
         },
         RESET: [
           {
@@ -278,7 +292,7 @@ export const appMachine = appMachineSetup.createMachine({
         OPTION_CLICK: [
           {
             guard: "isLastMove",
-            target: "completion",
+            target: "completed",
             actions: "completeSession",
           },
           {
@@ -286,20 +300,26 @@ export const appMachine = appMachineSetup.createMachine({
             actions: "advanceSession",
           },
         ],
-        BACK_HOME: [
+        REQUEST_EXIT: {
+          actions: ["pauseSession", "confirmExit"],
+        },
+        CANCEL_EXIT: {
+          actions: ["resumeSession", "cancelExit"],
+        },
+        CONFIRM_EXIT: [
           {
             guard: "hasMovesToAbandon",
             target: "home",
-            actions: ["recordAbandonedAttempt", "clearSession"],
+            actions: ["recordAbandonedAttempt", "clearSession", "cancelExit"],
           },
           {
             target: "home",
-            actions: "clearSession",
+            actions: ["clearSession", "cancelExit"],
           },
         ],
       },
     },
-    completion: {
+    completed: {
       on: {
         START_DECK: {
           guard: "deckExists",
@@ -309,34 +329,6 @@ export const appMachine = appMachineSetup.createMachine({
         GO_HOME: {
           target: "home",
           actions: "clearSession",
-        },
-        OPEN_STATS: {
-          target: "progress",
-          actions: ["setStatsReturnCompletion", "setStatsDeck"],
-        },
-      },
-    },
-    progress: {
-      on: {
-        GO_BACK: [
-          {
-            guard: "returnToCompletion",
-            target: "completion",
-          },
-          {
-            target: "home",
-          },
-        ],
-        GO_HOME: {
-          target: "home",
-        },
-        SET_STATS_DECK: {
-          actions: "setStatsDeck",
-        },
-        START_DECK: {
-          guard: "deckExists",
-          target: "training",
-          actions: "startDeck",
         },
       },
     },

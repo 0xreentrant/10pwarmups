@@ -1,0 +1,70 @@
+---
+description: Route guards, behavioral tests, and fixture constraints for routing + XState work
+globs: src/**/*.test.ts,src/**/*.test.tsx
+alwaysApply: false
+---
+
+# Routing guards, behavioral tests, and fixture constraints
+
+## 1. URL structure does not give guards for free
+
+Changing route shape does not remove validity logic — it relocates it.
+
+- **Free from URL structure**: browser history as the back-stack (no hand-rolled `statsReturnTo`-style context).
+- **Still required**: `beforeLoad` (or equivalent) guards that read session/machine state and a **product-chosen redirect** for invalid direct/forward navigation.
+
+When adding a session-coupled route (e.g. `/$deckId/training`, `/$deckId/completed`):
+
+- Guard on session state + `deckId`, not URL segment names alone.
+- Decide and document the fallback (deck progress, home, training) before writing the test.
+- Use `replace` on forward-only flow steps (e.g. training → completed) so Back does not land on a stale intermediate URL.
+
+```ts
+// BAD — assumes URL shape implies validity
+// Route renders CompletionScreen because pathname matches
+
+// GOOD — guard reads authoritative session state
+beforeLoad: ({ params }) => {
+  const snap = getAppSnapshot()
+  if (snap.value !== "completed" || snap.context.currentDeckId !== params.deckId) {
+    throw redirect({ to: "/$deckId", params: { deckId: params.deckId } })
+  }
+}
+```
+
+## 2. Test behavior, not mechanism
+
+Assert what the user, browser, or persisted data observes — not internal wiring.
+
+**Prefer**
+
+- Visible screen content after navigation or Back
+- Persisted side effects (`localStorage`, attempt shape)
+- URL only where the address bar is part of the product contract
+
+**Avoid**
+
+- `history.length`, `replace: true` flags, or router internals as the primary assertion
+- Tests for deleted implementation details (`statsReturnTo`, event names removed from the machine)
+- Blanket `router.state` checks after every `send()`
+
+```ts
+// BAD — tests implementation
+expect(history.length).toBe(n)
+
+// GOOD — tests behavior (replace is an implementation detail)
+history.back()
+await screen.findByText("10th Planet")
+expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
+```
+
+Use async patterns with TanStack Router: `await router.load()`, `await screen.findBy…`, shared helpers that wait for the next screen.
+
+## 3. Test fixtures must respect production constraints
+
+Before using reduced mock data in unit/integration tests, check implicit minimums in the code under test.
+
+Example: `pickDistractors` in `deckUtils.ts` needs **3 unique move names that are not the correct answer**. A mock deck pool with only 3 unique names total can never satisfy `while (chosen.length < 3)` and will hang the test worker.
+
+- Reuse or mirror fixtures that already work (e.g. `deckUtils.test.ts` mock decks with ≥5 unique names).
+- When adding XState test isolation, **create a fresh actor** — do not `stop()` + `start()` the same XState v5 actor (subscribers stop receiving updates).

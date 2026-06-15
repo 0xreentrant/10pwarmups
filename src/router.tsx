@@ -1,0 +1,264 @@
+import { useEffect } from "react"
+import {
+  Outlet,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  redirect,
+  useRouter,
+} from "@tanstack/react-router"
+import { useSelector } from "@xstate/react"
+import ExitConfirmPopover from "./components/ExitConfirmPopover"
+import CompletionScreen from "./components/CompletionScreen"
+import HomeScreen from "./components/HomeScreen"
+import ProgressScreen from "./components/ProgressScreen"
+import TrainingScreen from "./components/TrainingScreen"
+import WhatsNewPopover from "./components/WhatsNewPopover"
+import { appActor, getAppSnapshot } from "./appActor"
+import { DECKS } from "./data/decks"
+import { useWhatsNew } from "./hooks/useWhatsNew"
+import { nextDeckId } from "./utils/deckUtils"
+
+const rootRoute = createRootRoute({
+  component: RootLayout,
+})
+
+const indexRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/",
+  component: HomeRoute,
+})
+
+const allProgressRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/progress",
+  component: AllProgressRoute,
+})
+
+const deckRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/$deckId",
+  beforeLoad: ({ params }) => {
+    if (!DECKS.some(d => d.id === params.deckId)) {
+      throw redirect({ to: "/" })
+    }
+  },
+})
+
+const deckIndexRoute = createRoute({
+  getParentRoute: () => deckRoute,
+  path: "/",
+  component: DeckProgressRoute,
+})
+
+const trainingRoute = createRoute({
+  getParentRoute: () => deckRoute,
+  path: "/training",
+  beforeLoad: ({ params }) => {
+    const snap = getAppSnapshot()
+    if (snap.value !== "training" || snap.context.currentDeckId !== params.deckId) {
+      throw redirect({ to: "/$deckId", params: { deckId: params.deckId } })
+    }
+  },
+  component: TrainingRoute,
+})
+
+const completedRoute = createRoute({
+  getParentRoute: () => deckRoute,
+  path: "/completed",
+  beforeLoad: ({ params }) => {
+    const snap = getAppSnapshot()
+    if (snap.value === "completed" && snap.context.currentDeckId === params.deckId) {
+      return
+    }
+    if (
+      snap.value === "training" &&
+      snap.context.currentDeckId === params.deckId &&
+      snap.context.session &&
+      !snap.context.session.locked
+    ) {
+      throw redirect({ to: "/$deckId/training", params: { deckId: params.deckId } })
+    }
+    throw redirect({ to: "/$deckId", params: { deckId: params.deckId } })
+  },
+  component: CompletedRoute,
+})
+
+export const routeTree = rootRoute.addChildren([
+  indexRoute,
+  allProgressRoute,
+  deckRoute.addChildren([
+    deckIndexRoute,
+    trainingRoute,
+    completedRoute,
+  ]),
+])
+
+export const router = createRouter({
+  routeTree,
+  defaultPreload: "intent",
+})
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router
+  }
+}
+
+function RootLayout() {
+  const routerInstance = useRouter()
+  const { open: whatsNewOpen, dismiss: dismissWhatsNew } = useWhatsNew()
+
+  useEffect(() => {
+    return routerInstance.subscribe("onResolved", () => {
+      const path = routerInstance.state.location.pathname
+      const snap = getAppSnapshot()
+      if (path === "/" && snap.value === "training" && snap.context.currentDeckId) {
+        if (!snap.context.exitConfirm) {
+          appActor.send({ type: "REQUEST_EXIT" })
+          routerInstance.navigate({
+            to: "/$deckId/training",
+            params: { deckId: snap.context.currentDeckId },
+          })
+        }
+      } else if (path === "/" && snap.value === "completed") {
+        appActor.send({ type: "GO_HOME" })
+      }
+    })
+  }, [routerInstance])
+
+  return (
+    <div className="mx-auto max-w-[480px] px-4">
+      <Outlet />
+      <div className="mb-4 text-muted">
+        (c) 0xreentrant 2026 · <a href="updates.html" className="text-muted no-underline">Latest Updates</a>
+      </div>
+      <WhatsNewPopover open={whatsNewOpen} onDismiss={dismissWhatsNew} />
+    </div>
+  )
+}
+
+function HomeRoute() {
+  const routerInstance = useRouter()
+  const progress = useSelector(appActor, s => s.context.progress)
+  const resetConfirm = useSelector(appActor, s => s.context.resetConfirm)
+
+  return (
+    <HomeScreen
+      progress={progress}
+      onDeckClick={deckId => {
+        appActor.send({ type: "START_DECK", deckId })
+        routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
+      }}
+      onStats={() => routerInstance.navigate({ to: "/progress" })}
+      onReset={() => appActor.send({ type: "RESET" })}
+      resetConfirm={resetConfirm}
+      onCancelReset={() => appActor.send({ type: "CANCEL_RESET" })}
+    />
+  )
+}
+
+function TrainingRoute() {
+  const routerInstance = useRouter()
+  const { deckId } = trainingRoute.useParams()
+  const deck = DECKS.find(d => d.id === deckId)!
+  const session = useSelector(appActor, s => s.context.session)!
+  const exitConfirm = useSelector(appActor, s => s.context.exitConfirm)
+
+  useEffect(() => {
+    const sub = appActor.subscribe(snapshot => {
+      if (snapshot.value === "completed" && snapshot.context.currentDeckId === deckId) {
+        routerInstance.navigate({ to: "/$deckId/completed", params: { deckId }, replace: true })
+      }
+    })
+    return () => sub.unsubscribe()
+  }, [deckId, routerInstance])
+
+  return (
+    <>
+      <TrainingScreen
+        deck={deck}
+        session={session}
+        onOptionClick={optionIndex => appActor.send({ type: "OPTION_CLICK", optionIndex })}
+        onBack={() => appActor.send({ type: "REQUEST_EXIT" })}
+      />
+      <ExitConfirmPopover
+        open={exitConfirm}
+        onConfirm={() => {
+          appActor.send({ type: "CONFIRM_EXIT" })
+          routerInstance.navigate({ to: "/" })
+        }}
+        onCancel={() => appActor.send({ type: "CANCEL_EXIT" })}
+      />
+    </>
+  )
+}
+
+function CompletedRoute() {
+  const routerInstance = useRouter()
+  const { deckId } = completedRoute.useParams()
+  const deck = DECKS.find(d => d.id === deckId)!
+  const progress = useSelector(appActor, s => s.context.progress)
+  const session = useSelector(appActor, s => s.context.session)!
+
+  return (
+    <CompletionScreen
+      deck={deck}
+      session={session}
+      progress={progress}
+      onNext={() => {
+        const nid = nextDeckId(deck.id)
+        if (nid) {
+          appActor.send({ type: "START_DECK", deckId: nid })
+          routerInstance.navigate({ to: "/$deckId/training", params: { deckId: nid } })
+        } else {
+          appActor.send({ type: "GO_HOME" })
+          routerInstance.navigate({ to: "/" })
+        }
+      }}
+      onHome={() => {
+        appActor.send({ type: "GO_HOME" })
+        routerInstance.navigate({ to: "/" })
+      }}
+      onTryAgain={() => {
+        appActor.send({ type: "START_DECK", deckId: deck.id })
+        routerInstance.navigate({ to: "/$deckId/training", params: { deckId: deck.id } })
+      }}
+      onStats={() => routerInstance.navigate({ to: "/$deckId", params: { deckId } })}
+    />
+  )
+}
+
+function AllProgressRoute() {
+  const routerInstance = useRouter()
+  const progress = useSelector(appActor, s => s.context.progress)
+
+  return (
+    <ProgressScreen
+      deckId={null}
+      progress={progress}
+      onBack={() => routerInstance.history.back()}
+      onDeckSelect={id => {
+        if (id) routerInstance.navigate({ to: "/$deckId", params: { deckId: id } })
+      }}
+    />
+  )
+}
+
+function DeckProgressRoute() {
+  const routerInstance = useRouter()
+  const { deckId } = deckRoute.useParams()
+  const progress = useSelector(appActor, s => s.context.progress)
+
+  return (
+    <ProgressScreen
+      deckId={deckId}
+      progress={progress}
+      onBack={() => routerInstance.history.back()}
+      onDeckSelect={id => {
+        if (id) routerInstance.navigate({ to: "/$deckId", params: { deckId: id } })
+        else routerInstance.navigate({ to: "/progress" })
+      }}
+    />
+  )
+}

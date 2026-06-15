@@ -51,6 +51,8 @@ export interface Session {
   moveSequence: MoveAnswer[]
   currentStreak: number
   startTime: number
+  pausedAt: number | null
+  accumulatedPauseMs: number
   allOptions: QuestionOption[][]
   options: QuestionOption[]
   locked: boolean

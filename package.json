@@ -39,6 +39,7 @@
     "@fontsource/barlow-condensed": "^5.2.8",
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@statelyai/inspect": "^0.7.1",
+    "@tanstack/react-router": "^1.170.15",
     "@xstate/react": "^6.1.0",
     "puppeteer": "^25.1.0",
     "react": "^19.2.7",
