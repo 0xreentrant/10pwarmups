@@ -1,0 +1,33 @@
+---
+description: Keep chat responses brief and status-focused; omit code unless debugging bugs
+alwaysApply: true
+---
+
+# Concise responses
+
+Keep chat output short and status-oriented. Report what was done, what changed, and what is blocked — not walkthroughs or tutorials.
+
+## Default response style
+
+- Lead with outcome: done, in progress, or blocked
+- Use one or two short paragraphs at most unless the user asks for detail
+- Prefer plain language over long explanations
+- Skip summaries of code the user did not ask to see
+- Do not paste code citations, snippets, or diffs in the response
+
+## When code in chat is allowed
+
+Include code in the response only when actively debugging a bug:
+
+- Showing the exact failing line or condition under investigation
+- Proposing a minimal fix for a confirmed bug
+- Explaining a non-obvious root cause that requires quoting the source
+
+For feature work, refactors, config changes, and routine tasks: make the edits in the codebase and describe the result in prose only.
+
+## What to skip
+
+- Code blocks for changes already applied in files
+- "Here's what I changed" diffs when a status line suffices
+- Architecture essays unless the user asks for a design discussion
+- Repeating file contents the user can open in the editor
