@@ -1,6 +1,5 @@
 import { useEffect } from "react"
 import {
-  Link,
   Outlet,
   createRootRoute,
   createRoute,
@@ -11,7 +10,6 @@ import {
 import { useSelector } from "@xstate/react"
 import ExitConfirmPopover from "./components/ExitConfirmPopover"
 import CompletionScreen from "./components/CompletionScreen"
-import EmojiBarShowcase from "./components/EmojiBarShowcase"
 import HomeScreen from "./components/HomeScreen"
 import ProgressScreen from "./components/ProgressScreen"
 import TrainingScreen from "./components/TrainingScreen"
@@ -51,12 +49,6 @@ const allProgressRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/progress",
   component: AllProgressRoute,
-})
-
-const emojiBarRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/emoji-bar",
-  component: EmojiBarRoute,
 })
 
 const deckRoute = createRoute({
@@ -119,7 +111,6 @@ const completedRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   allProgressRoute,
-  emojiBarRoute,
   deckRoute.addChildren([
     deckIndexRoute,
     trainingRoute,
@@ -184,8 +175,6 @@ function RootLayout() {
       <Outlet />
       <div className="mb-4 text-muted">
         (c) 0xreentrant 2026 · <a href="updates.html" className="text-muted no-underline">Latest Updates</a>
-        {" · "}
-        <Link to="/emoji-bar" className="text-muted no-underline">Fire emoji bar</Link>
       </div>
       <WhatsNewPopover open={whatsNewOpen} onDismiss={dismissWhatsNew} />
     </div>
@@ -299,10 +288,6 @@ function AllProgressRoute() {
       }}
     />
   )
-}
-
-function EmojiBarRoute() {
-  return <EmojiBarShowcase />
 }
 
 function DeckProgressRoute() {

@@ -1,8 +1,9 @@
 import { useEffect } from "react"
 import { getLongestStreak } from "../appMachine"
 import DeckLink from "./DeckLink"
-import OptionMoveText from "./OptionMoveText"
 import MoveList from "./MoveList"
+import OptionMoveText from "./OptionMoveText"
+import StreakFlameBadge from "./StreakFlameBadge"
 import type { Deck, Session } from "../types/domain"
 import * as analytics from "../utils/analytics"
 
@@ -30,7 +31,7 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack }:
           <h2>{deck.name}</h2>
           <DeckLink link={deck.link} />
         </div>
-        <div className="font-disp font-bold text-lg tracking-wide text-accent">🔥 {sessionBestStreak}</div>
+        <StreakFlameBadge value={sessionBestStreak} max={total} />
       </div>
 
       <fieldset className="mb-3.5">

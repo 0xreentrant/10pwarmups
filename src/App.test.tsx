@@ -209,7 +209,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       await startFirstDeck();
 
-      expect(screen.getByText(/🔥/)).toBeInTheDocument();
+      expect(screen.getByLabelText(/Streak:/)).toBeInTheDocument();
     });
 
     it('increments streak for correct answers', async () => {
@@ -219,8 +219,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       clickOptionWithText(A1_MOVES[0]);
 
       await waitFor(() => {
-        const badges = screen.getAllByText(/🔥/);
-        expect(badges.length).toBeGreaterThan(0);
+        expect(screen.getByLabelText(/Streak: 1/)).toBeInTheDocument();
       }, { timeout: 1000 });
     });
 
@@ -235,8 +234,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       clickWrongOption(A1_MOVES[1]);
 
       await waitFor(() => {
-        const badges = screen.getAllByText(/🔥/);
-        expect(badges.length).toBeGreaterThan(0);
+        expect(screen.getByLabelText(/Streak: 1/)).toBeInTheDocument();
       }, { timeout: 1000 });
     });
 
