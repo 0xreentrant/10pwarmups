@@ -50,6 +50,15 @@ describe("routing", () => {
     restartAppActor()
   })
 
+  it("renders emoji bar showcase at /emoji-bar", async () => {
+    const { router } = await renderWithRouter("/emoji-bar")
+    expect(router.state.location.pathname).toBe("/emoji-bar")
+    expect(screen.getByRole("heading", { level: 2, name: "Fire emoji bar" })).toBeInTheDocument()
+    expect(screen.getByRole("slider")).toBeInTheDocument()
+    expect(screen.getByText("Test results reveal")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Replay" })).toBeInTheDocument()
+  })
+
   it("renders all-deck progress at /progress", async () => {
     await renderWithRouter("/progress")
     expect(screen.getByText("Progress")).toBeInTheDocument()

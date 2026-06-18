@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -14 128 162" width="128" height="162" role="img" aria-label="Animated blazing fire emoji">
+  <defs>
+    <linearGradient id="blazeOuter" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#8B0000"/>
+      <stop offset="15%" stop-color="#D50000"/>
+      <stop offset="40%" stop-color="#FF3D00"/>
+      <stop offset="68%" stop-color="#FF6D00"/>
+      <stop offset="100%" stop-color="#FFAB00"/>
+    </linearGradient>
+    <linearGradient id="blazeMid" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#FF1744"/>
+      <stop offset="25%" stop-color="#FF5722"/>
+      <stop offset="55%" stop-color="#FF9100"/>
+      <stop offset="100%" stop-color="#FFEA00"/>
+    </linearGradient>
+    <linearGradient id="blazeCore" x1="50%" y1="100%" x2="50%" y2="30%">
+      <stop offset="0%" stop-color="#FFD600"/>
+      <stop offset="45%" stop-color="#FFEE58"/>
+      <stop offset="100%" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <radialGradient id="blazeGlow" cx="50%" cy="88%" r="50%">
+      <stop offset="0%" stop-color="#FF6D00" stop-opacity="0.7"/>
+      <stop offset="55%" stop-color="#FF3D00" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FF3D00" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blazeBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.5"/>
+    </filter>
+  </defs>
+
+  <ellipse cx="64" cy="108" rx="52" ry="28" fill="url(#blazeGlow)">
+    <animate attributeName="rx" values="50;58;52;56;50" dur="0.55s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.65;1;0.7;0.95;0.65" dur="0.55s" repeatCount="indefinite"/>
+  </ellipse>
+
+  <g filter="url(#blazeBlur)" transform-origin="64 118">
+    <path fill="url(#blazeOuter)" d="M64 118 C34 118, 14 98, 12 72 C10 48, 22 30, 32 18 C38 10, 44 4, 50 2 C54 0, 58 0, 62 3 C66 6, 68 12, 72 18 C78 28, 86 34, 92 46 C100 62, 108 78, 102 94 C96 110, 82 118, 64 118Z">
+      <animate attributeName="d" dur="0.65s" repeatCount="indefinite"
+        values="M64 118 C34 118, 14 98, 12 72 C10 48, 22 30, 32 18 C38 10, 44 4, 50 2 C54 0, 58 0, 62 3 C66 6, 68 12, 72 18 C78 28, 86 34, 92 46 C100 62, 108 78, 102 94 C96 110, 82 118, 64 118Z;M64 118 C32 118, 10 96, 8 70 C6 44, 20 26, 30 14 C36 6, 42 1, 48 0 C52 -1, 56 1, 60 4 C64 7, 66 14, 70 20 C76 30, 84 36, 90 48 C98 64, 110 80, 104 96 C98 112, 84 118, 64 118Z;M64 118 C36 118, 16 100, 14 74 C12 50, 24 32, 34 20 C40 12, 46 6, 52 3 C56 1, 60 1, 64 4 C68 7, 70 13, 74 19 C80 29, 88 35, 94 47 C102 63, 106 76, 100 92 C94 108, 80 118, 64 118Z;M64 118 C34 118, 14 98, 12 72 C10 48, 22 30, 32 18 C38 10, 44 4, 50 2 C54 0, 58 0, 62 3 C66 6, 68 12, 72 18 C78 28, 86 34, 92 46 C100 62, 108 78, 102 94 C96 110, 82 118, 64 118Z"/>
+      <animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1.06 1.08;0.96 1.02;1.04 1.06;1 1" dur="0.65s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <g transform-origin="64 118">
+    <path fill="url(#blazeMid)" d="M64 114 C42 114, 28 98, 26 76 C24 54, 34 38, 42 26 C48 18, 52 12, 56 8 C58 6, 60 6, 62 8 C64 10, 66 16, 70 22 C76 32, 82 38, 88 50 C94 64, 96 78, 88 92 C80 106, 72 114, 64 114Z">
+      <animate attributeName="d" dur="0.5s" repeatCount="indefinite"
+        values="M64 114 C42 114, 28 98, 26 76 C24 54, 34 38, 42 26 C48 18, 52 12, 56 8 C58 6, 60 6, 62 8 C64 10, 66 16, 70 22 C76 32, 82 38, 88 50 C94 64, 96 78, 88 92 C80 106, 72 114, 64 114Z;M64 114 C40 114, 24 96, 22 74 C20 52, 32 36, 40 24 C46 16, 50 10, 54 6 C56 4, 58 4, 60 6 C62 8, 64 14, 68 20 C74 30, 80 36, 86 48 C92 62, 94 76, 86 90 C78 104, 70 114, 64 114Z;M64 114 C44 114, 30 100, 28 78 C26 56, 36 40, 44 28 C50 20, 54 14, 58 10 C60 8, 62 8, 64 10 C66 12, 68 18, 72 24 C78 34, 84 40, 90 52 C96 66, 98 80, 90 94 C82 108, 74 114, 64 114Z;M64 114 C42 114, 28 98, 26 76 C24 54, 34 38, 42 26 C48 18, 52 12, 56 8 C58 6, 60 6, 62 8 C64 10, 66 16, 70 22 C76 32, 82 38, 88 50 C94 64, 96 78, 88 92 C80 106, 72 114, 64 114Z"/>
+      <animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1.05 1.07;0.97 1.01;1.03 1.05;1 1" dur="0.5s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <g transform-origin="64 108">
+    <ellipse cx="64" cy="98" rx="22" ry="16" fill="url(#blazeCore)">
+      <animate attributeName="rx" values="22;26;20;24;22" dur="0.45s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="16;13;18;14;16" dur="0.45s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.88;1;0.82;0.98;0.88" dur="0.45s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="64" cy="92" rx="14" ry="10" fill="#FFFFFF" opacity="0.9">
+      <animate attributeName="rx" values="14;16;12;15;14" dur="0.38s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.7;1;0.75;0.95;0.7" dur="0.38s" repeatCount="indefinite"/>
+    </ellipse>
+  </g>
+
+  <g fill="#FFEA00">
+    <path d="M38 52 C34 44, 36 34, 42 28 C40 36, 38 44, 38 52Z" opacity="0.85">
+      <animate attributeName="d" dur="0.7s" repeatCount="indefinite"
+        values="M38 52 C34 44, 36 34, 42 28 C40 36, 38 44, 38 52Z;M36 50 C32 40, 34 30, 40 24 C38 32, 36 42, 36 50Z;M40 54 C36 46, 38 36, 44 30 C42 38, 40 46, 40 54Z;M38 52 C34 44, 36 34, 42 28 C40 36, 38 44, 38 52Z"/>
+      <animate attributeName="opacity" values="0.5;1;0.6;0.9;0.5" dur="0.7s" repeatCount="indefinite"/>
+    </path>
+    <path d="M92 48 C96 40, 94 30, 88 24 C90 32, 92 40, 92 48Z" opacity="0.8">
+      <animate attributeName="d" dur="0.6s" repeatCount="indefinite"
+        values="M92 48 C96 40, 94 30, 88 24 C90 32, 92 40, 92 48Z;M94 46 C98 38, 96 28, 90 22 C92 30, 94 38, 94 46Z;M90 50 C94 42, 92 32, 86 26 C88 34, 90 42, 90 50Z;M92 48 C96 40, 94 30, 88 24 C90 32, 92 40, 92 48Z"/>
+      <animate attributeName="opacity" values="0.45;0.95;0.55;0.85;0.45" dur="0.6s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <g fill="#FFFDE7">
+    <circle cx="48" cy="36" r="2">
+      <animate attributeName="cy" values="36;18;36" dur="0.9s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="0.9s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="48;44;48" dur="0.9s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="78" cy="30" r="1.8">
+      <animate attributeName="cy" values="30;12;30" dur="0.75s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="0.75s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="78;82;78" dur="0.75s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="64" cy="14" r="2.2">
+      <animate attributeName="cy" values="14;2;14" dur="1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="1s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

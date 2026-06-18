@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 -36 160 210" width="160" height="210" role="img" aria-label="Animated wildly out of control fire emoji">
+  <defs>
+    <linearGradient id="wildOuter" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#1A0000"/>
+      <stop offset="10%" stop-color="#4A0000"/>
+      <stop offset="30%" stop-color="#B71C1C"/>
+      <stop offset="55%" stop-color="#FF3D00"/>
+      <stop offset="80%" stop-color="#FF6D00"/>
+      <stop offset="100%" stop-color="#FFAB00"/>
+    </linearGradient>
+    <linearGradient id="wildMid" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#D50000"/>
+      <stop offset="25%" stop-color="#FF1744"/>
+      <stop offset="55%" stop-color="#FF5722"/>
+      <stop offset="85%" stop-color="#FFEA00"/>
+      <stop offset="100%" stop-color="#FFFFFF"/>
+    </linearGradient>
+    <linearGradient id="wildCore" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#FFD600"/>
+      <stop offset="30%" stop-color="#FFF59D"/>
+      <stop offset="60%" stop-color="#FFFFFF"/>
+      <stop offset="85%" stop-color="#E1F5FE"/>
+      <stop offset="100%" stop-color="#B3E5FC"/>
+    </linearGradient>
+    <radialGradient id="wildHalo" cx="50%" cy="88%" r="65%">
+      <stop offset="0%" stop-color="#FF6D00" stop-opacity="0.95"/>
+      <stop offset="35%" stop-color="#FF3D00" stop-opacity="0.55"/>
+      <stop offset="70%" stop-color="#B71C1C" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#1A0000" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="wildGlow" cx="50%" cy="92%" r="48%">
+      <stop offset="0%" stop-color="#FFEA00" stop-opacity="1"/>
+      <stop offset="45%" stop-color="#FF5722" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FF3D00" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="wildHaloBlur" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <filter id="wildOuterBlur" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur stdDeviation="4"/>
+    </filter>
+    <filter id="wildShimmerBlur" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.5"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#wildHaloBlur)">
+    <ellipse cx="64" cy="108" rx="68" ry="40" fill="url(#wildHalo)">
+      <animate attributeName="rx" values="62;76;64;72;62" dur="0.18s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="34;44;36;42;34" dur="0.16s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.65;1;0.7;0.98;0.65" dur="0.18s" repeatCount="indefinite"/>
+    </ellipse>
+  </g>
+
+  <ellipse cx="64" cy="112" rx="54" ry="30" fill="url(#wildGlow)">
+    <animate attributeName="rx" values="48;62;50;58;48" dur="0.14s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.7;1;0.75;1;0.7" dur="0.14s" repeatCount="indefinite"/>
+  </ellipse>
+
+  <g filter="url(#wildOuterBlur)" transform-origin="64 118">
+    <path fill="url(#wildOuter)" d="M64 118 C22 118, -4 92, -6 60 C-8 32, 10 14, 24 0 C30 -6, 38 -12, 48 -14 C54 -15, 58 -12, 62 -8 C66 -4, 68 6, 72 14 C78 26, 88 32, 96 46 C106 64, 118 82, 114 100 C110 118, 94 118, 64 118Z">
+      <animate attributeName="d" dur="0.2s" repeatCount="indefinite"
+        values="M64 118 C22 118, -4 92, -6 60 C-8 32, 10 14, 24 0 C30 -6, 38 -12, 48 -14 C54 -15, 58 -12, 62 -8 C66 -4, 68 6, 72 14 C78 26, 88 32, 96 46 C106 64, 118 82, 114 100 C110 118, 94 118, 64 118Z;M64 118 C18 118, -8 88, -10 56 C-12 28, 6 8, 20 -6 C26 -12, 34 -16, 44 -18 C50 -19, 54 -15, 58 -10 C62 -5, 64 4, 68 12 C74 24, 84 28, 92 42 C102 60, 122 78, 118 98 C114 118, 98 118, 64 118Z;M64 118 C26 118, 2 94, 0 62 C-2 36, 14 18, 28 4 C34 -2, 42 -8, 52 -10 C58 -11, 62 -8, 66 -4 C70 0, 72 10, 76 18 C82 30, 92 34, 100 48 C110 66, 116 84, 112 102 C108 118, 90 118, 64 118Z;M64 118 C22 118, -4 92, -6 60 C-8 32, 10 14, 24 0 C30 -6, 38 -12, 48 -14 C54 -15, 58 -12, 62 -8 C66 -4, 68 6, 72 14 C78 26, 88 32, 96 46 C106 64, 118 82, 114 100 C110 118, 94 118, 64 118Z"/>
+      <animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1.14 1.18;0.9 0.95;1.1 1.15;1 1" dur="0.2s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" additive="sum" values="0 0;-4 -2;5 1;-3 -1;0 0" dur="0.22s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <g transform-origin="64 118">
+    <path fill="url(#wildMid)" d="M64 114 C34 114, 14 92, 12 66 C10 42, 22 24, 34 10 C40 4, 46 -2, 54 -4 C58 -5, 62 -3, 64 0 C66 3, 68 12, 72 20 C78 32, 86 38, 94 52 C102 68, 106 84, 96 100 C86 114, 74 114, 64 114Z">
+      <animate attributeName="d" dur="0.16s" repeatCount="indefinite"
+        values="M64 114 C34 114, 14 92, 12 66 C10 42, 22 24, 34 10 C40 4, 46 -2, 54 -4 C58 -5, 62 -3, 64 0 C66 3, 68 12, 72 20 C78 32, 86 38, 94 52 C102 68, 106 84, 96 100 C86 114, 74 114, 64 114Z;M64 114 C30 114, 8 88, 6 62 C4 38, 18 20, 30 6 C36 0, 42 -6, 50 -8 C54 -9, 58 -6, 60 -2 C62 2, 64 10, 68 18 C74 30, 82 36, 90 50 C98 66, 102 82, 92 98 C82 114, 70 114, 64 114Z;M64 114 C38 114, 18 94, 16 68 C14 44, 26 26, 38 12 C44 6, 50 0, 58 -2 C62 -3, 66 0, 68 4 C70 8, 72 16, 76 24 C82 36, 90 42, 98 56 C106 72, 110 88, 100 104 C90 114, 78 114, 64 114Z;M64 114 C34 114, 14 92, 12 66 C10 42, 22 24, 34 10 C40 4, 46 -2, 54 -4 C58 -5, 62 -3, 64 0 C66 3, 68 12, 72 20 C78 32, 86 38, 94 52 C102 68, 106 84, 96 100 C86 114, 74 114, 64 114Z"/>
+      <animateTransform attributeName="transform" type="scale" additive="sum" values="1 1;1.1 1.14;0.92 0.98;1.08 1.12;1 1" dur="0.16s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="translate" additive="sum" values="0 0;3 -1;-4 2;2 -2;0 0" dur="0.19s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <g fill="#FF5722" transform-origin="64 118">
+    <path d="M28 70 C20 58, 18 42, 24 28 C22 40, 24 56, 28 70Z" opacity="0.85">
+      <animate attributeName="d" dur="0.17s" repeatCount="indefinite"
+        values="M28 70 C20 58, 18 42, 24 28 C22 40, 24 56, 28 70Z;M24 68 C14 54, 12 38, 18 22 C16 36, 20 52, 24 68Z;M32 72 C24 60, 22 44, 28 30 C26 42, 28 58, 32 72Z;M28 70 C20 58, 18 42, 24 28 C22 40, 24 56, 28 70Z"/>
+      <animate attributeName="opacity" values="0.3;1;0.4;0.95;0.3" dur="0.17s" repeatCount="indefinite"/>
+    </path>
+    <path d="M100 66 C108 54, 110 38, 104 24 C106 36, 104 52, 100 66Z" opacity="0.8">
+      <animate attributeName="d" dur="0.15s" repeatCount="indefinite"
+        values="M100 66 C108 54, 110 38, 104 24 C106 36, 104 52, 100 66Z;M104 64 C114 50, 116 34, 110 18 C112 32, 108 48, 104 64Z;M96 68 C104 56, 106 40, 100 26 C102 38, 100 54, 96 68Z;M100 66 C108 54, 110 38, 104 24 C106 36, 104 52, 100 66Z"/>
+      <animate attributeName="opacity" values="0.25;0.95;0.35;0.9;0.25" dur="0.15s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <g transform-origin="64 108">
+    <ellipse cx="64" cy="94" rx="26" ry="20" fill="url(#wildCore)">
+      <animate attributeName="rx" values="26;32;22;28;26" dur="0.12s" repeatCount="indefinite"/>
+      <animate attributeName="ry" values="20;15;22;16;20" dur="0.11s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;1;0.75;1;0.8" dur="0.12s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="64" cy="84" rx="18" ry="14" fill="#FFFFFF" opacity="0.98">
+      <animate attributeName="rx" values="18;22;15;20;18" dur="0.1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.6;1;0.65;1;0.6" dur="0.1s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="64" cy="76" rx="10" ry="8" fill="#B3E5FC" opacity="0.95">
+      <animate attributeName="rx" values="10;13;8;11;10" dur="0.08s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;1;0.55;1;0.5" dur="0.08s" repeatCount="indefinite"/>
+    </ellipse>
+  </g>
+
+  <g filter="url(#wildShimmerBlur)" fill="none" stroke="#FFF9C4" stroke-width="1.4" opacity="0.6">
+    <path d="M48 50 Q40 28, 46 4">
+      <animate attributeName="d" dur="0.14s" repeatCount="indefinite"
+        values="M48 50 Q40 28, 46 4;M44 48 Q34 24, 42 -4;M52 52 Q46 30, 50 6;M48 50 Q40 28, 46 4"/>
+      <animate attributeName="opacity" values="0.15;0.7;0.2;0.6;0.15" dur="0.14s" repeatCount="indefinite"/>
+    </path>
+    <path d="M80 46 Q88 24, 82 0">
+      <animate attributeName="d" dur="0.12s" repeatCount="indefinite"
+        values="M80 46 Q88 24, 82 0;M84 44 Q94 20, 86 -8;M76 48 Q82 26, 78 2;M80 46 Q88 24, 82 0"/>
+      <animate attributeName="opacity" values="0.1;0.65;0.18;0.55;0.1" dur="0.12s" repeatCount="indefinite"/>
+    </path>
+    <path d="M64 54 Q58 30, 64 -6">
+      <animate attributeName="d" dur="0.11s" repeatCount="indefinite"
+        values="M64 54 Q58 30, 64 -6;M60 52 Q52 26, 60 -10;M68 56 Q64 32, 68 -4;M64 54 Q58 30, 64 -6"/>
+      <animate attributeName="opacity" values="0.2;0.75;0.15;0.65;0.2" dur="0.11s" repeatCount="indefinite"/>
+    </path>
+  </g>
+
+  <g fill="#FFFDE7">
+    <circle cx="36" cy="28" r="2.4">
+      <animate attributeName="cy" values="28;4;28" dur="0.28s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="36;30;36" dur="0.28s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="0.28s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="88" cy="22" r="2.2">
+      <animate attributeName="cy" values="22;0;22" dur="0.24s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="88;94;88" dur="0.24s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="0.24s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="64" cy="6" r="2.8">
+      <animate attributeName="cy" values="6;-12;6" dur="0.22s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="0.22s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="52" cy="16" r="1.8">
+      <animate attributeName="cy" values="16;-4;16" dur="0.2s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="52;46;52" dur="0.2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.95;0" dur="0.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="76" cy="12" r="2">
+      <animate attributeName="cy" values="12;-6;12" dur="0.18s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="76;82;76" dur="0.18s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="0.18s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="44" cy="40" r="1.6">
+      <animate attributeName="cy" values="40;18;40" dur="0.16s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0" dur="0.16s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="84" cy="36" r="1.5">
+      <animate attributeName="cy" values="36;14;36" dur="0.15s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.85;0" dur="0.15s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <g fill="#FF6D00">
+    <circle cx="30" cy="72" r="1.4">
+      <animate attributeName="cy" values="72;48;72" dur="0.14s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="30;24;30" dur="0.14s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;0" dur="0.14s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="98" cy="68" r="1.3">
+      <animate attributeName="cy" values="68;44;68" dur="0.13s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="98;104;98" dur="0.13s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.95;0" dur="0.13s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="54" cy="60" r="1.2">
+      <animate attributeName="cy" values="60;38;60" dur="0.12s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="54;48;54" dur="0.12s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0" dur="0.12s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="74" cy="58" r="1.2">
+      <animate attributeName="cy" values="58;36;58" dur="0.11s" repeatCount="indefinite"/>
+      <animate attributeName="cx" values="74;80;74" dur="0.11s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.9;0" dur="0.11s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="64" cy="48" r="1">
+      <animate attributeName="cy" values="48;26;48" dur="0.1s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0.85;0" dur="0.1s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

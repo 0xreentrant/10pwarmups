@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import DeckLink from "./DeckLink"
+import HeatGradientCrownBar from "./HeatGradientCrownBar"
 import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS, SERIES } from "../data/decks"
 import type { Deck, ProgressMap } from "../types/domain"
@@ -44,7 +45,7 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
         <div className="font-disp font-semibold text-base tracking-tight">{deck.name}</div>
         <DeckLink link={deck.link} />
         <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} · {label}</div>
-        <progress value={prog.bestStreak} max={total} className="mt-1.5" />
+        <HeatGradientCrownBar value={prog.bestStreak} max={total} />
       </td>
       <td className="py-2 align-middle whitespace-nowrap">
         <button className="btn btn-primary" onClick={() => {
