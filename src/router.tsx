@@ -30,6 +30,20 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
+  beforeLoad: () => {
+    const snap = getAppSnapshot()
+    if (
+      snap.value === "training" &&
+      snap.context.currentDeckId &&
+      snap.context.session &&
+      !snap.context.session.locked
+    ) {
+      if (!snap.context.exitConfirm) {
+        appActor.send({ type: "REQUEST_EXIT" })
+      }
+      throw redirect({ to: "/$deckId/training", params: { deckId: snap.context.currentDeckId } })
+    }
+  },
   component: HomeRoute,
 })
 
@@ -159,15 +173,7 @@ function RootLayout() {
     return routerInstance.subscribe("onResolved", () => {
       const path = routerInstance.state.location.pathname
       const snap = getAppSnapshot()
-      if (path === "/" && snap.value === "training" && snap.context.currentDeckId) {
-        if (!snap.context.exitConfirm) {
-          appActor.send({ type: "REQUEST_EXIT" })
-          routerInstance.navigate({
-            to: "/$deckId/training",
-            params: { deckId: snap.context.currentDeckId },
-          })
-        }
-      } else if (path === "/" && snap.value === "completed") {
+      if (path === "/" && snap.value === "completed") {
         appActor.send({ type: "GO_HOME" })
       }
     })

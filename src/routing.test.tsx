@@ -39,6 +39,21 @@ async function confirmLeaveTest() {
   await screen.findByText("10th Planet")
 }
 
+function watchForText(text: string) {
+  let seen = document.body.textContent?.includes(text) ?? false
+  const observer = new MutationObserver(() => {
+    if (document.body.textContent?.includes(text)) {
+      seen = true
+    }
+  })
+  observer.observe(document.body, { childList: true, characterData: true, subtree: true })
+
+  return {
+    disconnect: () => observer.disconnect(),
+    wasSeen: () => seen,
+  }
+}
+
 describe("routing", () => {
   beforeEach(() => {
     localStorage.clear()
@@ -104,12 +119,18 @@ describe("routing", () => {
     await startFirstDeck()
     clickOptionWithText(A1_MOVES[0])
     await new Promise(r => setTimeout(r, 100))
+    const homeScreen = watchForText("10th Planet")
 
-    history.back()
-    await waitFor(() => {
-      expect(router.state.location.pathname).toBe("/A1/training")
-      expect(screen.getByText(/Leave this test/i)).toBeInTheDocument()
-    })
+    try {
+      history.back()
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe("/A1/training")
+        expect(screen.getByText(/Leave this test/i)).toBeInTheDocument()
+      })
+      expect(homeScreen.wasSeen()).toBe(false)
+    } finally {
+      homeScreen.disconnect()
+    }
 
     await confirmLeaveTest()
     expect(router.state.location.pathname).toBe("/")
