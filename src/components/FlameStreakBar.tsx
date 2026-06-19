@@ -1,6 +1,7 @@
 import { useId, type CSSProperties } from "react"
 
 const MIN_FLAME_PERCENT = 45
+const CROWN_RIGHT_NUDGE = 8
 
 const FLAME_SRC = {
   blaze: "/fire-emojis/fire-emoji-blaze-flicker.svg",
@@ -92,7 +93,7 @@ function CrownFlameTip({
       alt=""
       className={`fsb-crown-flame fsb-crown-flame--alive fsb-crown-flame--instant${tier === "inferno" ? " fsb-crown-flame--inferno" : ""}${isWild ? " fsb-crown-flame--wild" : ""}`}
       style={{
-        left: `${percent}%`,
+        left: `calc(${percent}% + ${CROWN_RIGHT_NUDGE}px)`,
         width: size,
         height: flameImgHeight(size, tier),
         "--fsb-crown-glow": glow,
@@ -218,11 +219,11 @@ export default function FlameStreakBar({
           top: 50%;
           display: block;
           object-fit: contain;
-          object-position: center bottom;
+          object-position: right bottom;
           pointer-events: none;
           user-select: none;
           filter: var(--fsb-crown-glow);
-          transform-origin: center bottom;
+          transform-origin: right bottom;
           transition: width 0.15s ease-out, height 0.15s ease-out, left 0.15s ease-out, opacity 0.15s ease-out, filter 0.15s ease-out;
           animation:
             fsb-crown-float var(--fsb-float-dur, 2.2s) ease-in-out infinite,
@@ -232,7 +233,7 @@ export default function FlameStreakBar({
         .fsb-crown-flame--instant {
           transition: none;
           animation: none;
-          translate: -50% -50%;
+          translate: -100% -50%;
         }
 
         .fsb-crown-flame--inferno {
@@ -248,15 +249,15 @@ export default function FlameStreakBar({
         }
 
         @keyframes fsb-crown-float {
-          0%, 100% { translate: -50% -50%; }
-          50% { translate: -50% calc(-50% - 4px); }
+          0%, 100% { translate: -100% -50%; }
+          50% { translate: -100% calc(-50% - 4px); }
         }
 
         @keyframes fsb-crown-float-wild {
-          0%, 100% { translate: -50% -50%; }
-          25% { translate: calc(-50% - 3px) calc(-50% - 6px); }
-          50% { translate: calc(-50% + 4px) calc(-50% - 2px); }
-          75% { translate: calc(-50% - 2px) calc(-50% - 8px); }
+          0%, 100% { translate: -100% -50%; }
+          25% { translate: calc(-100% - 3px) calc(-50% - 6px); }
+          50% { translate: calc(-100% + 4px) calc(-50% - 2px); }
+          75% { translate: calc(-100% - 2px) calc(-50% - 8px); }
         }
 
         @keyframes fsb-crown-pulse-blaze {
@@ -287,7 +288,7 @@ export default function FlameStreakBar({
             animation: none;
           }
           .fsb-crown-flame {
-            translate: -50% -50%;
+            translate: -100% -50%;
           }
         }
       `}</style>
