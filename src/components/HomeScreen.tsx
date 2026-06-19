@@ -32,7 +32,7 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
     ? "untrained"
     : prog.bestStreak === total
     ? "complete"
-    : "in progress"
+    : "incomplete"
 
   return (
     <tr>
@@ -44,7 +44,7 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
       <td className="py-2 pr-2.5 align-top" colSpan={showId ? 1 : 2}>
         <div className="font-disp font-semibold text-base tracking-tight">{deck.name}</div>
         <DeckLink link={deck.link} />
-        <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} · {label}</div>
+        <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} moves · {label}</div>
         <HeatGradientCrownBar value={prog.bestStreak} max={total} />
       </td>
       <td className="py-2 align-middle whitespace-nowrap">
