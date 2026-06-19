@@ -33,6 +33,10 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
     : prog.bestStreak === total
     ? "complete"
     : "incomplete"
+  const animation =
+    label === "complete" ? "lava"
+    : label === "incomplete" ? "pulse-edge"
+    : "none"
 
   return (
     <tr>
@@ -45,7 +49,7 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
         <div className="font-disp font-semibold text-base tracking-tight">{deck.name}</div>
         <DeckLink link={deck.link} />
         <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} moves · {label}</div>
-        <HeatGradientCrownBar value={prog.bestStreak} max={total} />
+        <HeatGradientCrownBar value={prog.bestStreak} max={total} animation={animation} />
       </td>
       <td className="py-2 align-middle whitespace-nowrap">
         <button className="btn btn-primary" onClick={() => {
