@@ -40,18 +40,18 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
 
   return (
     <tr>
-      {showId && (
-        <td className="py-2 align-top w-9">
+      <td className="py-2 align-top w-9">
+        {showId ? (
           <span className="font-disp font-extrabold text-base tracking-wide text-muted min-w-8">{deck.id}</span>
-        </td>
-      )}
-      <td className="py-2 pr-2.5 align-top" colSpan={showId ? 1 : 2}>
+        ) : null}
+      </td>
+      <td className="py-2 pr-2.5 align-top">
         <div className="font-disp font-semibold text-base tracking-tight">{deck.name}</div>
         <DeckLink link={deck.link} />
         <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} moves · {label}</div>
         <HeatGradientCrownBar value={prog.bestStreak} max={total} animation={animation} />
       </td>
-      <td className="py-2 align-bottom whitespace-nowrap">
+      <td className="py-2 align-top w-[71px]">
         <button className="btn btn-primary" onClick={() => {
           analytics.event({
             action: 'deck_selected',
@@ -121,7 +121,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
             <div className="font-disp font-bold text-[0.7rem] tracking-[0.18em] uppercase text-muted pt-1 pb-1.5 border-b border-border mb-1">
               Series {series.id} — {series.name}
             </div>
-            <table className="w-full border-collapse">
+            <table className="w-full table-fixed border-collapse">
               <tbody>
                 {seriesDecks.map(d => (
                   <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} showId />
@@ -137,7 +137,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
           <div className="font-disp font-bold text-[0.7rem] tracking-[0.18em] uppercase text-muted pt-1 pb-1.5 border-b border-border mb-1">
             Named Flows
           </div>
-          <table className="w-full border-collapse">
+          <table className="w-full table-fixed border-collapse">
             <tbody>
               {NAMED_FLOWS.map(d => (
                 <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} showId={false} />
