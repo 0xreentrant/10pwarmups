@@ -114,12 +114,12 @@ function HeatGradientStyles() {
           #a83218 100%
         );
         background-size: 200% 100%;
-        animation: hgc-fill-lava 6s linear infinite, hgc-fill-lava-glow 3s ease-in-out infinite;
+        animation: hgc-fill-lava 5s linear infinite, hgc-fill-lava-glow 2.5s ease-in-out infinite;
       }
 
       @keyframes hgc-fill-lava {
-        0% { background-position: 0% 50%; }
-        100% { background-position: 100% 50%; }
+        0% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
       }
 
       @keyframes hgc-fill-lava-glow {
