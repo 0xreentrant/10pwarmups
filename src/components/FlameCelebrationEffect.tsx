@@ -82,11 +82,21 @@ export default function FlameCelebrationEffect({
 }: FlameCelebrationEffectProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imagesRef = useRef<Partial<Record<FlameTier, HTMLImageElement>>>({})
+  const spritesRef = useRef<Partial<Record<FlameTier, HTMLCanvasElement>>>({})
 
   useEffect(() => {
     const tiers = Object.keys(FLAME_SRC) as FlameTier[]
     tiers.forEach(tier => {
       const img = new Image()
+      img.onload = () => {
+        const sprite = document.createElement("canvas")
+        sprite.width = img.naturalWidth || 160
+        sprite.height = img.naturalHeight || 210
+        const spriteCtx = sprite.getContext("2d")
+        if (!spriteCtx) return
+        spriteCtx.drawImage(img, 0, 0, sprite.width, sprite.height)
+        spritesRef.current[tier] = sprite
+      }
       img.src = FLAME_SRC[tier]
       imagesRef.current[tier] = img
     })
@@ -116,6 +126,8 @@ export default function FlameCelebrationEffect({
     let start = 0
     let last = 0
     let spawnCarry = 0
+    let width = 0
+    let height = 0
     let seed = playId * 9973 + 1
     const rng = () => {
       seed = (seed * 16807) % 2147483647
@@ -125,6 +137,8 @@ export default function FlameCelebrationEffect({
     const resize = () => {
       const rect = parent.getBoundingClientRect()
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      width = rect.width
+      height = rect.height
       canvas.width = Math.max(1, Math.floor(rect.width * dpr))
       canvas.height = Math.max(1, Math.floor(rect.height * dpr))
       canvas.style.width = `${rect.width}px`
@@ -140,15 +154,18 @@ export default function FlameCelebrationEffect({
 
     const drawFlame = (p: FlameParticle, alpha: number) => {
       const img = imagesRef.current[p.tier]
+      const sprite = spritesRef.current[p.tier]
       const w = p.size
       const h = p.size * TIER_HEIGHT[p.tier]
       const x = p.x - w / 2
       const y = p.y - h
 
-      ctx.save()
+      const previousAlpha = ctx.globalAlpha
       ctx.globalAlpha = alpha
-      const sway = Math.sin(p.wobble + (performance.now() - p.born) * 0.006) * 4
-      if (img?.complete && img.naturalWidth > 0) {
+      const sway = Math.sin(p.wobble) * 4
+      if (sprite) {
+        ctx.drawImage(sprite, x + sway, y, w, h)
+      } else if (img?.complete && img.naturalWidth > 0) {
         ctx.drawImage(img, x + sway, y, w, h)
       } else {
         const grad = ctx.createLinearGradient(x, y + h, x, y)
@@ -160,7 +177,7 @@ export default function FlameCelebrationEffect({
         ctx.ellipse(x + w / 2 + sway, y + h * 0.55, w * 0.35, h * 0.45, 0, 0, Math.PI * 2)
         ctx.fill()
       }
-      ctx.restore()
+      ctx.globalAlpha = previousAlpha
     }
 
     const tick = (now: number) => {
@@ -173,10 +190,6 @@ export default function FlameCelebrationEffect({
       const progress = Math.min(1, elapsed / durationMs)
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
-
-      const rect = parent.getBoundingClientRect()
-      const width = rect.width
-      const height = rect.height
 
       if (progress < 1) {
         const intensity = spawnIntensity(progress, mult)
