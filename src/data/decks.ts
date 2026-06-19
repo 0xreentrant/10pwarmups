@@ -102,7 +102,7 @@ const DECKS: Deck[] = [
     ]
   },
   {
-    id: "A4", series: "A", name: "Inverted Guard",
+    id: "A4", series: "A", name: "Cross Wrist Control",
     link: "https://www.instagram.com/10pwarmups/reel/DYS60K2zLUd/",
     moves: [
       m("Cross Wrist Control", "A"),
@@ -153,7 +153,7 @@ const DECKS: Deck[] = [
   },
   {
     id: "B2", series: "B", name: "Standing Knee Cut",
-    link: "https://www.instagram.com/p/DXuSvUikaRI/",
+    link: "https://www.instagram.com/p/DVcNxxZE4J6/",
     moves: [
       m("Standing Knee Cut", "A"),
       m("Rolling Kimura", "A"),
@@ -500,7 +500,7 @@ const DECKS: Deck[] = [
     ]
   },
   {
-    id: "E4", series: "E", name: "Open Z",
+    id: "E4", series: "E", name: "Open Z Mobility",
     link: "https://www.instagram.com/10pwarmups/reel/DZBeSE1TSAS/",
     moves: [
       m("Open Z Mobility", "B"),
