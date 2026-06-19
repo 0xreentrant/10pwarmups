@@ -98,16 +98,23 @@ function HeatGradientStyles() {
       .hgc-fill--anim-lava {
         background: linear-gradient(
           90deg,
-          #5c1a0e 0%,
-          #c0392b 25%,
-          #f39c12 50%,
-          #ffe08a 62%,
-          #f39c12 74%,
-          #c0392b 88%,
-          #5c1a0e 100%
+          #a83218 0%,
+          #c0392b 12.5%,
+          #f39c12 25%,
+          #ffe08a 31%,
+          #f39c12 37%,
+          #c0392b 43%,
+          #a83218 50%,
+          #a83218 50%,
+          #c0392b 62.5%,
+          #f39c12 75%,
+          #ffe08a 81%,
+          #f39c12 87%,
+          #c0392b 93%,
+          #a83218 100%
         );
-        background-size: 300% 100%;
-        animation: hgc-fill-lava 6s ease-in-out infinite alternate, hgc-fill-lava-glow 3s ease-in-out infinite;
+        background-size: 200% 100%;
+        animation: hgc-fill-lava 6s linear infinite, hgc-fill-lava-glow 3s ease-in-out infinite;
       }
 
       @keyframes hgc-fill-lava {
