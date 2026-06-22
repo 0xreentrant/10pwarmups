@@ -51,7 +51,7 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
         <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} moves · {label}</div>
         <HeatGradientCrownBar value={prog.bestStreak} max={total} animation={animation} />
       </td>
-      <td className="py-2 align-top w-[71px]">
+      <td className="py-2 align-middle w-[71px]">
         <button className="btn btn-primary" onClick={() => {
           analytics.event({
             action: 'deck_selected',
