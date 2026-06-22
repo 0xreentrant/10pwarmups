@@ -9,7 +9,7 @@ import {
 } from "../hooks/useAnimatedStreak"
 import type { Deck, ProgressMap, Session } from "../types/domain"
 import FlameCelebrationEffect from "./FlameCelebrationEffect"
-import FlameStreakBar from "./FlameStreakBar"
+import HeatGradientCrownBar from "./HeatGradientCrownBar"
 import MoveList from "./MoveList"
 import * as analytics from "../utils/analytics"
 import { deckLabel, formatDuration, nextDeckId } from "../utils/deckUtils"
@@ -84,10 +84,10 @@ export default function CompletionScreen({ deck, session, progress, onNext, onHo
         <div className="text-[11px] text-muted mb-0.5">
           {Math.round(animatedStreak)}/{total} · final streak
         </div>
-        <FlameStreakBar
+        <HeatGradientCrownBar
           value={animatedStreak}
           max={total}
-          flameFromStart
+          animation={perfect ? "lava" : animatedStreak > 0 ? "pulse-edge" : "none"}
         />
 
         <table className="w-full mt-4">
