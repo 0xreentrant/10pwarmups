@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
+import { describe, it, expect, beforeEach } from "vitest"
 import { createActor } from "xstate"
-import { appMachine, getActiveSessionElapsedMs } from "./appMachine"
+import { appMachine } from "./appMachine"
 import { precomputeDeckOptions } from "./utils/deckUtils"
 import type { Deck } from "./types/domain"
 
@@ -84,22 +84,21 @@ describe("appMachine", () => {
     expect(snap.context.progress.A1.attempts[0].duration).toBeGreaterThanOrEqual(0)
   })
 
-  it("records an abandoned attempt after at least one answered move", () => {
+  it("discards session without recording an attempt after exit request", () => {
     const actor = makeActor()
     startDeck(actor)
     answerCurrent(actor)
-    actor.send({ type: "CONFIRM_EXIT" })
+    actor.send({ type: "REQUEST_EXIT" })
 
     const snap = actor.getSnapshot()
     expect(snap.context.session).toBeNull()
-    expect(snap.context.progress.A1.attempts).toHaveLength(1)
-    expect(snap.context.progress.A1.attempts[0].abandoned).toBe(true)
+    expect(snap.context.progress.A1.attempts).toHaveLength(0)
   })
 
-  it("records no attempt when abandoning before answering", () => {
+  it("records no attempt when exiting before answering", () => {
     const actor = makeActor()
     startDeck(actor)
-    actor.send({ type: "CONFIRM_EXIT" })
+    actor.send({ type: "REQUEST_EXIT" })
 
     const snap = actor.getSnapshot()
     expect(snap.context.session).toBeNull()
@@ -195,41 +194,12 @@ describe("appMachine", () => {
     expect(actor.getSnapshot().context.progress.A1.attempts).toHaveLength(1)
   })
 
-  it("pauses the timer on exit request and resumes on cancel", () => {
-    vi.useFakeTimers()
+  it("clears session immediately on exit request", () => {
     const actor = makeActor()
     startDeck(actor)
-    vi.advanceTimersByTime(2000)
 
     actor.send({ type: "REQUEST_EXIT" })
-    expect(actor.getSnapshot().context.session?.pausedAt).not.toBeNull()
-    expect(actor.getSnapshot().context.exitConfirm).toBe(true)
-
-    vi.advanceTimersByTime(5000)
-    actor.send({ type: "CANCEL_EXIT" })
-    expect(actor.getSnapshot().context.session?.pausedAt).toBeNull()
-    expect(actor.getSnapshot().context.exitConfirm).toBe(false)
-
-    vi.advanceTimersByTime(1000)
-    const elapsed = getActiveSessionElapsedMs(actor.getSnapshot().context.session!)
-    expect(elapsed).toBeGreaterThanOrEqual(2900)
-    expect(elapsed).toBeLessThan(4000)
-    vi.useRealTimers()
-  })
-
-  it("excludes paused time from abandoned attempt duration", () => {
-    vi.useFakeTimers()
-    const actor = makeActor()
-    startDeck(actor)
-    answerCurrent(actor)
-    vi.advanceTimersByTime(1000)
-
-    actor.send({ type: "REQUEST_EXIT" })
-    vi.advanceTimersByTime(10000)
-    actor.send({ type: "CONFIRM_EXIT" })
-
-    const duration = actor.getSnapshot().context.progress.A1.attempts[0].duration
-    expect(duration).toBe(1)
-    vi.useRealTimers()
+    expect(actor.getSnapshot().value).toBe("home")
+    expect(actor.getSnapshot().context.session).toBeNull()
   })
 })

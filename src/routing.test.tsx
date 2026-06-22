@@ -33,12 +33,6 @@ async function startFirstDeck() {
   await screen.findByText(/What's next/)
 }
 
-async function confirmLeaveTest() {
-  await screen.findByText(/Leave this test/i)
-  fireEvent.click(screen.getByText("Leave test"))
-  await screen.findByText("10th Planet")
-}
-
 function watchForText(text: string) {
   let seen = document.body.textContent?.includes(text) ?? false
   const observer = new MutationObserver(() => {
@@ -105,7 +99,7 @@ describe("routing", () => {
     }, { timeout: 5000 })
   })
 
-  it("browser back from training after one answer shows exit warning then returns home on confirm", async () => {
+  it("browser back from training after one answer returns home immediately", async () => {
     const { router, history } = await renderWithRouter("/")
     await startFirstDeck()
     clickOptionWithText(A1_MOVES[0])
@@ -115,23 +109,20 @@ describe("routing", () => {
     try {
       history.back()
       await waitFor(() => {
-        expect(router.state.location.pathname).toBe("/A1/training")
-        expect(screen.getByText(/Leave this test/i)).toBeInTheDocument()
+        expect(router.state.location.pathname).toBe("/")
+        expect(screen.getByText("10th Planet")).toBeInTheDocument()
+        expect(screen.queryByText(/Leave this test/i)).not.toBeInTheDocument()
       })
-      expect(homeScreen.wasSeen()).toBe(false)
+      expect(homeScreen.wasSeen()).toBe(true)
     } finally {
       homeScreen.disconnect()
     }
 
-    await confirmLeaveTest()
-    expect(router.state.location.pathname).toBe("/")
-
     const saved = JSON.parse(localStorage.getItem("tp_progress")!)
-    expect(saved.A1.attempts).toHaveLength(1)
-    expect(saved.A1.attempts[0].abandoned).toBe(true)
+    expect(saved.A1.attempts).toHaveLength(0)
   })
 
-  it("blocks router navigation away from active training before the route changes", async () => {
+  it("allows router navigation away from active training without a prompt", async () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()
     clickOptionWithText(A1_MOVES[0])
@@ -139,21 +130,43 @@ describe("routing", () => {
 
     void router.navigate({ to: "/" })
 
-    await screen.findByText(/Leave this test/i)
-    expect(router.state.location.pathname).toBe("/A1/training")
-    expect(screen.queryByText("10th Planet")).not.toBeInTheDocument()
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/")
+      expect(screen.getByText("10th Planet")).toBeInTheDocument()
+      expect(screen.queryByText(/Leave this test/i)).not.toBeInTheDocument()
+    })
   })
 
-  it("cancelling exit warning keeps training active", async () => {
-    await renderWithRouter("/")
+  it("in-screen back leaves training immediately", async () => {
+    const { router } = await renderWithRouter("/")
     await startFirstDeck()
 
     fireEvent.click(screen.getByText(/← Back/))
-    await screen.findByText(/Leave this test/i)
-    fireEvent.click(screen.getByText("Keep training"))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/")
+      expect(screen.getByText("10th Planet")).toBeInTheDocument()
+      expect(screen.queryByText(/Leave this test/i)).not.toBeInTheDocument()
+    })
+  })
 
-    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
-    expect(screen.queryByText(/Leave this test/i)).not.toBeInTheDocument()
+  it("browser forward after backing out of active training redirects to deck progress", async () => {
+    const { router, history } = await renderWithRouter("/")
+    await startFirstDeck()
+    clickOptionWithText(A1_MOVES[0])
+    await new Promise(r => setTimeout(r, 100))
+
+    history.back()
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/")
+      expect(screen.getByText("10th Planet")).toBeInTheDocument()
+    })
+
+    history.forward()
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/A1")
+      expect(screen.getByText("Summary")).toBeInTheDocument()
+      expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
+    })
   })
 
   it("browser back from completed returns home, not training", async () => {

@@ -39,8 +39,6 @@ async function answerDeckMoves(moves: string[], delay = 100) {
 }
 
 async function confirmLeaveTest() {
-  await screen.findByText(/Leave this test/i)
-  fireEvent.click(screen.getByText("Leave test"))
   await screen.findByText("10th Planet")
 }
 
@@ -306,7 +304,6 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
       const backButton = screen.getByText(/← Back/);
       fireEvent.click(backButton);
-      await screen.findByText(/Leave this test/i);
       await confirmLeaveTest();
     });
 
@@ -356,11 +353,9 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       fireEvent.click(backButton);
       await confirmLeaveTest();
 
-      // Check that attempt was recorded
+      // Check that in-progress attempt was discarded
       const saved = JSON.parse(localStorage.getItem('tp_progress')!);
-      expect(saved['A1'].attempts.length).toBeGreaterThan(0);
-      const lastAttempt = saved['A1'].attempts[saved['A1'].attempts.length - 1];
-      expect(lastAttempt.abandoned).toBe(true);
+      expect(saved['A1'].attempts).toHaveLength(0);
     });
 
     it('handles reset confirmation correctly', async () => {

@@ -70,7 +70,6 @@ interface AppContext {
   currentDeckId: string | null
   session: Session | null
   resetConfirm: boolean
-  exitConfirm: boolean
 }
 
 interface AppInput {
@@ -86,8 +85,6 @@ export type AppEvent =
   | { type: "GO_HOME" }
   | { type: "RESTORE_COMPLETED" }
   | { type: "REQUEST_EXIT" }
-  | { type: "CANCEL_EXIT" }
-  | { type: "CONFIRM_EXIT" }
 
 export function hasRestorableCompletion(
   snap: { value: unknown; context: AppContext },
@@ -116,8 +113,6 @@ const appMachineSetup = setup({
     clearStorage: () => { resetProgress() },
     confirmReset: assign({ resetConfirm: true }),
     cancelReset: assign({ resetConfirm: false }),
-    confirmExit: assign({ exitConfirm: true }),
-    cancelExit: assign({ exitConfirm: false }),
     resetAll: assign(({ context }) => ({
       resetConfirm: false,
       progress: getDefaultProgress(context.decks),
@@ -138,25 +133,6 @@ const appMachineSetup = setup({
           allOptions,
           options: allOptions[0],
           locked: false,
-        },
-      }
-    }),
-    pauseSession: assign(({ context }) => {
-      if (!context.session || context.session.pausedAt) return {}
-      return {
-        session: {
-          ...context.session,
-          pausedAt: Date.now(),
-        },
-      }
-    }),
-    resumeSession: assign(({ context }) => {
-      if (!context.session || !context.session.pausedAt) return {}
-      return {
-        session: {
-          ...context.session,
-          accumulatedPauseMs: context.session.accumulatedPauseMs + (Date.now() - context.session.pausedAt),
-          pausedAt: null,
         },
       }
     }),
@@ -222,32 +198,6 @@ const appMachineSetup = setup({
         },
       }
     }),
-    recordAbandonedAttempt: assign(({ context }) => {
-      const d = getDeck(context)
-      if (!d || !context.session || context.session.moveSequence.length === 0) return {}
-      const duration = Math.floor(getActiveSessionElapsedMs(context.session) / 1000)
-      const wrongMoves = context.session.moveSequence.filter(x => !x.correct).map(x => x.moveIndex)
-      const longestStreak = getLongestStreak(context.session.moveSequence)
-      const attempt = {
-        date: new Date().toISOString().split("T")[0],
-        finalStreak: longestStreak,
-        wrongMoves,
-        duration,
-        abandoned: true,
-      }
-      const prev = context.progress[d.id]
-      return {
-        progress: {
-          ...context.progress,
-          [d.id]: {
-            currentStreak: context.session.currentStreak,
-            bestStreak: Math.max(prev.bestStreak, longestStreak),
-            lastAttemptDate: attempt.date,
-            attempts: [...prev.attempts, attempt],
-          },
-        },
-      }
-    }),
   },
   guards: {
     deckExists: ({ context, event }) =>
@@ -255,8 +205,6 @@ const appMachineSetup = setup({
     resetConfirmed: ({ context }) => context.resetConfirm,
     sessionNotLocked: ({ context }) =>
       !!context.session && !context.session.locked,
-    hasMovesToAbandon: ({ context }) =>
-      !!context.session && context.session.moveSequence.length > 0,
     isLastMove: ({ context }) => {
       const d = getDeck(context)
       if (!d || !context.session) return false
@@ -276,7 +224,6 @@ export const appMachine = appMachineSetup.createMachine({
     currentDeckId: null,
     session: null,
     resetConfirm: false,
-    exitConfirm: false,
   }),
   initial: "home",
   states: {
@@ -319,22 +266,9 @@ export const appMachine = appMachineSetup.createMachine({
           },
         ],
         REQUEST_EXIT: {
-          actions: ["pauseSession", "confirmExit"],
+          target: "home",
+          actions: "clearSession",
         },
-        CANCEL_EXIT: {
-          actions: ["resumeSession", "cancelExit"],
-        },
-        CONFIRM_EXIT: [
-          {
-            guard: "hasMovesToAbandon",
-            target: "home",
-            actions: ["recordAbandonedAttempt", "clearSession", "cancelExit"],
-          },
-          {
-            target: "home",
-            actions: ["clearSession", "cancelExit"],
-          },
-        ],
       },
     },
     completed: {

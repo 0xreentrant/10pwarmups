@@ -8,7 +8,6 @@ import {
   useRouter,
 } from "@tanstack/react-router"
 import { useSelector } from "@xstate/react"
-import ExitConfirmPopover from "./components/ExitConfirmPopover"
 import CompletionScreen from "./components/CompletionScreen"
 import HomeScreen from "./components/HomeScreen"
 import ProgressScreen from "./components/ProgressScreen"
@@ -28,20 +27,6 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  beforeLoad: () => {
-    const snap = getAppSnapshot()
-    if (
-      snap.value === "training" &&
-      snap.context.currentDeckId &&
-      snap.context.session &&
-      !snap.context.session.locked
-    ) {
-      if (!snap.context.exitConfirm) {
-        appActor.send({ type: "REQUEST_EXIT" })
-      }
-      throw redirect({ to: "/$deckId/training", params: { deckId: snap.context.currentDeckId } })
-    }
-  },
   component: HomeRoute,
 })
 
@@ -138,32 +123,21 @@ function RootLayout() {
   }, [routerInstance])
 
   useEffect(() => {
-    return routerInstance.history.block({
-      blockerFn: ({ action, nextLocation }) => {
-        const snap = getAppSnapshot()
-        const activeTrainingPath = snap.context.currentDeckId
-          ? `/${snap.context.currentDeckId}/training`
-          : null
-        const leavingActiveTraining =
-          snap.value === "training" &&
-          !!snap.context.session &&
-          !snap.context.session.locked &&
-          (action === "BACK" || nextLocation.pathname !== activeTrainingPath)
-
-        if (!leavingActiveTraining) return false
-        if (!snap.context.exitConfirm) {
-          appActor.send({ type: "REQUEST_EXIT" })
-        }
-        return true
-      },
-      enableBeforeUnload: false,
-    })
-  }, [routerInstance])
-
-  useEffect(() => {
     return routerInstance.subscribe("onResolved", () => {
       const path = routerInstance.state.location.pathname
       const snap = getAppSnapshot()
+      if (
+        snap.value === "training" &&
+        snap.context.currentDeckId &&
+        snap.context.session &&
+        !snap.context.session.locked
+      ) {
+        const trainingPath = `/${snap.context.currentDeckId}/training`
+        if (path !== trainingPath) {
+          appActor.send({ type: "REQUEST_EXIT" })
+          return
+        }
+      }
       if (path === "/" && snap.value === "completed") {
         appActor.send({ type: "GO_HOME" })
       }
@@ -208,7 +182,6 @@ function TrainingRoute() {
   const { deckId } = trainingRoute.useParams()
   const deck = DECKS.find(d => d.id === deckId)!
   const session = useSelector(appActor, s => s.context.session)!
-  const exitConfirm = useSelector(appActor, s => s.context.exitConfirm)
 
   useEffect(() => {
     const sub = appActor.subscribe(snapshot => {
@@ -225,15 +198,10 @@ function TrainingRoute() {
         deck={deck}
         session={session}
         onOptionClick={optionIndex => appActor.send({ type: "OPTION_CLICK", optionIndex })}
-        onBack={() => appActor.send({ type: "REQUEST_EXIT" })}
-      />
-      <ExitConfirmPopover
-        open={exitConfirm}
-        onConfirm={() => {
-          appActor.send({ type: "CONFIRM_EXIT" })
-          routerInstance.navigate({ to: "/", ignoreBlocker: true })
+        onBack={() => {
+          appActor.send({ type: "REQUEST_EXIT" })
+          routerInstance.navigate({ to: "/" })
         }}
-        onCancel={() => appActor.send({ type: "CANCEL_EXIT" })}
       />
     </>
   )
