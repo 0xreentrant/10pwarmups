@@ -163,7 +163,8 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const saved = JSON.parse(localStorage.getItem('tp_progress')!);
       expect(saved).toBeDefined();
       expect(saved['A1']).toBeDefined();
-      expect(typeof saved['A1'].currentStreak).toBe('number');
+      expect(typeof saved['A1'].bestStreak).toBe('number');
+      expect(saved['A1'].currentStreak).toBeUndefined();
     });
 
     it('saves best streak when deck is completed', async () => {
@@ -184,7 +185,6 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       // Pre-set some progress data
       localStorage.setItem('tp_progress', JSON.stringify({
         A1: {
-          currentStreak: 0,
           bestStreak: 3,
           lastAttemptDate: '2026-06-05',
           attempts: [{ date: '2026-06-05', finalStreak: 3, wrongMoves: [], duration: 120 }],
@@ -360,7 +360,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
     it('handles reset confirmation correctly', async () => {
       localStorage.setItem('tp_progress', JSON.stringify({
-        A1: { currentStreak: 5, bestStreak: 5, attempts: [{ date: '2026-06-05' }] },
+        A1: { bestStreak: 5, attempts: [{ date: '2026-06-05' }] },
       }));
       restartAppActor();
 
@@ -404,7 +404,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
   describe('UI and presentation quality', () => {
     it('displays progress bars for each deck', async () => {
       localStorage.setItem('tp_progress', JSON.stringify({
-        A1: { currentStreak: 0, bestStreak: 3, attempts: [{}] },
+        A1: { bestStreak: 3, attempts: [{}] },
       }));
       restartAppActor();
 

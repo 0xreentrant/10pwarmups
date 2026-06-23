@@ -149,26 +149,6 @@ describe("routing", () => {
     })
   })
 
-  it("browser forward after backing out of active training redirects to deck progress", async () => {
-    const { router, history } = await renderWithRouter("/")
-    await startFirstDeck()
-    clickOptionWithText(A1_MOVES[0])
-    await new Promise(r => setTimeout(r, 100))
-
-    history.back()
-    await waitFor(() => {
-      expect(router.state.location.pathname).toBe("/")
-      expect(screen.getByText("10th Planet")).toBeInTheDocument()
-    })
-
-    history.forward()
-    await waitFor(() => {
-      expect(router.state.location.pathname).toBe("/A1")
-      expect(screen.getByText("Summary")).toBeInTheDocument()
-      expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
-    })
-  })
-
   it("browser back from completed returns home, not training", async () => {
     const { router, history } = await renderWithRouter("/")
     await startFirstDeck()

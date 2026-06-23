@@ -39,7 +39,6 @@ export interface Attempt {
 }
 
 export interface DeckProgress {
-  currentStreak: number
   bestStreak: number
   lastAttemptDate: string | null
   attempts: Attempt[]

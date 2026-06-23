@@ -26,7 +26,7 @@ interface DeckRowProps {
 }
 
 function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
-  const prog = progress[deck.id] || { currentStreak: 0, bestStreak: 0, attempts: [] }
+  const prog = progress[deck.id] || { bestStreak: 0, attempts: [] }
   const total = deck.moves.length
   const label = prog.attempts.length === 0
     ? "untrained"

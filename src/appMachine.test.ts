@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { createActor } from "xstate"
-import { appMachine } from "./appMachine"
+import { appMachine, loadProgress } from "./appMachine"
 import { precomputeDeckOptions } from "./utils/deckUtils"
 import type { Deck } from "./types/domain"
 
@@ -201,5 +201,28 @@ describe("appMachine", () => {
     actor.send({ type: "REQUEST_EXIT" })
     expect(actor.getSnapshot().value).toBe("home")
     expect(actor.getSnapshot().context.session).toBeNull()
+  })
+
+  it("does not persist currentStreak on deck progress after completion", () => {
+    const actor = makeActor()
+    completeDeck(actor)
+
+    expect(actor.getSnapshot().context.progress.A1).not.toHaveProperty("currentStreak")
+  })
+})
+
+describe("loadProgress", () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
+  it("strips legacy currentStreak from stored progress", () => {
+    localStorage.setItem("tp_progress", JSON.stringify({
+      A1: { currentStreak: 5, bestStreak: 3, lastAttemptDate: "2026-06-05", attempts: [] },
+    }))
+
+    const progress = loadProgress(mockDecks)
+    expect(progress.A1.bestStreak).toBe(3)
+    expect(progress.A1).not.toHaveProperty("currentStreak")
   })
 })

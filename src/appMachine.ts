@@ -11,7 +11,7 @@ const DECK_ID_MIGRATIONS: Record<string, string> = {
 export function getDefaultProgress(decks: Deck[]): ProgressMap {
   const p: ProgressMap = {}
   decks.forEach(d => {
-    p[d.id] = { currentStreak: 0, bestStreak: 0, lastAttemptDate: null, attempts: [] }
+    p[d.id] = { bestStreak: 0, lastAttemptDate: null, attempts: [] }
   })
   return p
 }
@@ -28,6 +28,11 @@ export function loadProgress(decks: Deck[]): ProgressMap {
       delete parsed[oldId]
     })
     Object.keys(base).forEach(id => { if (!parsed[id]) parsed[id] = base[id] })
+    Object.values(parsed).forEach(entry => {
+      if (typeof entry === "object" && entry !== null) {
+        delete (entry as Record<string, unknown>).currentStreak
+      }
+    })
     return parsed as ProgressMap
   } catch { return getDefaultProgress(decks) }
 }
@@ -183,7 +188,6 @@ const appMachineSetup = setup({
         progress: {
           ...context.progress,
           [d.id]: {
-            currentStreak: newStreak,
             bestStreak: Math.max(prev.bestStreak, longestStreak),
             lastAttemptDate: attempt.date,
             attempts: [...prev.attempts, attempt],
