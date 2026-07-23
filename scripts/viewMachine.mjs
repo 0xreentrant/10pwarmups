@@ -1,8 +1,11 @@
+import { createJiti } from "jiti"
 import { createActor } from "xstate"
 import { createWebSocketInspector } from "@statelyai/inspect"
 import { createInspectorServer } from "@statelyai/inspect/server"
-import { appMachine } from "../src/appMachine.js"
-import { precomputeDeckOptions } from "../src/utils/deckUtils.js"
+
+const jiti = createJiti(import.meta.url)
+const { appMachine } = await jiti.import("../src/appMachine.ts")
+const { precomputeDeckOptions } = await jiti.import("../src/utils/deckUtils.ts")
 
 const mockDecks = [
   {

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { DECKS } from './data/decks';
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from './data/whatsNew';
 import { restartAppActor } from './appActor';
 import { renderWithRouter } from './test/renderWithRouter';
@@ -59,7 +60,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       expect(screen.getByText('10th Planet')).toBeInTheDocument();
       expect(screen.getByText('Warmup Trainer')).toBeInTheDocument();
-      expect(screen.getByText(/34 decks/)).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(`${DECKS.length} decks`))).toBeInTheDocument();
     });
 
     it('shows all 8 series and named flows', async () => {
@@ -71,6 +72,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       expect(screen.getAllByText(/Named Flows/).length).toBeGreaterThan(0);
       expect(screen.getByText('Attack Series')).toBeInTheDocument();
       expect(screen.getByText('Ramey Flow')).toBeInTheDocument();
+      expect(screen.getByText('Marvin Flow')).toBeInTheDocument();
       expect(screen.queryByText(/Series I/)).not.toBeInTheDocument();
       expect(screen.queryByText('I1')).not.toBeInTheDocument();
       expect(screen.queryByText('J1')).not.toBeInTheDocument();
@@ -79,7 +81,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     it('displays a Train button for each deck', async () => {
       await renderWithRouter("/");
       const trainButtons = screen.getAllByText('Train');
-      expect(trainButtons.length).toBe(34);
+      expect(trainButtons.length).toBe(DECKS.length);
     });
   });
 
@@ -452,7 +454,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     it('creates deck entries in progress when loading default', async () => {
       await renderWithRouter("/");
       const trainButtons = screen.getAllByText('Train');
-      expect(trainButtons.length).toBe(34);
+      expect(trainButtons.length).toBe(DECKS.length);
     });
 
     it('correctly saves attempt timestamp when deck completes', async () => {

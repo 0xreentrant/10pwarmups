@@ -29,7 +29,7 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack }:
         <div>
           {deck.series && <span className="block mb-0.5 font-disp font-extrabold text-base tracking-wide text-muted min-w-8">{deck.id}</span>}
           <h2>{deck.name}</h2>
-          <DeckLink link={deck.link} />
+          <DeckLink link={deck.link} variant="full" />
         </div>
         <StreakFlameBadge value={sessionBestStreak} max={total} />
       </div>

@@ -848,5 +848,30 @@ const DECKS: Deck[] = [
       m("Top Side Heel Hook", "B"),
     ]
   },
+  {
+    id: "marvin-flow", name: "Marvin Flow",
+    moves: [
+      m("Black Mamba", "A"),
+      m("Shin 2 Shin", "A"),
+      m("Ashi", "A"),
+      m("Cummings Blast", "A"),
+      m("DOA", "A"),
+      m("Hand Fight", "B"),
+      m("X-Break", "A"),
+      m("Steering Wheel Toe Hold", "A"),
+      m("Opposite Toe Hold", "A"),
+      m("Straight Ankle", "A"),
+      m("Roof", "A"),
+      m("Top Side Straight Ankle", "A"),
+      m("Top Side Heel Hook", "A"),
+      m("Toe Peel", "B"),
+      m("Knee Hug", "B"),
+      m("Build & Backstep", "B"),
+      m("DOA Smash", "B"),
+      m("Straight Arm Lock", "B"),
+      m("Kimura", "B"),
+      m("Vaporizer", "B"),
+    ]
+  },
 ];
 export { SERIES, DECKS, m }

@@ -40,14 +40,16 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
 
   return (
     <tr>
-      <td className="py-2 align-top w-9">
-        {showId ? (
-          <span className="font-disp font-extrabold text-base tracking-wide text-muted min-w-8">{deck.id}</span>
-        ) : null}
+      <td className="py-2 align-top w-[4.75rem]">
+        <div className="flex flex-col items-center gap-1">
+          {showId ? (
+            <span className="font-disp font-extrabold text-base tracking-wide text-muted leading-none">{deck.id}</span>
+          ) : null}
+          <DeckLink link={deck.link} variant="emoji" />
+        </div>
       </td>
       <td className="py-2 pr-2.5 align-top">
         <div className="font-disp font-semibold text-base tracking-tight">{deck.name}</div>
-        <DeckLink link={deck.link} />
         <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} moves · {label}</div>
         <HeatGradientCrownBar value={prog.bestStreak} max={total} animation={animation} />
       </td>
@@ -105,7 +107,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
       <h1 className="mb-1">10th Planet</h1>
       <h1 className="mb-1.5 text-accent">Warmup Trainer</h1>
       <p className="text-[11px] text-muted mt-0.5 mb-5 tracking-wide">openthesystem.app</p>
-      <p className="text-[11px] text-muted mt-0.5 mb-8 tracking-widest uppercase">34 decks · 8 series</p>
+      <p className="text-[11px] text-muted mt-0.5 mb-8 tracking-widest uppercase">{DECKS.length} decks · {SERIES.length} series</p>
 
       <nav className="flex justify-between items-center gap-1 mb-7 border-y border-border py-2">
         {SERIES.map(series => (
