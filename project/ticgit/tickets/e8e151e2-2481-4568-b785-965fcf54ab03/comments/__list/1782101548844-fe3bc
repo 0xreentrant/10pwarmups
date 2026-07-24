@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"Remove back-navigation confirmation flow. Leaving training should discard in-progress session immediately and allow normal back/forward behavior."}

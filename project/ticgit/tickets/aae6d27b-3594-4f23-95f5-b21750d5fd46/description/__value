@@ -1,0 +1,1 @@
+Show full move list without "What's next?" quiz. Entry from home next to Train, and toggle under title between train/review. Confirm dialog only when leaving in-progress training for review. Mode switches reset quiz progress. Back from review returns to home menu.
