@@ -149,6 +149,76 @@ describe("routing", () => {
     })
   })
 
+  it("navigates to review URL when Review is clicked", async () => {
+    const { router } = await renderWithRouter("/")
+    const reviewButtons = await screen.findAllByText("Review")
+    fireEvent.click(reviewButtons[0])
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/A1/review")
+    })
+    expect(screen.getByText("Kneeling")).toBeInTheDocument()
+    expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
+    expect(screen.getByText("Kneeling Granby")).toBeInTheDocument()
+    expect(screen.getByText("Granby Flow")).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Train" })).toBeInTheDocument()
+  })
+
+  it("confirms before switching from training to review and resets quiz progress", async () => {
+    const { router } = await renderWithRouter("/")
+    await startFirstDeck()
+    clickOptionWithText(A1_MOVES[0])
+    await new Promise(r => setTimeout(r, 100))
+
+    fireEvent.click(screen.getByRole("button", { name: "Review" }))
+    expect(screen.getByText(/Switch to review/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText("Keep training"))
+    expect(screen.queryByText(/Switch to review/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
+    expect(router.state.location.pathname).toBe("/A1/training")
+
+    fireEvent.click(screen.getByRole("button", { name: "Review" }))
+    fireEvent.click(screen.getByText("Go to review"))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/A1/review")
+    })
+    expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
+    expect(screen.getByText("Kneeling Granby")).toBeInTheDocument()
+  })
+
+  it("switches from review to train without a confirm dialog", async () => {
+    const { router } = await renderWithRouter("/")
+    const reviewButtons = await screen.findAllByText("Review")
+    fireEvent.click(reviewButtons[0])
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/A1/review")
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Train" }))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/A1/training")
+    })
+    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Switch to review/i)).not.toBeInTheDocument()
+  })
+
+  it("returns home from review via Back", async () => {
+    const { router } = await renderWithRouter("/")
+    const reviewButtons = await screen.findAllByText("Review")
+    fireEvent.click(reviewButtons[0])
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/A1/review")
+    })
+
+    fireEvent.click(screen.getByText(/← Back/))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/")
+      expect(screen.getByText("10th Planet")).toBeInTheDocument()
+    })
+  })
+
   it("browser back from completed returns home, not training", async () => {
     const { router, history } = await renderWithRouter("/")
     await startFirstDeck()

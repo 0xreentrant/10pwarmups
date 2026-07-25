@@ -64,6 +64,18 @@ const trainingRoute = createRoute({
   component: TrainingRoute,
 })
 
+const reviewRoute = createRoute({
+  getParentRoute: () => deckRoute,
+  path: "/review",
+  beforeLoad: ({ params }) => {
+    const snap = getAppSnapshot()
+    if (snap.value !== "review" || snap.context.currentDeckId !== params.deckId) {
+      throw redirect({ to: "/$deckId", params: { deckId: params.deckId } })
+    }
+  },
+  component: ReviewRoute,
+})
+
 const completedRoute = createRoute({
   getParentRoute: () => deckRoute,
   path: "/completed",
@@ -99,6 +111,7 @@ export const routeTree = rootRoute.addChildren([
   deckRoute.addChildren([
     deckIndexRoute,
     trainingRoute,
+    reviewRoute,
     completedRoute,
   ]),
 ])
@@ -138,6 +151,13 @@ function RootLayout() {
           return
         }
       }
+      if (snap.value === "review" && snap.context.currentDeckId) {
+        const reviewPath = `/${snap.context.currentDeckId}/review`
+        if (path !== reviewPath) {
+          appActor.send({ type: "REQUEST_EXIT" })
+          return
+        }
+      }
       if (path === "/" && snap.value === "completed") {
         appActor.send({ type: "GO_HOME" })
       }
@@ -169,6 +189,10 @@ function HomeRoute() {
         appActor.send({ type: "START_DECK", deckId })
         routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
       }}
+      onReviewClick={deckId => {
+        appActor.send({ type: "START_REVIEW", deckId })
+        routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
+      }}
       onStats={() => routerInstance.navigate({ to: "/progress" })}
       onReset={() => appActor.send({ type: "RESET" })}
       resetConfirm={resetConfirm}
@@ -193,17 +217,45 @@ function TrainingRoute() {
   }, [deckId, routerInstance])
 
   return (
-    <>
-      <TrainingScreen
-        deck={deck}
-        session={session}
-        onOptionClick={optionIndex => appActor.send({ type: "OPTION_CLICK", optionIndex })}
-        onBack={() => {
-          appActor.send({ type: "REQUEST_EXIT" })
-          routerInstance.navigate({ to: "/" })
-        }}
-      />
-    </>
+    <TrainingScreen
+      deck={deck}
+      mode="training"
+      session={session}
+      onOptionClick={optionIndex => appActor.send({ type: "OPTION_CLICK", optionIndex })}
+      onBack={() => {
+        appActor.send({ type: "REQUEST_EXIT" })
+        routerInstance.navigate({ to: "/" })
+      }}
+      onSwitchToReview={() => {
+        appActor.send({ type: "START_REVIEW", deckId })
+        routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
+      }}
+      onSwitchToTrain={() => {}}
+    />
+  )
+}
+
+function ReviewRoute() {
+  const routerInstance = useRouter()
+  const { deckId } = reviewRoute.useParams()
+  const deck = DECKS.find(d => d.id === deckId)!
+
+  return (
+    <TrainingScreen
+      deck={deck}
+      mode="review"
+      session={null}
+      onOptionClick={() => {}}
+      onBack={() => {
+        appActor.send({ type: "REQUEST_EXIT" })
+        routerInstance.navigate({ to: "/" })
+      }}
+      onSwitchToReview={() => {}}
+      onSwitchToTrain={() => {
+        appActor.send({ type: "START_DECK", deckId })
+        routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
+      }}
+    />
   )
 }
 

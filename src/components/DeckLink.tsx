@@ -29,9 +29,7 @@ export default function DeckLink({ link, variant = "full" }: DeckLinkProps) {
         onClick={onClick}
       >
         <span className="text-3xl leading-none" aria-hidden>🎞️</span>
-        <span className="text-[10px] leading-tight text-center">
-          watch<br />video
-        </span>
+        <span className="text-xs leading-tight text-center">watch</span>
       </a>
     )
   }

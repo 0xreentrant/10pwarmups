@@ -84,6 +84,7 @@ interface AppInput {
 
 export type AppEvent =
   | { type: "START_DECK"; deckId: string }
+  | { type: "START_REVIEW"; deckId: string }
   | { type: "OPTION_CLICK"; optionIndex: number }
   | { type: "RESET" }
   | { type: "CANCEL_RESET" }
@@ -139,6 +140,14 @@ const appMachineSetup = setup({
           options: allOptions[0],
           locked: false,
         },
+      }
+    }),
+    startReview: assign(({ context, event }) => {
+      if (event.type !== "START_REVIEW") return {}
+      if (!context.decks.some(x => x.id === event.deckId)) return {}
+      return {
+        currentDeckId: event.deckId,
+        session: null,
       }
     }),
     clearSession: assign({
@@ -206,6 +215,8 @@ const appMachineSetup = setup({
   guards: {
     deckExists: ({ context, event }) =>
       event.type === "START_DECK" && context.decks.some(x => x.id === event.deckId),
+    reviewDeckExists: ({ context, event }) =>
+      event.type === "START_REVIEW" && context.decks.some(x => x.id === event.deckId),
     resetConfirmed: ({ context }) => context.resetConfirm,
     sessionNotLocked: ({ context }) =>
       !!context.session && !context.session.locked,
@@ -242,6 +253,11 @@ export const appMachine = appMachineSetup.createMachine({
           target: "training",
           actions: "startDeck",
         },
+        START_REVIEW: {
+          guard: "reviewDeckExists",
+          target: "review",
+          actions: "startReview",
+        },
         RESET: [
           {
             guard: "resetConfirmed",
@@ -269,6 +285,24 @@ export const appMachine = appMachineSetup.createMachine({
             actions: "advanceSession",
           },
         ],
+        START_REVIEW: {
+          guard: "reviewDeckExists",
+          target: "review",
+          actions: "startReview",
+        },
+        REQUEST_EXIT: {
+          target: "home",
+          actions: "clearSession",
+        },
+      },
+    },
+    review: {
+      on: {
+        START_DECK: {
+          guard: "deckExists",
+          target: "training",
+          actions: "startDeck",
+        },
         REQUEST_EXIT: {
           target: "home",
           actions: "clearSession",
@@ -281,6 +315,11 @@ export const appMachine = appMachineSetup.createMachine({
           guard: "deckExists",
           target: "training",
           actions: "startDeck",
+        },
+        START_REVIEW: {
+          guard: "reviewDeckExists",
+          target: "review",
+          actions: "startReview",
         },
         GO_HOME: {
           target: "home",

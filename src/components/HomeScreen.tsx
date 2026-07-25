@@ -22,10 +22,11 @@ interface DeckRowProps {
   deck: Deck
   progress: ProgressMap
   onDeckClick: (deckId: string) => void
+  onReviewClick: (deckId: string) => void
   showId: boolean
 }
 
-function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
+function DeckRow({ deck, progress, onDeckClick, onReviewClick, showId }: DeckRowProps) {
   const prog = progress[deck.id] || { bestStreak: 0, attempts: [] }
   const total = deck.moves.length
   const label = prog.attempts.length === 0
@@ -53,15 +54,25 @@ function DeckRow({ deck, progress, onDeckClick, showId }: DeckRowProps) {
         <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} moves · {label}</div>
         <HeatGradientCrownBar value={prog.bestStreak} max={total} animation={animation} />
       </td>
-      <td className="py-2 align-middle w-[71px]">
-        <button className="btn btn-primary" onClick={() => {
-          analytics.event({
-            action: 'deck_selected',
-            category: 'Training',
-            label: `${deck.id} - ${deck.name}`
-          })
-          onDeckClick(deck.id)
-        }}>Train</button>
+      <td className="py-2 align-middle w-[9.5rem]">
+        <div className="flex gap-1 items-center justify-end">
+          <button className="btn btn-primary" onClick={() => {
+            analytics.event({
+              action: 'deck_selected',
+              category: 'Training',
+              label: `${deck.id} - ${deck.name}`
+            })
+            onDeckClick(deck.id)
+          }}>Train</button>
+          <button className="btn" onClick={() => {
+            analytics.event({
+              action: 'deck_review',
+              category: 'Review',
+              label: `${deck.id} - ${deck.name}`
+            })
+            onReviewClick(deck.id)
+          }}>Review</button>
+        </div>
       </td>
     </tr>
   )
@@ -71,13 +82,14 @@ interface HomeScreenProps {
   progress: ProgressMap
   scrollToSectionId?: string
   onDeckClick: (deckId: string) => void
+  onReviewClick: (deckId: string) => void
   onStats: () => void
   onReset: () => void
   resetConfirm: boolean
   onCancelReset: () => void
 }
 
-export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, onStats, onReset, resetConfirm, onCancelReset }: HomeScreenProps) {
+export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, onReviewClick, onStats, onReset, resetConfirm, onCancelReset }: HomeScreenProps) {
   const [showScrollTop, setShowScrollTop] = useState(false)
 
   useEffect(() => {
@@ -126,7 +138,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
             <table className="w-full table-fixed border-collapse">
               <tbody>
                 {seriesDecks.map(d => (
-                  <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} showId />
+                  <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} onReviewClick={onReviewClick} showId />
                 ))}
               </tbody>
             </table>
@@ -142,7 +154,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
           <table className="w-full table-fixed border-collapse">
             <tbody>
               {NAMED_FLOWS.map(d => (
-                <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} showId={false} />
+                <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} onReviewClick={onReviewClick} showId={false} />
               ))}
             </tbody>
           </table>

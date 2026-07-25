@@ -203,6 +203,49 @@ describe("appMachine", () => {
     expect(actor.getSnapshot().context.session).toBeNull()
   })
 
+  it("enters review from home without a quiz session", () => {
+    const actor = makeActor()
+    actor.send({ type: "START_REVIEW", deckId: "A1" })
+
+    const snap = actor.getSnapshot()
+    expect(snap.value).toBe("review")
+    expect(snap.context.currentDeckId).toBe("A1")
+    expect(snap.context.session).toBeNull()
+  })
+
+  it("discards in-progress training when switching to review", () => {
+    const actor = makeActor()
+    startDeck(actor)
+    answerCurrent(actor)
+    actor.send({ type: "START_REVIEW", deckId: "A1" })
+
+    const snap = actor.getSnapshot()
+    expect(snap.value).toBe("review")
+    expect(snap.context.session).toBeNull()
+    expect(snap.context.progress.A1.attempts).toHaveLength(0)
+  })
+
+  it("starts a fresh training session from review", () => {
+    const actor = makeActor()
+    actor.send({ type: "START_REVIEW", deckId: "A1" })
+    actor.send({ type: "START_DECK", deckId: "A1" })
+
+    const snap = actor.getSnapshot()
+    expect(snap.value).toBe("training")
+    expect(snap.context.session?.moveSequence).toHaveLength(0)
+    expect(snap.context.session?.locked).toBe(false)
+  })
+
+  it("returns home from review on exit request", () => {
+    const actor = makeActor()
+    actor.send({ type: "START_REVIEW", deckId: "A1" })
+    actor.send({ type: "REQUEST_EXIT" })
+
+    const snap = actor.getSnapshot()
+    expect(snap.value).toBe("home")
+    expect(snap.context.currentDeckId).toBeNull()
+  })
+
   it("does not persist currentStreak on deck progress after completion", () => {
     const actor = makeActor()
     completeDeck(actor)

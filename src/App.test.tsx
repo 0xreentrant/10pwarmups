@@ -83,6 +83,12 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const trainButtons = screen.getAllByText('Train');
       expect(trainButtons.length).toBe(DECKS.length);
     });
+
+    it('displays a Review button for each deck', async () => {
+      await renderWithRouter("/");
+      const reviewButtons = screen.getAllByText('Review');
+      expect(reviewButtons.length).toBe(DECKS.length);
+    });
   });
 
   describe('CRITICAL: User can start training a deck', () => {
