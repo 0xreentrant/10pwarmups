@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { screen, fireEvent } from "@testing-library/react"
+import { screen, fireEvent, within } from "@testing-library/react"
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from "../data/whatsNew"
 import { restartAppActor } from "../appActor"
 import { renderWithRouter } from "../test/renderWithRouter"
@@ -14,9 +14,14 @@ describe("What's New popover", () => {
     await renderWithRouter("/")
     expect(screen.getByRole("dialog")).toBeInTheDocument()
     expect(screen.getByText("What's New")).toBeInTheDocument()
-    expect(screen.getByText(/Trainer works offline/)).toBeInTheDocument()
-    const link = screen.getByRole("link", { name: /install it to your phone like an app/i })
-    expect(link).toHaveAttribute("href", "https://support.google.com/chrome/answer/9658361")
+    expect(screen.getByText(/is in the trainer/)).toBeInTheDocument()
+    expect(screen.getByText(/Review mode shows the full move list/)).toBeInTheDocument()
+    expect(screen.getByText(/bigger and easier to tap/)).toBeInTheDocument()
+    const dialog = screen.getByRole("dialog")
+    const marvinLink = within(dialog).getByRole("link", { name: "Marvin Flow" })
+    expect(marvinLink).toHaveAttribute("href", "/marvin-flow/training")
+    const link = within(dialog).getByRole("link", { name: /latest updates/i })
+    expect(link).toHaveAttribute("href", "updates.html")
     expect(link).toHaveAttribute("target", "_blank")
   })
 

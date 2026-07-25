@@ -26,8 +26,8 @@ export default function TrainingScreen({ deck, session, onOptionClick, onBack }:
   return (
     <div className="pt-5 pb-12">
       <div className="flex justify-between items-start mb-5">
-        <div>
-          {deck.series && <span className="block mb-0.5 font-disp font-extrabold text-base tracking-wide text-muted min-w-8">{deck.id}</span>}
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          {deck.series && <span className="font-disp font-extrabold text-base tracking-wide text-muted min-w-8">{deck.id}</span>}
           <h2>{deck.name}</h2>
           <DeckLink link={deck.link} variant="full" />
         </div>
