@@ -36,7 +36,7 @@ export default function DeckLink({ link, variant = "full" }: DeckLinkProps) {
 
   return (
     <a
-      className={`inline-block text-lg tracking-wide mt-1.5 ${LINK_BASE}`}
+      className={`inline-block text-lg tracking-wide ${LINK_BASE}`}
       href={link}
       target="_blank"
       rel="noopener noreferrer"

@@ -1,8 +1,10 @@
+import { Link } from "@tanstack/react-router"
+import { appActor } from "../appActor"
 import Popover from "./Popover"
 import { formatReleaseDate } from "../data/whatsNew"
 
-const INSTALL_HELP_URL = "https://support.google.com/chrome/answer/9658361"
 const POPOVER_LINK = "text-text underline decoration-accent underline-offset-2 hover:text-accent"
+const MARVIN_FLOW_ID = "marvin-flow"
 
 interface WhatsNewPopoverProps {
   open: boolean
@@ -20,7 +22,18 @@ export default function WhatsNewPopover({ open, onDismiss }: WhatsNewPopoverProp
       </div>
       <p className="text-[11px] text-muted mt-0.5 mb-2 tracking-wide">{formatReleaseDate()}</p>
       <p className="m-0 text-muted leading-normal">
-        Trainer works offline, and you can <a href={INSTALL_HELP_URL} className={POPOVER_LINK} target="_blank" rel="noopener noreferrer">install it to your phone like an app</a>
+        <Link
+          to="/$deckId/training"
+          params={{ deckId: MARVIN_FLOW_ID }}
+          className={POPOVER_LINK}
+          onClick={() => {
+            appActor.send({ type: "START_DECK", deckId: MARVIN_FLOW_ID })
+            onDismiss()
+          }}
+        >
+          Marvin Flow
+        </Link>
+        {" "}is in the trainer. Review mode shows the full move list without the quiz - tap Review next to Train on any deck. Video links are bigger and easier to tap.
         <br /><br />
         Check the <a href="updates.html" className={POPOVER_LINK} target="_blank" rel="noopener noreferrer">latest updates</a>.
       </p>
