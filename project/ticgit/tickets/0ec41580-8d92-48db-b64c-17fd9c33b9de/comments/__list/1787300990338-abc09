@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"Added Live rolling (pauseOnVerdict=false) reusing Corners chips. Default Rolling still freezes. Browser: Live never paused after answer; Corners paused. Tests: pauseSchedule + optionSource green. Note: Fifty/Ticker removed in parallel chat per user - left out."}

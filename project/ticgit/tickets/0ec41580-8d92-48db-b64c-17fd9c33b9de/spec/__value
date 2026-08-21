@@ -1,0 +1,14 @@
+## Goal
+Keep Rolling pause-then-reveal as default (chat 2). Preserve Fifty + narrowOptions (chat 3). Restore chat 1 continuous tape as one new Rolling example without changing the five pause demos.
+
+## Spec
+- `useRollingRun` accepts `pauseOnVerdict` (default `true`).
+- When false: never pause/resume on beat; `revealed` stays true so truth overlays while tape keeps rolling.
+- New concept `rolling-live` / Live: Corners chip layout, continuous tape.
+- RollingStage launcher meta reflects pause vs live.
+- Existing Corners/Updraft/Dial/Ticker/Split unchanged (still pause).
+- Small unit/self-check: continuous config does not schedule HOLD/LINGER pause path (testable via exported config behavior or pure helper).
+
+## Out of scope
+- Duplicating all five layouts as continuous variants.
+- Changing Quiz/Blind/Fifty behavior (Ante already covers Quiz cross-sync).
