@@ -1,0 +1,31 @@
+# Heat mode spec
+
+## Goal
+Showcase mode `heat` with five tabs sharing HeatShell + FlameStreakBar. Mechanic mirrors Heat Chain (lead-in, answer, streak feedback, reveal rate) with firebar as the streak display and per-variant rule twists.
+
+## Files
+- `src/components/showcase/concepts.ts` — HEAT_CONCEPTS
+- `src/components/showcase/ShowcaseScreen.tsx` — mode wiring
+- `src/components/showcase/heat/HeatShell.tsx` — shared shell
+- `src/components/showcase/heat/heatVariants.ts` — five variants
+- `src/components/showcase/heat/heatRules.ts` — pure heat math (unit tested)
+- Reuse `FlameStreakBar`, `FlameCelebrationEffect`, `useQuizDrill`, segment player
+
+## Variants
+1. **Stoke** — heat = streak, max 8, miss → 0, reveal rate 1+streak*0.12
+2. **Embers** — miss → max(floor(max*0.25), 1) residual heat (not cold); streak counter still zeros for drill but bar shows residual
+3. **Kindling** — max = deck.length; heat = streak capped at max; miss → 0; done when streak reaches deck length in one run... actually kindling fills toward finishing deck - heat tracks consecutive correct, max=deck length. Completing deck ends as normal.
+4. **Backdraft** — miss → 0; next reveal rate slowed (e.g. 0.7); correct restores normal scaling
+5. **Smolder** — while asking+ready, heat bleeds down over ~6s from current value; empty → auto forfeit (miss)
+
+## Heat model
+Track `heat` separately from `drill.streak` where needed:
+- On correct: heat = min(max, heat+1) or for stoke heat=streak
+- On miss: apply variant.onMiss(heat, max)
+- Smolder: rAF/interval drain while asking
+
+## UI
+Video stage like HeatChain; FlameStreakBar under stage; options fieldset; tier banners at 3/5/8 when max>=8 or proportional for Kindling; snap/flash on miss for Backdraft.
+
+## Out of scope
+TrainingScreen wiring; replacing Heat Chain quiz tab.

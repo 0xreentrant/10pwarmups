@@ -1,0 +1,16 @@
+# Spec: Stamp collection
+
+## Goal
+Ship a new showcase mode `stamp` with five variants that apply the Dusk + Slap In critique fixes. Do not mutate FadeShell or TappedShell variants.
+
+## Variants
+1. Floor - polished Slap: floor CTA, soft veil (~0.62), streak not banked, no "nothing moves", omit empty meta, mute outer caption while buzzed
+2. Ghost - same as Floor with softer veil (~0.48) so mat silhouette remains
+3. Dim - live: dusk dim only (no fog seconds), stamp-weight ×stake on rung drop, solid ink option tiles; buzz: Floor slap
+4. Digits - live: readable stamp seconds (high contrast, Count-digit energy) + stamp ×stake + solid tiles; buzz: Floor slap
+5. Rungs - live: ante rung rail for literacy + stamp ×stake + solid tiles; buzz: Floor slap
+
+## Shared
+- useAnteRound with buzzHoldMs null, dusk fadeLook
+- HUD shows streak not banked
+- slapMeta(best, prevStreak) pure helper; omit when both zero
