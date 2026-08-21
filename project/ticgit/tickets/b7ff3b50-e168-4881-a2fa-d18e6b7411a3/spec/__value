@@ -1,0 +1,6 @@
+# Bleed mode
+
+- New mode `bleed` with Dusk/Whiteout/Defocus/Dissolve/Iris
+- Rolling-style launcher → fixed fullscreen overlay (Escape/✕ exit)
+- Reuse useAnteRound + fadeLooks; ante-fade stays in Fade
+- Remove inset FadeShell for those five variants
