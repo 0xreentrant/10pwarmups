@@ -83,6 +83,8 @@ export interface UseAnteRoundArgs {
   onOptionClick: (optionIndex: number) => void
   onRestart?: () => void
   config?: AnteRoundConfig
+  /** Optional in-memory timestamps (e.g. tagger preview). */
+  timestamps?: number[] | null
 }
 
 export function useAnteRound({
@@ -92,6 +94,7 @@ export function useAnteRound({
   onOptionClick,
   onRestart,
   config = {},
+  timestamps: timestampOverrides = null,
 }: UseAnteRoundArgs): AnteRound {
   const { buzzHoldMs = 1600, buzzReplay = false, correctHoldMs } = config
   const clockRef = useRef(0)
@@ -112,7 +115,7 @@ export function useAnteRound({
   const [score, setScore] = useState(0)
   const [paid, setPaid] = useState<number | null>(null)
   const [marks, setMarks] = useState<Record<number, AnteMark>>({})
-  const timeline = useMoveTimeline(deck.moves.length, videoEl)
+  const timeline = useMoveTimeline(deck.id, deck.moves.length, videoEl, undefined, timestampOverrides)
   const { play, hold, cancel } = useSegmentPlayer(videoEl)
   const { after, clearAll } = useTimers()
   paidRef.current = paid

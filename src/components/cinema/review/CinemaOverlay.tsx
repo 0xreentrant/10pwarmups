@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import MoveLabel from "../../MoveLabel"
 import MoveList from "../../MoveList"
+import { usePersistedMediaVolume } from "../../../hooks/usePersistedMediaVolume"
 import type { Deck } from "../../../types/domain"
 import { captureAmbientColor } from "../frameCapture"
 import { useMoveTimeline } from "../useMoveTimeline"
@@ -10,6 +11,8 @@ interface CinemaOverlayProps {
   videoSrc: string | null
   /** Full sequence on the scrubber with Train affordance, no quiz. */
   review?: boolean
+  /** Optional in-memory timestamps (e.g. tagger preview). */
+  timestamps?: number[] | null
   onClose: () => void
   onTrain?: () => void
 }
@@ -18,6 +21,7 @@ export default function CinemaOverlay({
   deck,
   videoSrc,
   review = false,
+  timestamps: timestampOverrides = null,
   onClose,
   onTrain,
 }: CinemaOverlayProps) {
@@ -27,12 +31,14 @@ export default function CinemaOverlay({
   const [time, setTime] = useState(0)
   const [glow, setGlow] = useState("rgb(192, 57, 43)")
   const [movesOpen, setMovesOpen] = useState(false)
-  const timeline = useMoveTimeline(deck.moves.length, videoEl)
+  const timeline = useMoveTimeline(deck.id, deck.moves.length, videoEl, undefined, timestampOverrides)
   const currentIndex = timeline ? timeline.moveIndexAt(time) : 0
 
   useEffect(() => {
     setVideoEl(videoSrc ? videoRef.current : null)
   }, [videoSrc])
+
+  usePersistedMediaVolume(videoEl)
 
   useEffect(() => {
     const previous = document.body.style.overflow

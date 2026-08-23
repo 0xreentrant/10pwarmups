@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { usePersistedMediaVolume } from "../../../hooks/usePersistedMediaVolume"
 import type { Deck, Session } from "../../../types/domain"
 import { AnteBaseStyles, AnteHud, AnteOptions, AnteVerdict } from "../ante/AnteBits"
 import { fadeLook } from "../ante/fadeLooks"
@@ -18,6 +19,8 @@ interface OverlayProps {
   onClose: () => void
   onReview?: () => void
   onRestart?: () => void
+  /** Optional in-memory timestamps (e.g. tagger preview). */
+  timestamps?: number[] | null
 }
 
 /** Full-bleed dissolve + Slap In buzz hold + Blackout correct payoff. */
@@ -30,6 +33,7 @@ export default function BleedDusk2Overlay({
   onClose,
   onReview,
   onRestart,
+  timestamps: timestampOverrides = null,
 }: OverlayProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streakRef = useRef(0)
@@ -38,6 +42,9 @@ export default function BleedDusk2Overlay({
   useEffect(() => {
     setVideoEl(videoSrc ? videoRef.current : null)
   }, [videoSrc])
+
+  // Autoplay needs mute; still restore volume level without writing mute back.
+  usePersistedMediaVolume(videoEl, { forceMuted: true })
 
   useEffect(() => {
     const previous = document.body.style.overflow
@@ -51,6 +58,7 @@ export default function BleedDusk2Overlay({
     videoEl,
     onOptionClick,
     onRestart,
+    timestamps: timestampOverrides,
     config: {
       buzzHoldMs: null,
       correctHoldMs: CORRECT_HOLD_MS,
@@ -176,6 +184,7 @@ function BleedDusk2Styles() {
         background: #000;
         overflow: hidden;
         user-select: none;
+        container-type: inline-size;
       }
 
       .bl-stage {
@@ -370,7 +379,8 @@ function BleedDusk2Styles() {
       }
 
       .bl-deck .ao-option {
-        font-size: clamp(2.4rem, 10vw, 3.5rem);
+        /* ponytail: cqw tracks overlay (phone frame); no rem floor below ~240px-wide. */
+        font-size: min(2.625rem, 7.5cqw);
         line-height: 1.1;
         padding: 16px 8px;
         background: rgba(10, 10, 12, 0.42);
