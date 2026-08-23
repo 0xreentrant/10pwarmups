@@ -1,0 +1,1 @@
+Store per-deck tagged timestamps (starting with A1). useMoveTimeline prefers tagged data when present and length matches move count; otherwise equal-slice fallback. Train (ante) and review (cinema) both consume via the shared hook.

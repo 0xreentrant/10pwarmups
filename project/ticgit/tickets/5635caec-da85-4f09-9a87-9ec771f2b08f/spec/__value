@@ -1,0 +1,6 @@
+## Spec
+
+- Add src/data/moveTimestamps.ts with A1 tagged starts
+- resolveMoveTimestamps(deckId, moveCount, duration) returns tagged if length matches, else equal slice
+- useMoveTimeline(deckId, moveCount, videoEl, fallback?) uses that resolver
+- CinemaOverlay + useAnteRound pass deck.id
