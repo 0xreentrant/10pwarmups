@@ -252,6 +252,21 @@ describe("appMachine", () => {
 
     expect(actor.getSnapshot().context.progress.A1).not.toHaveProperty("currentStreak")
   })
+
+  it("START_PREVIEW completes without writing progress", () => {
+    const actor = makeActor()
+    actor.send({ type: "START_PREVIEW", deckId: "A1" })
+    expect(actor.getSnapshot().context.preview).toBe(true)
+    expect(actor.getSnapshot().value).toBe("training")
+    const deck = mockDecks.find(d => d.id === "A1")!
+    for (let i = 0; i < deck.moves.length; i++) {
+      answerCurrent(actor)
+    }
+    expect(actor.getSnapshot().value).toBe("completed")
+    expect(actor.getSnapshot().context.session?.locked).toBe(true)
+    expect(actor.getSnapshot().context.progress.A1.attempts).toHaveLength(0)
+    expect(actor.getSnapshot().context.preview).toBe(true)
+  })
 })
 
 describe("loadProgress", () => {
