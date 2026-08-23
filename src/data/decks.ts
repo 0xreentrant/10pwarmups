@@ -24,8 +24,8 @@ const DECKS: Deck[] = [
     id: "A1", series: "A", name: "Kneeling",
     link: "https://www.instagram.com/10thplanetdenver/reel/CyeMgsQJ_Cn/",
     moves: [
-      m("Kneeling Granby", "A"),
       m("Seated Granby", "A"),
+      m("Kneeling Granby", "A"),
       m("Bridging Granby", "A"),
       m("Belly to Belly Granby", "A"),
       m("Granby Flow", "A"),

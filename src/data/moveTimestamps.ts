@@ -1,5 +1,5 @@
-/** Per-deck move start times (seconds), from /tagger. */
-export const MOVE_TIMESTAMPS: Record<string, number[]> = {
+/** Per-deck move start times (seconds), from /tagger. null = not tagged yet. */
+export const MOVE_TIMESTAMPS: Record<string, (number | null)[]> = {
   A1: [
     0,
     11.12784969140625,
@@ -19,25 +19,25 @@ export const MOVE_TIMESTAMPS: Record<string, number[]> = {
     14.760212896568541,
     16.022672047660603,
     17.84209847129328,
-    19.364475682904295,
-    20.10709871295845,
-    20.88685289451531,
-    21.778000530580297,
-    22.605329,
-    24.112350933333335,
-    25.61937286666667,
-    27.126394800000003,
-    28.633416733333334,
-    30.140438666666668,
-    31.647460600000002,
-    33.154482533333336,
-    34.66150446666667,
-    36.168526400000005,
-    37.67554833333334,
-    39.18257026666667,
-    40.6895922,
-    42.196614133333334,
-    43.70363606666667,
+    null,
+    19.727183508614903,
+    20.882138,
+    21.930241,
+    22.469932,
+    24.184998,
+    null,
+    null,
+    null,
+    null,
+    null,
+    26.213021,
+    30.424569603066274,
+    null,
+    33.630115,
+    38.40995864457656,
+    null,
+    null,
+    null,
   ],
 }
 
@@ -46,19 +46,76 @@ export function resolveMoveTimestamps(
   deckId: string,
   moveCount: number,
   duration: number,
-): number[] {
+): (number | null)[] {
   const tagged = MOVE_TIMESTAMPS[deckId]
   // ponytail: skip tags that overrun the clip (jsdom mock duration is 10s).
   if (
     tagged &&
     tagged.length === moveCount &&
-    tagged.every(t => t <= duration)
+    tagged.every(t => !isFiniteTimestamp(t) || t <= duration)
   ) {
     return tagged
   }
   if (moveCount <= 0 || duration <= 0) return []
   const step = duration / moveCount
   return Array.from({ length: moveCount }, (_, i) => i * step)
+}
+
+export function playableIndicesFromTimestamps(
+  timestamps: readonly (number | null | undefined)[],
+): number[] {
+  return timestamps
+    .map((t, i) => (isFiniteTimestamp(t) ? i : -1))
+    .filter(i => i >= 0)
+}
+
+/** Quiz order: all moves, or only those with a tagged start time. */
+export function playableMoveIndices(deckId: string, moveCount: number): number[] {
+  const tagged = MOVE_TIMESTAMPS[deckId]
+  if (tagged?.length === moveCount) {
+    const playable = playableIndicesFromTimestamps(tagged)
+    if (playable.length > 0 && playable.length < moveCount) return playable
+  }
+  return Array.from({ length: moveCount }, (_, i) => i)
+}
+
+export function prevPlayableMoveIndex(
+  timestamps: readonly (number | null | undefined)[],
+  moveIdx: number,
+): number {
+  for (let i = moveIdx - 1; i >= 0; i--) {
+    if (isFiniteTimestamp(timestamps[i])) return i
+  }
+  return -1
+}
+
+export function nextPlayableMoveIndex(
+  timestamps: readonly (number | null | undefined)[],
+  moveIdx: number,
+): number {
+  for (let i = moveIdx + 1; i < timestamps.length; i++) {
+    if (isFiniteTimestamp(timestamps[i])) return i
+  }
+  return -1
+}
+
+export function clampPrevPlayable(
+  timestamps: readonly (number | null | undefined)[],
+  from: number,
+): number {
+  const prev = prevPlayableMoveIndex(timestamps, from)
+  if (prev >= 0) return prev
+  return playableIndicesFromTimestamps(timestamps)[0] ?? 0
+}
+
+export function clampNextPlayable(
+  timestamps: readonly (number | null | undefined)[],
+  from: number,
+): number {
+  const next = nextPlayableMoveIndex(timestamps, from)
+  if (next >= 0) return next
+  const playable = playableIndicesFromTimestamps(timestamps)
+  return playable[playable.length - 1] ?? from
 }
 
 export function isFiniteTimestamp(t: number | null | undefined): t is number {

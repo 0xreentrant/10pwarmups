@@ -1,0 +1,1 @@
+ - check if the first move indeed is seated granby and not kneeling granby
