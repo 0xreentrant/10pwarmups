@@ -4,7 +4,7 @@ import { FALLBACK_TIMELINE_SEC } from "../../utils/deckVideo"
 
 export interface MoveTimeline {
   duration: number
-  timestamps: number[]
+  timestamps: (number | null)[]
   moveIndexAt: (time: number) => number
 }
 
@@ -14,7 +14,7 @@ export function useMoveTimeline(
   videoEl: HTMLVideoElement | null,
   fallbackDurationSec = FALLBACK_TIMELINE_SEC,
   /** When length matches moveCount, used instead of MOVE_TIMESTAMPS / equal slice. */
-  timestampOverrides?: number[] | null,
+  timestampOverrides?: (number | null)[] | null,
 ): MoveTimeline | null {
   const [duration, setDuration] = useState<number | null>(() =>
     videoEl ? null : fallbackDurationSec,

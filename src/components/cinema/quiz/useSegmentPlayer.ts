@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react"
+import { isFiniteTimestamp, nextPlayableMoveIndex, prevPlayableMoveIndex } from "../../../data/moveTimestamps"
 import type { MoveTimeline } from "../useMoveTimeline"
 
 export interface Segment {
@@ -8,19 +9,18 @@ export interface Segment {
 
 /** The tape the quiz is allowed to show: everything up to the move being asked. */
 export function leadInSegment(timeline: MoveTimeline, moveIdx: number): Segment {
-  return {
-    from: moveIdx > 0 ? timeline.timestamps[moveIdx - 1] : 0,
-    to: timeline.timestamps[moveIdx],
-  }
+  const to = timeline.timestamps[moveIdx]
+  const prev = prevPlayableMoveIndex(timeline.timestamps, moveIdx)
+  const from = prev >= 0 ? timeline.timestamps[prev]! : 0
+  return { from, to: isFiniteTimestamp(to) ? to : from }
 }
 
 /** The answer itself, played back only once the guess is locked in. */
 export function revealSegment(timeline: MoveTimeline, moveIdx: number): Segment {
-  const next = timeline.timestamps[moveIdx + 1]
-  return {
-    from: timeline.timestamps[moveIdx],
-    to: next ?? timeline.duration,
-  }
+  const from = timeline.timestamps[moveIdx]
+  const next = nextPlayableMoveIndex(timeline.timestamps, moveIdx)
+  const to = next >= 0 ? timeline.timestamps[next]! : timeline.duration
+  return { from: isFiniteTimestamp(from) ? from : 0, to }
 }
 
 interface PlayOptions {

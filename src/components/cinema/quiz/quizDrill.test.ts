@@ -79,4 +79,15 @@ describe("segment bounds", () => {
     expect(revealSegment(timeline, 1)).toEqual({ from: 10, to: 20 })
     expect(revealSegment(timeline, 2)).toEqual({ from: 20, to: 30 })
   })
+
+  it("skips untagged moves when bounding segments", () => {
+    const gapped: MoveTimeline = {
+      duration: 40,
+      timestamps: [0, 10, null, 20, 30],
+      moveIndexAt: () => 0,
+    }
+    expect(leadInSegment(gapped, 3)).toEqual({ from: 10, to: 20 })
+    expect(revealSegment(gapped, 1)).toEqual({ from: 10, to: 20 })
+    expect(revealSegment(gapped, 3)).toEqual({ from: 20, to: 30 })
+  })
 })

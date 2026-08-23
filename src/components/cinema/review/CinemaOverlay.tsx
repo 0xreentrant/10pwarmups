@@ -4,6 +4,12 @@ import MoveList from "../../MoveList"
 import { usePersistedMediaVolume } from "../../../hooks/usePersistedMediaVolume"
 import type { Deck } from "../../../types/domain"
 import { captureAmbientColor } from "../frameCapture"
+import {
+  clampNextPlayable,
+  clampPrevPlayable,
+  isFiniteTimestamp,
+  playableIndicesFromTimestamps,
+} from "../../../data/moveTimestamps"
 import { useMoveTimeline } from "../useMoveTimeline"
 
 interface CinemaOverlayProps {
@@ -12,7 +18,7 @@ interface CinemaOverlayProps {
   /** Full sequence on the scrubber with Train affordance, no quiz. */
   review?: boolean
   /** Optional in-memory timestamps (e.g. tagger preview). */
-  timestamps?: number[] | null
+  timestamps?: (number | null)[] | null
   onClose: () => void
   onTrain?: () => void
 }
@@ -33,6 +39,9 @@ export default function CinemaOverlay({
   const [movesOpen, setMovesOpen] = useState(false)
   const timeline = useMoveTimeline(deck.id, deck.moves.length, videoEl, undefined, timestampOverrides)
   const currentIndex = timeline ? timeline.moveIndexAt(time) : 0
+  const playableIndices = timeline
+    ? playableIndicesFromTimestamps(timeline.timestamps)
+    : Array.from({ length: deck.moves.length }, (_, i) => i)
 
   useEffect(() => {
     setVideoEl(videoSrc ? videoRef.current : null)
@@ -48,7 +57,8 @@ export default function CinemaOverlay({
 
   useEffect(() => {
     if (!timeline || !videoSrc) return
-    captureAmbientColor(videoSrc, timeline.timestamps[currentIndex]).then(setGlow).catch(() => {})
+    const t = timeline.timestamps[Math.max(0, currentIndex)]
+    captureAmbientColor(videoSrc, isFiniteTimestamp(t) ? t : 0).then(setGlow).catch(() => {})
   }, [timeline, currentIndex, videoSrc])
 
   useEffect(() => {
@@ -70,8 +80,10 @@ export default function CinemaOverlay({
 
   const seekToIndex = (i: number) => {
     if (!timeline) return
+    if (!isFiniteTimestamp(timeline.timestamps[i])) return
     const clamped = Math.min(deck.moves.length - 1, Math.max(0, i))
     const t = timeline.timestamps[clamped]
+    if (!isFiniteTimestamp(t)) return
     const video = videoRef.current
     if (!video) {
       setTime(t)
@@ -113,8 +125,16 @@ export default function CinemaOverlay({
     else video.pause()
   }
 
-  const move = deck.moves[currentIndex]
+  const move = deck.moves[Math.max(0, currentIndex)]
   const handleTrain = onTrain ?? onClose
+  const seekPrev = () => {
+    if (!timeline) return
+    seekToIndex(clampPrevPlayable(timeline.timestamps, currentIndex))
+  }
+  const seekNext = () => {
+    if (!timeline) return
+    seekToIndex(clampNextPlayable(timeline.timestamps, currentIndex))
+  }
 
   return (
     <div className="ct-overlay">
@@ -140,34 +160,32 @@ export default function CinemaOverlay({
 
       {review && (
         <div className="ct-review-bar">
-          <div className="ct-review-deck">
-            {deck.series && <span className="ct-review-id">{deck.id}</span>}
-            <span className="ct-review-name">{deck.name}</span>
+          <div className="ct-review-head">
+            <div className="ct-review-title-row">
+              {deck.series && <span className="ct-review-id">{deck.id}</span>}
+              <span className="ct-review-name">{deck.name}</span>
+            </div>
+            <button type="button" className="ct-review-train" onClick={handleTrain}>Train</button>
           </div>
-          <button type="button" className="ct-review-train" onClick={handleTrain}>Train</button>
+          <button
+            type="button"
+            className="ct-review-moves-link"
+            onClick={() => setMovesOpen(true)}
+          >
+            Show moves
+          </button>
         </div>
       )}
 
       <button type="button" className="ct-close" onClick={onClose} aria-label="Exit review">✕</button>
 
       <div className="ct-tapzones">
-        <button type="button" className="ct-tapzone" aria-label="Previous move" onClick={() => seekToIndex(currentIndex - 1)} />
+        <button type="button" className="ct-tapzone" aria-label="Previous move" onClick={seekPrev} />
         <button type="button" className="ct-tapzone" aria-label="Play or pause" onClick={togglePlay} />
-        <button type="button" className="ct-tapzone" aria-label="Next move" onClick={() => seekToIndex(currentIndex + 1)} />
+        <button type="button" className="ct-tapzone" aria-label="Next move" onClick={seekNext} />
       </div>
 
       <div className={`ct-caption${review ? " ct-caption--review" : ""}`}>
-        {review && (
-          <div className="ct-review-seq-row">
-            <button
-              type="button"
-              className="ct-review-moves-link"
-              onClick={() => setMovesOpen(true)}
-            >
-              Show moves
-            </button>
-          </div>
-        )}
         <span className={`ct-partner-tag ct-partner-tag--${move.partner}`}>Person {move.partner}</span>
         {!review && (
           <div className="ct-caption-index">Move {currentIndex + 1} / {deck.moves.length}</div>
@@ -178,17 +196,17 @@ export default function CinemaOverlay({
           onPointerDown={e => e.stopPropagation()}
           onClick={e => e.stopPropagation()}
         >
-          {timeline?.timestamps.map((_, i) => (
+          {playableIndices.map(moveIdx => (
             <button
-              key={i}
+              key={moveIdx}
               type="button"
-              className={`ct-progress-seg ${i <= currentIndex ? "ct-progress-seg--filled" : ""}`}
-              aria-label={`Move ${i + 1}`}
-              aria-current={i === currentIndex ? "step" : undefined}
+              className={`ct-progress-seg ${moveIdx <= currentIndex ? "ct-progress-seg--filled" : ""}`}
+              aria-label={`Move ${moveIdx + 1}`}
+              aria-current={moveIdx === currentIndex ? "step" : undefined}
               onPointerDown={e => e.stopPropagation()}
               onClick={e => {
                 e.stopPropagation()
-                seekToIndex(i)
+                seekToIndex(moveIdx)
               }}
             />
           ))}
@@ -220,7 +238,10 @@ export default function CinemaOverlay({
                   deck={deck}
                   moveSequence={[]}
                   visibleThroughIndex={deck.moves.length - 1}
-                  onMoveClick={seekToIndex}
+                  onMoveClick={i => {
+                    if (timeline && !isFiniteTimestamp(timeline.timestamps[i])) return
+                    seekToIndex(i)
+                  }}
                 />
               </div>
             </div>
@@ -282,31 +303,42 @@ function CinemaStyles() {
 
       .ct-close {
         position: absolute;
-        top: 16px;
-        right: 16px;
-        z-index: 20;
-        width: 36px;
-        height: 36px;
+        top: 14px;
+        right: 14px;
+        z-index: 30;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
         background: rgba(0, 0, 0, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.25);
         color: #fff;
+        font-size: 0.85rem;
+        line-height: 1;
       }
 
       .ct-review-bar {
         position: absolute;
         top: 14px;
         left: 14px;
-        right: 56px;
+        right: 54px;
         z-index: 25;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        pointer-events: none;
+      }
+
+      .ct-review-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        pointer-events: none;
+        min-width: 0;
+        pointer-events: auto;
       }
 
-      .ct-review-deck {
+      .ct-review-title-row {
         display: flex;
         flex-wrap: wrap;
         align-items: baseline;
@@ -335,6 +367,7 @@ function CinemaStyles() {
       .ct-review-train {
         pointer-events: auto;
         flex-shrink: 0;
+        align-self: center;
         font-family: var(--font-family-disp);
         font-weight: 800;
         font-size: 0.72rem;
@@ -343,27 +376,24 @@ function CinemaStyles() {
         color: var(--color-text-on-accent);
         background: var(--color-accent);
         border: 1px solid var(--color-accent);
-        padding: 8px 14px;
-      }
-
-      .ct-review-seq-row {
-        margin-bottom: 6px;
-        pointer-events: auto;
+        padding: 7px 12px;
+        line-height: 1;
       }
 
       .ct-review-moves-link {
+        pointer-events: auto;
+        align-self: flex-start;
         font-family: var(--font-family-disp);
         font-weight: 700;
-        font-size: 1.4rem;
+        font-size: 0.65rem;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: #ffd9a0;
         background: transparent;
         border: none;
-        padding: 6px 3px;
-        min-height: 33px;
+        padding: 2px 0;
         text-decoration: underline;
-        text-underline-offset: 7px;
+        text-underline-offset: 4px;
       }
 
       .ct-review-moves-link:hover {
@@ -447,18 +477,18 @@ function CinemaStyles() {
       .ct-drawer-moves .move-label-btn,
       .ct-drawer-moves .text-partner-a,
       .ct-drawer-moves .text-partner-b {
-        font-size: 1.5rem;
+        font-size: 1.2rem;
       }
 
       .ct-drawer-moves .flex {
-        gap: 0.75rem;
-        padding-top: 0.35rem;
-        padding-bottom: 0.35rem;
+        gap: 0.6rem;
+        padding-top: 0.28rem;
+        padding-bottom: 0.28rem;
       }
 
       .ct-drawer-moves .min-w-3\\.5 {
-        min-width: 1.75rem;
-        font-size: 1.5rem;
+        min-width: 1.4rem;
+        font-size: 1.2rem;
       }
 
       @keyframes ct-drawer-in {
@@ -533,7 +563,7 @@ function CinemaStyles() {
       }
 
       .ct-caption--review .ct-caption-text {
-        margin-top: 10px;
+        font-size: clamp(1.44rem, 6.4vw, 2.24rem);
       }
 
       .ct-progress {
