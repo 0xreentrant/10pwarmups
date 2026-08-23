@@ -17,7 +17,7 @@ export function AnteOptions({ round }: { round: AnteRound }) {
             key={`${drill.moveIdx}-${i}`}
             type="button"
             className={cls}
-            disabled={!round.live}
+            disabled={drill.phase !== "asking" || !round.live}
             onClick={() => round.answer(i)}
           >
             {opt.text}

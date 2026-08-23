@@ -424,31 +424,26 @@ function BleedDusk2Styles() {
         border: none;
       }
 
-      .bl-deck .ao-option--truth {
-        border: none;
-        background: color-mix(in srgb, var(--color-green) 52%, rgba(10, 10, 12, 0.42));
-      }
-
-      .bl-deck .ao-option--wrong {
-        border: none;
-        background: color-mix(in srgb, var(--color-accent) 52%, rgba(10, 10, 12, 0.42));
-        text-decoration: line-through;
-      }
-
-      .bl-deck .ao-option--truth:disabled,
-      .bl-deck .ao-option--truth:disabled:hover {
+      .bl-deck .ao-option.ao-option--truth,
+      .bl-deck .ao-option.ao-option--truth:disabled,
+      .bl-deck .ao-option.ao-option--truth:disabled:hover {
         opacity: 1;
-        color: #fff;
-        border: none;
-        background: color-mix(in srgb, var(--color-green) 52%, rgba(10, 10, 12, 0.42));
+        color: #f2fff7;
+        border: 2px solid var(--color-green);
+        background: color-mix(in srgb, var(--color-green) 58%, rgba(10, 10, 12, 0.55));
+        backdrop-filter: none;
+        box-shadow: 0 0 18px color-mix(in srgb, var(--color-green) 42%, transparent);
       }
 
-      .bl-deck .ao-option--wrong:disabled,
-      .bl-deck .ao-option--wrong:disabled:hover {
+      .bl-deck .ao-option.ao-option--wrong,
+      .bl-deck .ao-option.ao-option--wrong:disabled,
+      .bl-deck .ao-option.ao-option--wrong:disabled:hover {
         opacity: 1;
-        color: #fff;
-        border: none;
-        background: color-mix(in srgb, var(--color-accent) 52%, rgba(10, 10, 12, 0.42));
+        color: #fff0ee;
+        border: 2px solid var(--color-accent);
+        background: color-mix(in srgb, var(--color-accent) 58%, rgba(10, 10, 12, 0.55));
+        backdrop-filter: none;
+        box-shadow: 0 0 18px color-mix(in srgb, var(--color-accent) 42%, transparent);
         text-decoration: line-through;
       }
 
@@ -461,6 +456,16 @@ function BleedDusk2Styles() {
       .bl-overlay .ao-verdict {
         font-size: clamp(2.6rem, 10vw, 4rem);
         z-index: 35;
+      }
+
+      .bl-overlay .ao-verdict--hit {
+        color: #f2fff7;
+        text-shadow: 0 0 20px rgba(39, 174, 96, 0.95), 0 0 54px rgba(39, 174, 96, 0.45);
+      }
+
+      .bl-overlay .ao-verdict--miss {
+        color: #fff0ee;
+        text-shadow: 0 0 20px rgba(192, 57, 43, 0.95), 0 0 50px rgba(192, 57, 43, 0.5);
       }
 
       .bl-overlay .tp-veil {
