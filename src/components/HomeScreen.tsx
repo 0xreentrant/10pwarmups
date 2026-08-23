@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { Link } from "@tanstack/react-router"
 import DeckLink from "./DeckLink"
 import HeatGradientCrownBar from "./HeatGradientCrownBar"
 import ResetConfirmPopover from "./ResetConfirmPopover"
@@ -164,6 +165,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
       <hr />
       <div className="flex gap-2 mt-3 flex-wrap">
         <button className="btn" onClick={onStats}>Stats</button>
+        <Link to="/showcase" className="btn no-underline">Video Playback</Link>
         <button
           className="btn"
           onClick={() => { if (!resetConfirm) onReset() }}

@@ -11,6 +11,7 @@ import { useSelector } from "@xstate/react"
 import CompletionScreen from "./components/CompletionScreen"
 import HomeScreen from "./components/HomeScreen"
 import ProgressScreen from "./components/ProgressScreen"
+import ShowcaseScreen from "./components/showcase/ShowcaseScreen"
 import TrainingScreen from "./components/TrainingScreen"
 import WhatsNewPopover from "./components/WhatsNewPopover"
 import { appActor, getAppSnapshot } from "./appActor"
@@ -34,6 +35,12 @@ const allProgressRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/progress",
   component: AllProgressRoute,
+})
+
+const showcaseRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/showcase",
+  component: ShowcaseScreen,
 })
 
 const deckRoute = createRoute({
@@ -108,6 +115,7 @@ const completedRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   allProgressRoute,
+  showcaseRoute,
   deckRoute.addChildren([
     deckIndexRoute,
     trainingRoute,

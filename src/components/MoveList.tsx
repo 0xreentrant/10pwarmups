@@ -7,9 +7,11 @@ interface MoveListProps {
   deck: Deck
   moveSequence: MoveAnswer[]
   visibleThroughIndex: number
+  /** When set, move label click jumps (e.g. video seek) instead of opening notes. */
+  onMoveClick?: (moveIndex: number) => void
 }
 
-export default function MoveList({ deck, moveSequence, visibleThroughIndex }: MoveListProps) {
+export default function MoveList({ deck, moveSequence, visibleThroughIndex, onMoveClick }: MoveListProps) {
   const { moveIndex, popoverRef, open, close } = useMoveNotesPopover()
 
   return (
@@ -28,7 +30,7 @@ export default function MoveList({ deck, moveSequence, visibleThroughIndex }: Mo
             <button
               type="button"
               className="move-label-btn"
-              onClick={() => open(i)}
+              onClick={() => onMoveClick ? onMoveClick(i) : open(i)}
             >
               <MoveLabel move={move} />
             </button>

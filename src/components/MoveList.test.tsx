@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import MoveList from './MoveList'
 import type { Deck } from '../types/domain'
@@ -65,6 +65,14 @@ describe('MoveList', () => {
     renderList()
     clickMoveLabel('Move Alpha')
     fireEvent.mouseDown(screen.getByTestId('popover-backdrop'))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('calls onMoveClick instead of opening notes when provided', () => {
+    const onMoveClick = vi.fn()
+    renderList({ onMoveClick })
+    clickMoveLabel('Move Beta')
+    expect(onMoveClick).toHaveBeenCalledWith(1)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 })

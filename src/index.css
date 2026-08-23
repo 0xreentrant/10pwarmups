@@ -182,6 +182,47 @@
     color: var(--color-text-on-accent);
   }
 
+  .option-btn:disabled {
+    opacity: 0.42;
+    color: var(--color-muted);
+    background: color-mix(in srgb, var(--color-surface) 50%, var(--color-bg));
+    border-color: var(--color-border-subtle);
+    cursor: default;
+  }
+
+  .option-btn:disabled:hover {
+    background: color-mix(in srgb, var(--color-surface) 50%, var(--color-bg));
+    border-color: var(--color-border-subtle);
+  }
+
+  .option-btn[class*="--truth"]:disabled,
+  .option-btn[class*="--truth"]:disabled:hover {
+    opacity: 1;
+    color: var(--color-text-on-accent);
+    border-color: var(--color-green);
+    background: color-mix(in srgb, var(--color-green) 20%, var(--color-surface));
+  }
+
+  .option-btn[class*="--wrong"]:disabled,
+  .option-btn[class*="--wrong"]:disabled:hover {
+    opacity: 1;
+    color: var(--color-text-on-accent);
+    border-color: var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 20%, var(--color-surface));
+    text-decoration: line-through;
+  }
+
+  .btn:disabled {
+    opacity: 0.42;
+    color: var(--color-muted);
+    cursor: default;
+  }
+
+  .btn:disabled:hover {
+    background: var(--color-surface);
+    border-color: var(--color-border);
+  }
+
   .move-label-btn {
     font-family: var(--font-family-body);
     font-size: 12px;
