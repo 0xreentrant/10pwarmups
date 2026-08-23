@@ -9,6 +9,7 @@ interface Dusk2TrainingViewProps {
   deck: Deck
   session: Session
   onOptionClick: (optionIndex: number) => void
+  onTapOut?: () => void
   onBack: () => void
   onSwitchToReview: () => void
   onRestart?: () => void
@@ -18,6 +19,7 @@ export default function Dusk2TrainingView({
   deck,
   session,
   onOptionClick,
+  onTapOut,
   onBack,
   onSwitchToReview,
   onRestart,
@@ -38,6 +40,7 @@ export default function Dusk2TrainingView({
         videoSrc={videoSrc}
         variant={DUSK2_BLEED_VARIANT}
         onOptionClick={onOptionClick}
+        onTapOut={onTapOut}
         onClose={() => {
           analytics.event({
             action: "test_abandoned",

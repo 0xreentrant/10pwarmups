@@ -1,0 +1,69 @@
+import { describe, expect, it, vi } from "vitest"
+import { render } from "@testing-library/react"
+import BleedDusk2Overlay from "./BleedDusk2Overlay"
+import { DUSK2_BLEED_VARIANT } from "./bleedVariant"
+import { DECKS } from "../../../data/decks"
+import type { Session } from "../../../types/domain"
+
+vi.mock("../ante/useAnteRound", () => ({
+  ANTE_CLOCK_MS: 5000,
+  useAnteRound: () => ({
+    drill: {
+      phase: "asking",
+      picked: null,
+      moveIdx: 0,
+      total: 20,
+      options: [
+        { text: "Move A", correct: true, partner: "A" },
+        { text: "Move B", correct: false },
+        { text: "Move C", correct: false },
+        { text: "Move D", correct: false },
+      ],
+      streak: 0,
+      best: 0,
+      misses: 0,
+      history: [],
+      beat: 0,
+      move: { text: "Move A", partner: "A" },
+    },
+    live: false,
+    ready: false,
+    stake: 1,
+    remaining: 5000,
+    answer: vi.fn(),
+    card: [],
+    score: 0,
+    paid: null,
+    restart: vi.fn(),
+  }),
+}))
+
+describe("BleedDusk2Overlay progress", () => {
+  it("shows current move index only, not deck total", () => {
+    const session: Session = {
+      deckId: "A2",
+      moveSequence: [],
+      locked: false,
+      correctCount: 0,
+      wrongCount: 0,
+      tapOutCount: 0,
+      streak: 0,
+      bestStreak: 0,
+    }
+
+    const { container } = render(
+      <BleedDusk2Overlay
+        deck={DECKS.find(d => d.id === "A2") ?? DECKS[0]}
+        session={session}
+        videoSrc={null}
+        variant={DUSK2_BLEED_VARIANT}
+        onOptionClick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    )
+
+    expect(container.querySelector(".ao-hud")).toBeNull()
+    expect(container.querySelector(".bl-progress")?.textContent).toBe("1")
+    expect(container.textContent).not.toMatch(/\/20/)
+  })
+})

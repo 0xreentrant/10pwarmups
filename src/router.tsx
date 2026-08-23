@@ -230,6 +230,7 @@ function TrainingRoute() {
       deck={deck}
       session={session}
       onOptionClick={optionIndex => appActor.send({ type: "OPTION_CLICK", optionIndex })}
+      onTapOut={() => appActor.send({ type: "TAP_OUT" })}
       onBack={() => {
         appActor.send({ type: "REQUEST_EXIT" })
         routerInstance.navigate({ to: "/" })

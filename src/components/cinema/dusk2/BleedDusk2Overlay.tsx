@@ -1,13 +1,29 @@
 import { useEffect, useRef, useState } from "react"
 import { usePersistedMediaVolume } from "../../../hooks/usePersistedMediaVolume"
 import type { Deck, Session } from "../../../types/domain"
-import { AnteBaseStyles, AnteHud, AnteOptions, AnteVerdict } from "../ante/AnteBits"
+import { AnteBaseStyles, AnteOptions, AnteVerdict } from "../ante/AnteBits"
 import { fadeLook } from "../ante/fadeLooks"
 import { SlapOverlay, TappedStyles, type TappedCtx } from "../ante/SlapOverlay"
-import { ANTE_CLOCK_MS, useAnteRound } from "../ante/useAnteRound"
+import { ANTE_CLOCK_MS, useAnteRound, type DrillPhase } from "../ante/useAnteRound"
 import type { BleedVariant } from "./bleedVariant"
 
 const CORRECT_HOLD_MS = 300
+
+/** Video filter for the bleed stage; exported for tests. */
+export function bleedVideoFilter(
+  phase: DrillPhase,
+  picked: number | null,
+  ready: boolean,
+  askingLook: ReturnType<typeof fadeLook>,
+  dissolveFull: ReturnType<typeof fadeLook>,
+): string {
+  const buzzed = phase === "wrong" && picked === null
+  const revealing = phase === "correct" || (phase === "wrong" && picked !== null)
+  if (revealing) return "none"
+  if (phase === "wrong") return buzzed ? dissolveFull.filter : "brightness(0.35) grayscale(0.8)"
+  if (!ready) return "brightness(0.85)"
+  return askingLook.filter
+}
 const EARNED_CLARITY = 4
 
 interface OverlayProps {
@@ -16,11 +32,12 @@ interface OverlayProps {
   videoSrc: string | null
   variant: BleedVariant
   onOptionClick: (optionIndex: number) => void
+  onTapOut?: () => void
   onClose: () => void
   onReview?: () => void
   onRestart?: () => void
   /** Optional in-memory timestamps (e.g. tagger preview). */
-  timestamps?: number[] | null
+  timestamps?: (number | null)[] | null
 }
 
 /** Full-bleed dissolve + Slap In buzz hold + Blackout correct payoff. */
@@ -30,6 +47,7 @@ export default function BleedDusk2Overlay({
   videoSrc,
   variant,
   onOptionClick,
+  onTapOut,
   onClose,
   onReview,
   onRestart,
@@ -57,6 +75,7 @@ export default function BleedDusk2Overlay({
     session,
     videoEl,
     onOptionClick,
+    onTapOut,
     onRestart,
     timestamps: timestampOverrides,
     config: {
@@ -86,15 +105,7 @@ export default function BleedDusk2Overlay({
   const dissolveFull = fadeLook("dissolve", 1)
   const buzzed = drill.phase === "wrong" && drill.picked === null
   const sharp = drill.phase === "correct"
-  const videoFilter = sharp
-    ? "none"
-    : drill.phase === "wrong"
-      ? buzzed
-        ? dissolveFull.filter
-        : "brightness(0.35) grayscale(0.8)"
-      : !ready
-        ? "brightness(0.85)"
-        : look.filter
+  const videoFilter = bleedVideoFilter(drill.phase, drill.picked, ready, look, dissolveFull)
   const videoOpacity = sharp
     ? 1
     : buzzed
@@ -110,6 +121,25 @@ export default function BleedDusk2Overlay({
       <AnteBaseStyles />
       <BleedDusk2Styles />
       <TappedStyles />
+
+      <div className="bl-top-bar">
+        <div className="bl-top-left">
+          <span className="bl-progress">{drill.moveIdx + 1}</span>
+          {onReview && (
+            <button type="button" className="bl-review" onClick={onReview}>
+              Review
+            </button>
+          )}
+        </div>
+        <div className="bl-top-right">
+          <span className="bl-streak" aria-label={`Streak: ${drill.streak}`}>
+            {drill.streak} streak
+          </span>
+          <button type="button" className="bl-close" onClick={onClose} aria-label="Exit training">
+            ✕
+          </button>
+        </div>
+      </div>
 
       <div className={`bl-stage ${buzzed ? "bl-stage--slap-buzz" : ""}`}>
         {videoSrc ? (
@@ -142,7 +172,6 @@ export default function BleedDusk2Overlay({
         <div className="bl-scrim-top" />
         <div className="bl-scrim-bottom" />
 
-        <AnteHud round={round} />
         {!buzzed && !sharp && <AnteVerdict round={round} buzzerWord="Tapped out!" />}
 
         {live && (
@@ -158,18 +187,16 @@ export default function BleedDusk2Overlay({
         {buzzed && <SlapOverlay key={`buzz-${drill.beat}`} {...ctx} />}
 
         {!buzzed && (
-          <div className="bl-deck">
-            <AnteOptions round={round} />
+          <div className="bl-quiz">
+            <span className={`bl-partner-tag bl-partner-tag--${drill.move.partner}`}>
+              Person {drill.move.partner}
+            </span>
+            <div className="bl-deck">
+              <AnteOptions round={round} />
+            </div>
           </div>
         )}
       </div>
-
-      {onReview && (
-        <button type="button" className="bl-review" onClick={onReview}>
-          Review
-        </button>
-      )}
-      <button type="button" className="bl-close" onClick={onClose} aria-label="Exit training">✕</button>
     </div>
   )
 }
@@ -285,11 +312,55 @@ function BleedDusk2Styles() {
         color: #cfd6da;
       }
 
-      .bl-review {
+      .bl-top-bar {
         position: absolute;
         top: 12px;
         left: 12px;
+        right: 12px;
         z-index: 40;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        pointer-events: none;
+      }
+
+      .bl-top-left {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        min-width: 0;
+        pointer-events: auto;
+      }
+
+      .bl-top-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+        pointer-events: auto;
+      }
+
+      .bl-progress {
+        font-family: var(--font-family-disp);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #fff;
+        line-height: 1;
+      }
+
+      .bl-streak {
+        font-family: var(--font-family-disp);
+        font-size: 10px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #fff;
+        line-height: 1;
+      }
+
+      .bl-review {
         font-family: var(--font-family-disp);
         font-weight: 700;
         font-size: 0.72rem;
@@ -298,17 +369,15 @@ function BleedDusk2Styles() {
         color: #fff;
         background: rgba(0, 0, 0, 0.45);
         border: 1px solid rgba(255, 255, 255, 0.28);
-        padding: 8px 12px;
+        padding: 7px 12px;
+        line-height: 1;
       }
 
       .bl-close {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        z-index: 40;
-        width: 36px;
-        height: 36px;
-        font-size: 1.1rem;
+        width: 32px;
+        height: 32px;
+        font-size: 0.85rem;
+        line-height: 1;
         color: #fff;
         background: rgba(0, 0, 0, 0.45);
         border: 1px solid rgba(255, 255, 255, 0.28);
@@ -366,16 +435,44 @@ function BleedDusk2Styles() {
         z-index: 3;
       }
 
-      .bl-deck {
+      .bl-quiz {
         position: absolute;
         left: 50%;
         bottom: 48px;
         transform: translateX(-50%);
         width: calc(100% - 24px);
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 4;
+      }
+
+      .bl-partner-tag {
+        display: inline-block;
+        align-self: flex-start;
+        font-family: var(--font-family-disp);
+        font-weight: 700;
+        font-size: 0.65rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 2px;
+      }
+
+      .bl-partner-tag--A {
+        background: rgba(93, 226, 93, 0.18);
+        color: #5de25d;
+      }
+
+      .bl-partner-tag--B {
+        background: rgba(120, 165, 255, 0.18);
+        color: #78a5ff;
+      }
+
+      .bl-deck {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 10px;
-        z-index: 4;
       }
 
       .bl-deck .ao-option {
@@ -428,12 +525,6 @@ function BleedDusk2Styles() {
         text-decoration: line-through;
       }
 
-      .bl-overlay .ao-hud {
-        z-index: 30;
-        padding: 14px 56px 14px 14px;
-        font-size: 11px;
-      }
-
       .bl-overlay .ao-verdict {
         font-size: clamp(2.6rem, 10vw, 4rem);
         z-index: 35;
@@ -456,27 +547,27 @@ function BleedDusk2Styles() {
 
       .bl-overlay .tp-head--stamp,
       .bl-overlay .tp-head.tp-head--stamp {
-        font-size: clamp(5.5rem, 22vw, 6.8rem);
+        font-size: clamp(4.4rem, 17.6vw, 5.44rem);
       }
 
       .bl-overlay .tp-veil--slap .tp-cost {
-        font-size: clamp(22.5px, 6.625vw, 27.5px);
+        font-size: clamp(18px, 5.3vw, 22px);
         max-width: 34ch;
         margin-top: 2px;
       }
 
       .bl-overlay .tp-veil--slap .tp-note {
-        font-size: clamp(18.75px, 5.25vw, 22.5px);
+        font-size: clamp(15px, 4.2vw, 18px);
         margin-top: 2px;
       }
 
       .bl-overlay .tp-action {
-        font-size: clamp(1.5rem, 6.5vw, 1.75rem);
-        padding: 16px 28px;
+        font-size: clamp(1.2rem, 5.2vw, 1.4rem);
+        padding: 13px 22px;
       }
 
       .bl-overlay .tp-veil--slap .tp-action {
-        margin-top: 10px;
+        margin-top: 8px;
       }
 
       @keyframes bl2-wipe {
