@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { screen, fireEvent, waitFor } from "@testing-library/react"
+import { DECKS } from "./data/decks"
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from "./data/whatsNew"
 import { restartAppActor } from "./appActor"
 import { renderWithRouter } from "./test/renderWithRouter"
@@ -10,7 +11,7 @@ import {
   waitForLiveOptions,
 } from "./test/trainingHelpers"
 
-const A1_MOVES = ["Kneeling Granby", "Seated Granby", "Bridging Granby", "Belly to Belly Granby", "Granby Flow"]
+const A1_MOVES = DECKS.find(d => d.id === "A1")!.moves.map(m => m.text)
 
 function watchForText(text: string) {
   let seen = document.body.textContent?.includes(text) ?? false
@@ -138,7 +139,7 @@ describe("routing", () => {
     })
     expect(document.querySelector(".ct-overlay")).toBeTruthy()
     expect(screen.getByText("Kneeling")).toBeInTheDocument()
-    expect(screen.getByText("Kneeling Granby")).toBeInTheDocument()
+    expect(screen.getByText(A1_MOVES[0])).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Train" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Show moves" })).toBeInTheDocument()
   })
@@ -165,7 +166,7 @@ describe("routing", () => {
     })
     expect(document.querySelector(".bl-overlay")).toBeFalsy()
     expect(document.querySelector(".ct-overlay")).toBeTruthy()
-    expect(screen.getByText("Kneeling Granby")).toBeInTheDocument()
+    expect(screen.getByText(A1_MOVES[0])).toBeInTheDocument()
   })
 
   it("switches from review to train without a confirm dialog", async () => {

@@ -8,8 +8,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const root = path.resolve(__dirname, "../..")
 
 const A1_MOVES = [
-  "Kneeling Granby",
   "Seated Granby",
+  "Kneeling Granby",
   "Bridging Granby",
   "Belly to Belly Granby",
   "Granby Flow",

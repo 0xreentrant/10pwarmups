@@ -13,7 +13,7 @@ import {
   waitForLiveOptions,
 } from './test/trainingHelpers';
 
-const A1_MOVES = ['Kneeling Granby', 'Seated Granby', 'Bridging Granby', 'Belly to Belly Granby', 'Granby Flow'];
+const A1_MOVES = DECKS.find(d => d.id === 'A1')!.moves.map(m => m.text);
 
 async function confirmLeaveTest() {
   await screen.findByText("10th Planet")
@@ -82,7 +82,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
       const optionButtons = getOptionButtons();
       expect(optionButtons.length).toBe(4);
-      expect(screen.getByRole('button', { name: /Kneeling Granby/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: new RegExp(A1_MOVES[0], 'i') })).toBeInTheDocument();
       expect(screen.getByText('Person A')).toBeInTheDocument();
     });
 
