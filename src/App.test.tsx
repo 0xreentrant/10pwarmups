@@ -83,6 +83,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const optionButtons = getOptionButtons();
       expect(optionButtons.length).toBe(4);
       expect(screen.getByRole('button', { name: /Kneeling Granby/i })).toBeInTheDocument();
+      expect(screen.getByText('Person A')).toBeInTheDocument();
     });
 
     it('always includes the correct next move in precomputed options', async () => {
@@ -388,11 +389,12 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       expect(progressBars.length).toBeGreaterThan(0);
     });
 
-    it('shows move sequence visualization during training', async () => {
+    it('shows move progress without deck total during training', async () => {
       await renderWithRouter("/");
       await startFirstDeck(); // A1: 5 moves
 
-      expect(document.querySelector('.ao-hud')?.textContent).toMatch(/1\s*\/\s*5/);
+      expect(document.querySelector('.ao-hud')).toBeNull();
+      expect(document.querySelector('.bl-progress')?.textContent).toBe('1');
     });
 
     it('shows next move prompt correctly', async () => {
