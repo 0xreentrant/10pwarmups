@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"Gear + Keyboard nudge dialog on TaggerView; usePersistedNudgeMs (tp_tagger_nudge_ms, default 2000); arrows use ms/1000. Vitest + tsc green."}

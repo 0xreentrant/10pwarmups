@@ -1,0 +1,1 @@
+Add gear dropdown + modal on tagger page so Left/Right nudge amount is configurable in milliseconds and persisted (localStorage). Default 2000ms to match current 2s behavior.

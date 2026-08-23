@@ -1,0 +1,16 @@
+## Spec: Configurable arrow-key playhead nudge
+
+### UI
+- Gear button top-right of TaggerView 80vw container (near title)
+- Dropdown: "Keyboard nudge" opens native <dialog> modal
+- Modal: number input (ms), Save closes dialog; Cancel closes without save
+- Min 100ms, max 60000ms; default 2000
+
+### Behavior
+- Arrow Left/Right use nudgeMs/1000 as seconds delta
+- Persist via localStorage key tp_tagger_nudge_ms
+- Hook usePersistedNudgeMs mirrors volumeStorage load/clamp/save pattern
+
+### Files
+- src/hooks/usePersistedNudgeMs.ts (+ tiny test if easy)
+- src/components/tagger/TaggerView.tsx
