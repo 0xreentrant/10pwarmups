@@ -24,7 +24,6 @@ import MoveLabel from "../MoveLabel"
 import { SELECT_NUDGE_SEC, taggerMachine } from "./taggerMachine"
 import {
   buildJsonText,
-  buildSavePrompt,
   isFiniteTimestamp,
   moveIndexAtTime,
   parseTimestampsJson,
@@ -35,6 +34,28 @@ import {
 const VIDEO_IDS = listVideoDeckIds()
 
 type TaggerTab = "edit" | "train" | "review"
+type SavedTarget = "json" | "note"
+
+async function postTaggerApi(path: string, body: unknown): Promise<void> {
+  const res = await fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as { error?: string } | null
+    throw new Error(data?.error ?? "Save failed")
+  }
+}
+
+export type { TaggerTab }
+
+type TaggerViewProps = {
+  warmup: string
+  mode: TaggerTab
+  onWarmupChange: (warmup: string) => void
+  onModeChange: (mode: TaggerTab) => void
+}
 
 function deckMoveNames(deckId: string, defaultNames: string[]): string[] {
   return resolveMoveNames(deckId, defaultNames, loadMoveNamesByDeck())
@@ -51,45 +72,7 @@ function PhonePreviewFrame({ children }: { children: ReactNode }) {
   )
 }
 
-const CURSOR_PROMPT_DEEPLINK = "cursor://anysphere.cursor-deeplink/prompt"
-const CURSOR_DEEPLINK_MAX_URL = 8000
-
-function buildNoteSavePrompt(deckId: string, noteText: string): string {
-  return [
-    `Write or overwrite src/data/warmup-notes/${deckId}.txt with the tagger note for warmup deck ${deckId}. Replace the entire file with exactly this text:`,
-    "",
-    "```",
-    noteText,
-    "```",
-  ].join("\n")
-}
-
-function buildCursorPromptDeeplink(text: string): string {
-  const url = new URL(CURSOR_PROMPT_DEEPLINK)
-  const empty = new URL(CURSOR_PROMPT_DEEPLINK)
-  empty.searchParams.set("text", "")
-  const overhead = empty.toString().length
-  let prompt = text
-  if (encodeURIComponent(prompt).length + overhead > CURSOR_DEEPLINK_MAX_URL) {
-    const suffix = "\n\n[truncated for deeplink length limit]"
-    let low = 0
-    let high = prompt.length
-    while (low < high) {
-      const mid = Math.ceil((low + high) / 2)
-      const candidate = `${prompt.slice(0, mid)}${suffix}`
-      if (encodeURIComponent(candidate).length + overhead <= CURSOR_DEEPLINK_MAX_URL) {
-        low = mid
-      } else {
-        high = mid - 1
-      }
-    }
-    prompt = `${prompt.slice(0, low)}${suffix}`
-  }
-  url.searchParams.set("text", prompt)
-  return url.toString()
-}
-
-export default function TaggerView() {
+export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange }: TaggerViewProps) {
   const [tagger, send] = useMachine(taggerMachine)
   const {
     deckId,
@@ -109,8 +92,9 @@ export default function TaggerView() {
   const [jsonDraft, setJsonDraft] = useState("")
   const [notesDraft, setNotesDraft] = useState("")
   const [copied, setCopied] = useState(false)
+  const [saved, setSaved] = useState<SavedTarget | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
-  const [tab, setTab] = useState<TaggerTab>("edit")
+  const [saveError, setSaveError] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -137,12 +121,11 @@ export default function TaggerView() {
   const previewTimestamps = timestampsReady ? timestamps : null
 
   useEffect(() => {
-    const id = VIDEO_IDS[0] ?? ""
-    const d = DECKS.find(x => x.id === id)
+    const d = DECKS.find(x => x.id === warmup)
     const moves = d?.moves.length ?? 0
-    const names = deckMoveNames(id, d?.moves.map(m => m.text) ?? [])
-    send({ type: "SET_DECK", deckId: id, moveCount: moves, moveNames: names })
-  }, [send])
+    const names = deckMoveNames(warmup, d?.moves.map(m => m.text) ?? [])
+    send({ type: "SET_DECK", deckId: warmup, moveCount: moves, moveNames: names })
+  }, [warmup, send])
 
   useEffect(() => {
     if (!deckId || moveNames.length !== moveCount) return
@@ -150,8 +133,8 @@ export default function TaggerView() {
   }, [deckId, moveCount, moveNames])
 
   useEffect(() => {
-    setEditVideoEl(tab === "edit" && videoSrc ? videoRef.current : null)
-  }, [tab, videoSrc, deckId])
+    setEditVideoEl(mode === "edit" && videoSrc ? videoRef.current : null)
+  }, [mode, videoSrc, deckId])
 
   usePersistedMediaVolume(editVideoEl)
 
@@ -167,6 +150,7 @@ export default function TaggerView() {
 
   useEffect(() => {
     setLoadError(null)
+    setSaveError(null)
   }, [deckId])
 
   useEffect(() => {
@@ -213,12 +197,12 @@ export default function TaggerView() {
   }, [deckId, moveCount, videoSrc, send])
 
   useEffect(() => {
-    if (tab !== "train" || !deckId || !timestampsReady) {
+    if (mode !== "train" || !deckId || !timestampsReady) {
       if (preview.value !== "home") previewSend({ type: "REQUEST_EXIT" })
       return
     }
     previewSend({ type: "START_PREVIEW", deckId })
-  }, [tab, deckId, timestampsReady, previewSend])
+  }, [mode, deckId, timestampsReady, previewSend])
 
   useEffect(() => {
     if (tagger.value !== "dragging") return
@@ -241,7 +225,7 @@ export default function TaggerView() {
   }, [tagger.value, duration, send])
 
   useEffect(() => {
-    if (tab !== "edit") return
+    if (mode !== "edit") return
     const isTyping = (e: KeyboardEvent) => {
       const el = e.target
       return (
@@ -302,7 +286,7 @@ export default function TaggerView() {
       video?.removeEventListener("keydown", onKeyDown, true)
       video?.removeEventListener("keyup", onKeyUp, true)
     }
-  }, [tab, videoSrc, deckId, duration, send, nudgeMs, selectedIndex, timestamps])
+  }, [mode, videoSrc, deckId, duration, send, nudgeMs, selectedIndex, timestamps])
 
   function deleteSelectedMarker() {
     if (selectedIndex === null) return
@@ -392,12 +376,28 @@ export default function TaggerView() {
     })
   }
 
-  function saveViaCursorDeeplink() {
-    window.open(buildCursorPromptDeeplink(buildSavePrompt(jsonDraft)), "_blank")
+  function saveJson() {
+    setSaveError(null)
+    void postTaggerApi("/api/tagger/save-json", { jsonText: jsonDraft })
+      .then(() => {
+        setSaved("json")
+        window.setTimeout(() => setSaved(null), 1200)
+      })
+      .catch(err => {
+        setSaveError(err instanceof Error ? err.message : "Save failed")
+      })
   }
 
-  function saveNoteViaCursorDeeplink() {
-    window.open(buildCursorPromptDeeplink(buildNoteSavePrompt(deckId, notesDraft)), "_blank")
+  function saveNote() {
+    setSaveError(null)
+    void postTaggerApi("/api/tagger/save-note", { deckId, noteText: notesDraft })
+      .then(() => {
+        setSaved("note")
+        window.setTimeout(() => setSaved(null), 1200)
+      })
+      .catch(err => {
+        setSaveError(err instanceof Error ? err.message : "Save failed")
+      })
   }
 
   function restartTrainPreview() {
@@ -406,15 +406,7 @@ export default function TaggerView() {
   }
 
   function onDeckChange(nextId: string) {
-    const nextDeck = DECKS.find(d => d.id === nextId)
-    const moves = nextDeck?.moves.length ?? 0
-    const names = deckMoveNames(nextId, nextDeck?.moves.map(m => m.text) ?? [])
-    send({
-      type: "SET_DECK",
-      deckId: nextId,
-      moveCount: moves,
-      moveNames: names,
-    })
+    onWarmupChange(nextId)
   }
 
   function openMoveNameEditor(index: number) {
@@ -582,9 +574,9 @@ export default function TaggerView() {
             key={id}
             type="button"
             className={`text-[11px] uppercase tracking-wider ${
-              tab === id ? "text-text" : "text-muted"
+              mode === id ? "text-text" : "text-muted"
             }`}
-            onClick={() => setTab(id)}
+            onClick={() => onModeChange(id)}
           >
             {label}
           </button>
@@ -605,7 +597,7 @@ export default function TaggerView() {
         </select>
       </label>
 
-      {tab === "edit" && (
+      {mode === "edit" && (
         <>
           <div className="mb-4 flex flex-col items-stretch gap-4 sm:flex-row sm:items-start">
             <div className="min-w-0 flex-1">
@@ -712,7 +704,7 @@ export default function TaggerView() {
 
           <div className="mb-1 flex items-baseline justify-between gap-3">
             <p className="text-muted text-[11px] uppercase tracking-wider">
-              JSON{copied ? " - copied" : ""}
+              JSON{copied ? " - copied" : saved === "json" ? " - saved" : ""}
             </p>
             <div className="flex items-baseline gap-3">
               <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={copyJson}>
@@ -721,7 +713,7 @@ export default function TaggerView() {
               <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={loadJson}>
                 Load
               </button>
-              <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={saveViaCursorDeeplink}>
+              <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={saveJson}>
                 Save
               </button>
               <button
@@ -743,13 +735,16 @@ export default function TaggerView() {
             spellCheck={false}
           />
           {loadError && <p className="mt-1 text-[11px] text-accent">{loadError}</p>}
+          {saveError && <p className="mt-1 text-[11px] text-accent">{saveError}</p>}
 
           <div className="mt-4 mb-1 flex items-baseline justify-between gap-3">
-            <p className="text-muted text-[11px] uppercase tracking-wider">Notes</p>
+            <p className="text-muted text-[11px] uppercase tracking-wider">
+              Notes{saved === "note" ? " - saved" : ""}
+            </p>
             <button
               type="button"
               className="text-muted text-[11px] uppercase tracking-wider"
-              onClick={saveNoteViaCursorDeeplink}
+              onClick={saveNote}
             >
               Save note
             </button>
@@ -762,7 +757,7 @@ export default function TaggerView() {
         </>
       )}
 
-      {tab === "train" && (
+      {mode === "train" && (
         !deck || !timestampsReady ? (
           <p className="text-muted text-sm">Tag at least one move in Edit first.</p>
         ) : previewSession?.locked ? (
@@ -771,7 +766,7 @@ export default function TaggerView() {
             <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={restartTrainPreview}>
               Restart
             </button>
-            <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={() => setTab("edit")}>
+            <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={() => onModeChange("edit")}>
               Back to Edit
             </button>
           </div>
@@ -787,15 +782,15 @@ export default function TaggerView() {
                 previewSend({ type: "OPTION_CLICK", optionIndex })
               }}
               onTapOut={() => previewSend({ type: "TAP_OUT" })}
-              onClose={() => setTab("edit")}
-              onReview={() => setTab("review")}
+              onClose={() => onModeChange("edit")}
+              onReview={() => onModeChange("review")}
               onRestart={restartTrainPreview}
             />
           </PhonePreviewFrame>
         ) : null
       )}
 
-      {tab === "review" && (
+      {mode === "review" && (
         !deck || !timestampsReady ? (
           <p className="text-muted text-sm">Tag at least one move in Edit first.</p>
         ) : (
@@ -805,8 +800,8 @@ export default function TaggerView() {
               videoSrc={videoSrc}
               review
               timestamps={previewTimestamps}
-              onClose={() => setTab("edit")}
-              onTrain={() => setTab("train")}
+              onClose={() => onModeChange("edit")}
+              onTrain={() => onModeChange("train")}
             />
           </PhonePreviewFrame>
         )

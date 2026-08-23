@@ -11,7 +11,7 @@ import { useSelector } from "@xstate/react"
 import CompletionScreen from "./components/CompletionScreen"
 import HomeScreen from "./components/HomeScreen"
 import ProgressScreen from "./components/ProgressScreen"
-import TaggerView from "./components/tagger/TaggerView"
+import TaggerView, { type TaggerTab } from "./components/tagger/TaggerView"
 import CinemaReviewView from "./components/training/CinemaReviewView"
 import Dusk2TrainingView from "./components/training/Dusk2TrainingView"
 import WhatsNewPopover from "./components/WhatsNewPopover"
@@ -21,6 +21,17 @@ import { DECKS } from "./data/decks"
 import { useWhatsNew } from "./hooks/useWhatsNew"
 import { consumePopNavigation, trackRouterHistoryActions } from "./navigationHistory"
 import { homeSectionHash, nextDeckId } from "./utils/deckUtils"
+import { listVideoDeckIds } from "./utils/deckVideo"
+
+const TAGGER_MODES: readonly TaggerTab[] = ["edit", "train", "review"]
+
+function isTaggerMode(mode: string): mode is TaggerTab {
+  return (TAGGER_MODES as readonly string[]).includes(mode)
+}
+
+function defaultTaggerWarmup(): string {
+  return listVideoDeckIds()[0] ?? ""
+}
 
 const rootRoute = createRootRoute({
   component: RootLayout,
@@ -41,7 +52,51 @@ const allProgressRoute = createRoute({
 const taggerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/tagger",
-  component: TaggerView,
+})
+
+const taggerIndexRoute = createRoute({
+  getParentRoute: () => taggerRoute,
+  path: "/",
+  beforeLoad: () => {
+    const warmup = defaultTaggerWarmup()
+    if (!warmup) throw redirect({ to: "/" })
+    throw redirect({ to: "/tagger/$warmup/$mode", params: { warmup, mode: "edit" } })
+  },
+})
+
+const taggerWarmupRoute = createRoute({
+  getParentRoute: () => taggerRoute,
+  path: "/$warmup",
+  beforeLoad: ({ params }) => {
+    if (!listVideoDeckIds().includes(params.warmup)) {
+      throw redirect({ to: "/tagger" })
+    }
+  },
+})
+
+const taggerWarmupIndexRoute = createRoute({
+  getParentRoute: () => taggerWarmupRoute,
+  path: "/",
+  beforeLoad: ({ params }) => {
+    throw redirect({
+      to: "/tagger/$warmup/$mode",
+      params: { warmup: params.warmup, mode: "edit" },
+    })
+  },
+})
+
+const taggerModeRoute = createRoute({
+  getParentRoute: () => taggerWarmupRoute,
+  path: "/$mode",
+  beforeLoad: ({ params }) => {
+    if (!isTaggerMode(params.mode)) {
+      throw redirect({
+        to: "/tagger/$warmup/$mode",
+        params: { warmup: params.warmup, mode: "edit" },
+      })
+    }
+  },
+  component: TaggerRoute,
 })
 
 const deckRoute = createRoute({
@@ -116,7 +171,10 @@ const completedRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   allProgressRoute,
-  taggerRoute,
+  taggerRoute.addChildren([
+    taggerIndexRoute,
+    taggerWarmupRoute.addChildren([taggerWarmupIndexRoute, taggerModeRoute]),
+  ]),
   deckRoute.addChildren([
     deckIndexRoute,
     trainingRoute,
@@ -312,6 +370,30 @@ function AllProgressRoute() {
       onBack={() => routerInstance.history.back()}
       onDeckSelect={id => {
         if (id) routerInstance.navigate({ to: "/$deckId", params: { deckId: id } })
+      }}
+    />
+  )
+}
+
+function TaggerRoute() {
+  const routerInstance = useRouter()
+  const { warmup, mode } = taggerModeRoute.useParams()
+
+  return (
+    <TaggerView
+      warmup={warmup}
+      mode={mode as TaggerTab}
+      onWarmupChange={nextWarmup => {
+        routerInstance.navigate({
+          to: "/tagger/$warmup/$mode",
+          params: { warmup: nextWarmup, mode },
+        })
+      }}
+      onModeChange={nextMode => {
+        routerInstance.navigate({
+          to: "/tagger/$warmup/$mode",
+          params: { warmup, mode: nextMode },
+        })
       }}
     />
   )

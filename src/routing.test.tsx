@@ -311,4 +311,51 @@ describe("routing", () => {
       expect(screen.getByText("Summary")).toBeInTheDocument()
     })
   })
+
+  it("redirects /tagger to the first video warmup in edit mode", async () => {
+    const { router } = await renderWithRouter("/tagger")
+
+    await screen.findByRole("heading", { name: "Video Tagger" })
+    expect(router.state.location.pathname).toBe("/tagger/A1/edit")
+  })
+
+  it("navigates tagger tabs and warmup via URL", async () => {
+    const { router } = await renderWithRouter("/tagger/A1/edit")
+
+    await screen.findByRole("heading", { name: "Video Tagger" })
+
+    fireEvent.click(screen.getByRole("button", { name: "Train" }))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/tagger/A1/train")
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/tagger/A1/edit")
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: "Review" }))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/tagger/A1/review")
+    })
+
+    fireEvent.change(screen.getByLabelText("Video"), { target: { value: "A2" } })
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/tagger/A2/review")
+    })
+  })
+
+  it("redirects invalid tagger warmup to /tagger", async () => {
+    const { router } = await renderWithRouter("/tagger/ZZZ/edit")
+
+    await screen.findByRole("heading", { name: "Video Tagger" })
+    expect(router.state.location.pathname).toBe("/tagger/A1/edit")
+  })
+
+  it("redirects invalid tagger mode to edit", async () => {
+    const { router } = await renderWithRouter("/tagger/A1/bogus")
+
+    await screen.findByRole("heading", { name: "Video Tagger" })
+    expect(router.state.location.pathname).toBe("/tagger/A1/edit")
+  })
 })
