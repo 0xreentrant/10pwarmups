@@ -1,0 +1,7 @@
+## Spec
+- timestamps: (number | null)[] in tagger machine / parse / JSON
+- isFiniteTimestamp helper; moveIndexAtTime skips non-finite, returns -1 if none match
+- SELECT missing: set selectedIndex only (no seek)
+- UI: dots only for finite; provisional at playhead when selected missing; drag DRAG_START assigns
+- Train/review ready only when all timestamps finite
+- Nudge: already localStorage tp_tagger_nudge_ms via usePersistedNudgeMs

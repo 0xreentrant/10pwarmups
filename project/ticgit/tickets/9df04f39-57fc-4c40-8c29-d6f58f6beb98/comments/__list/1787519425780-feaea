@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"Sparse (number|null)[] timestamps; provisional playhead dot; moveIndexAtTime skips nulls. Nudge ms localStorage key tp_tagger_nudge_ms (usePersistedNudgeMs). Tests+tsc green."}

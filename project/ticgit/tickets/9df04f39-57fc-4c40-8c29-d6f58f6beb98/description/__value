@@ -1,0 +1,1 @@
+Support sparse timestamps (number | null). No timeline dots or active highlight for missing; selected missing move shows provisional dot at playhead; drag assigns time. Keep nudge ms localStorage (tp_tagger_nudge_ms).
