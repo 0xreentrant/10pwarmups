@@ -107,11 +107,9 @@ function CrownFlameTip({
 function FlameFill({
   percent,
   bodyGrad,
-  tongueGrad,
 }: {
   percent: number
   bodyGrad: string
-  tongueGrad: string
 }) {
   const hot = heatIntensity(percent)
 
@@ -131,17 +129,8 @@ function FlameFill({
             <stop offset="50%" stopColor="#c43810" />
             <stop offset="100%" stopColor="#ffc050" />
           </linearGradient>
-          <linearGradient id={tongueGrad} x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0%" stopColor="#a82808" />
-            <stop offset="100%" stopColor="#ffe090" />
-          </linearGradient>
         </defs>
         <rect x="0" y="3" width="120" height="5" fill={`url(#${bodyGrad})`} />
-        <path
-          className="fsb-tongue fsb-tongue--a"
-          fill={`url(#${tongueGrad})`}
-          d="M0,4 C5,1 10,5 15,2 C20,-1 25,4 30,1 C35,-2 40,3 45,0 C50,-3 55,2 60,-1 C65,-4 70,1 75,-2 C80,-5 85,0 90,-3 C95,-6 100,1 105,-2 C110,-5 115,0 120,-3 L120,4 L0,4 Z"
-        />
       </svg>
     </div>
   )
@@ -154,7 +143,6 @@ export default function FlameStreakBar({
 }: FlameStreakBarProps) {
   const uid = useId().replace(/:/g, "")
   const bodyGrad = `fsb-body-${uid}`
-  const tongueGrad = `fsb-tongue-${uid}`
   const percent = max > 0 ? Math.min(100, (value / max) * 100) : 0
   const tier = flameTier(percent)
   const crownSize = crownFlameSize(percent)
@@ -206,14 +194,6 @@ export default function FlameStreakBar({
           overflow: visible;
         }
 
-        .fsb-tongue {
-          transform-origin: center bottom;
-        }
-
-        .fsb-tongue--a {
-          animation: fsb-tongue-a calc(1.8s - var(--fsb-hot, 0.5) * 0.4s) ease-in-out infinite;
-        }
-
         .fsb-crown-flame {
           position: absolute;
           top: 50%;
@@ -224,7 +204,7 @@ export default function FlameStreakBar({
           user-select: none;
           filter: var(--fsb-crown-glow);
           transform-origin: right bottom;
-          transition: width 0.15s ease-out, height 0.15s ease-out, left 0.15s ease-out, opacity 0.15s ease-out, filter 0.15s ease-out;
+          transition: opacity 0.15s ease-out, filter 0.15s ease-out;
           animation:
             fsb-crown-float var(--fsb-float-dur, 2.2s) ease-in-out infinite,
             fsb-crown-pulse-blaze 1s ease-in-out infinite;
@@ -275,15 +255,7 @@ export default function FlameStreakBar({
           50% { scale: 1.2; filter: var(--fsb-crown-glow) brightness(1.5); }
         }
 
-        @keyframes fsb-tongue-a {
-          0%, 100% { transform: scaleY(1) translateY(0); }
-          30% { transform: scaleY(1.08) translateY(-1px); }
-          55% { transform: scaleY(0.94) translateY(1px); }
-          80% { transform: scaleY(1.05) translateY(-0.5px); }
-        }
-
         @media (prefers-reduced-motion: reduce) {
-          .fsb-tongue,
           .fsb-crown-flame--alive {
             animation: none;
           }
@@ -298,7 +270,6 @@ export default function FlameStreakBar({
           <FlameFill
             percent={percent}
             bodyGrad={bodyGrad}
-            tongueGrad={tongueGrad}
           />
         )}
       </div>
