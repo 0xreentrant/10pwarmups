@@ -1,0 +1,1 @@
+Wire full-bleed Dusk 2 into /$deckId/training using appMachine as the only quiz state. Import deck videos from ~/Downloads/10pwarmups into public/videos/. Decks without video use a blank stage and 30s synthetic timeline. Review mode stays on TrainingScreen.

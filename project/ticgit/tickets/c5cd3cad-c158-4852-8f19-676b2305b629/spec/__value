@@ -1,0 +1,15 @@
+## Spec: Video tagger
+
+### Route
+- `/tagger` on root, unlinked from UI
+- Component: TaggerView
+
+### Behavior
+1. Dropdown lists all VIDEO_DECK_IDS with deck names
+2. Select loads video + moves; timestamps init as equal slices on loadedmetadata
+3. HTML5 video with controls; timeline playhead follows timeupdate
+4. One draggable dot per move; click move selects + seeks; drag sets timestamp
+5. JSON `{ deckId, timestamps }` at bottom updates live; click copies to clipboard
+
+### Out of scope
+DB, train/review consumption

@@ -1,0 +1,16 @@
+# Spec: Dusk 2 training
+
+## Goal
+Replace production training quiz UI with Dusk 2 overlay on /$deckId/training.
+
+## Requirements
+- appMachine is the only quiz state machine (no useQuizDrill on training path)
+- Import videos A1-H4 + ramey-flow into public/videos/, commit as plain blobs
+- Equal-split timeline; missing video -> null src + 30s fallback duration
+- Clock forfeit: OPTION_CLICK wrong index + Slap In gates UI advance
+- Review route unchanged (TrainingScreen)
+
+## Out of scope
+- Review mode redesign
+- Per-move timestamp files
+- Git LFS
