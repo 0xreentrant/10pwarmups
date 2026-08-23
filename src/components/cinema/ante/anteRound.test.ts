@@ -1,5 +1,17 @@
 import { describe, expect, it } from "vitest"
-import { ANTE_STALL_STEPS, ANTE_TOP_STAKE, anteStake, strobeLit } from "./useAnteRound"
+import {
+  ANTE_STALL_STEPS,
+  ANTE_TOP_STAKE,
+  CORRECT_REVEAL_PLAYBACK_RATE,
+  anteStake,
+  strobeLit,
+} from "./useAnteRound"
+
+describe("CORRECT_REVEAL_PLAYBACK_RATE", () => {
+  it("is 1x so train playback is never sped up by stake", () => {
+    expect(CORRECT_REVEAL_PLAYBACK_RATE).toBe(1)
+  })
+})
 
 describe("anteStake", () => {
   it("opens at the top stake", () => {

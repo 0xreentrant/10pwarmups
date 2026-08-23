@@ -8,7 +8,7 @@ export interface TappedCtx {
 }
 
 function missedMove(ctx: TappedCtx) {
-  return ctx.deck.moves[ctx.round.drill.moveIdx].text
+  return ctx.round.drill.move.text
 }
 
 export function SlapOverlay(ctx: TappedCtx) {

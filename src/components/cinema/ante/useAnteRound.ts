@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react"
 import { getLongestStreak } from "../../../appMachine"
+import { isFiniteTimestamp } from "../../../data/moveTimestamps"
 import type { Deck, QuestionOption, Session } from "../../../types/domain"
 import { useMoveTimeline } from "../useMoveTimeline"
 import { useTimers } from "../quiz/quizMotion"
-import { leadInSegment, revealSegment, useSegmentPlayer } from "../quiz/useSegmentPlayer"
+import { revealSegment, useSegmentPlayer } from "../quiz/useSegmentPlayer"
 
 export const ANTE_CLOCK_MS = 6000
 export const ANTE_TOP_STAKE = 4
+/** Correct-answer reveal always plays at 1x in train mode. */
+export const CORRECT_REVEAL_PLAYBACK_RATE = 1
 /** No peek button in these variants: time is the only currency, so three
  * stall steps walk the stake all the way down x4 -> x1 before the buzzer. */
 export const ANTE_STALL_STEPS = [1500, 3000, 4500]
@@ -72,7 +75,8 @@ export interface AnteRound {
 }
 
 interface FrozenAsk {
-  moveIdx: number
+  slot: number
+  deckMoveIdx: number
   options: QuestionOption[]
 }
 
@@ -81,10 +85,11 @@ export interface UseAnteRoundArgs {
   session: Session
   videoEl: HTMLVideoElement | null
   onOptionClick: (optionIndex: number) => void
+  onTapOut?: () => void
   onRestart?: () => void
   config?: AnteRoundConfig
   /** Optional in-memory timestamps (e.g. tagger preview). */
-  timestamps?: number[] | null
+  timestamps?: (number | null)[] | null
 }
 
 export function useAnteRound({
@@ -92,6 +97,7 @@ export function useAnteRound({
   session,
   videoEl,
   onOptionClick,
+  onTapOut,
   onRestart,
   config = {},
   timestamps: timestampOverrides = null,
@@ -103,8 +109,10 @@ export function useAnteRound({
   const frozenRef = useRef<FrozenAsk | null>(null)
   const sessionRef = useRef(session)
   const onOptionClickRef = useRef(onOptionClick)
+  const onTapOutRef = useRef(onTapOut)
   sessionRef.current = session
   onOptionClickRef.current = onOptionClick
+  onTapOutRef.current = onTapOut
   const [phase, setPhase] = useState<DrillPhase>("asking")
   const [picked, setPicked] = useState<number | null>(null)
   const [frozen, setFrozen] = useState<FrozenAsk | null>(null)
@@ -121,18 +129,20 @@ export function useAnteRound({
   paidRef.current = paid
   frozenRef.current = frozen
 
-  const total = deck.moves.length
-  const askMoveIdx = frozen?.moveIdx ?? session.moveSequence.length
+  const moveOrder = session.moveOrder
+  const total = moveOrder.length
+  const askSlot = frozen?.slot ?? session.moveSequence.length
+  const deckMoveIdx = frozen?.deckMoveIdx ?? moveOrder[askSlot] ?? 0
   const askOptions = frozen?.options ?? session.options
   const history: DrillResult[] = session.moveSequence.map(a => (a.correct ? "hit" : "miss"))
   const misses = history.filter(h => h === "miss").length
   const best = Math.max(getLongestStreak(session.moveSequence), session.currentStreak)
-  const done = session.locked || askMoveIdx >= total
+  const done = session.locked || askSlot >= total
 
   const drill: AnteDrillView = {
     phase: done && phase === "asking" ? "done" : phase,
     picked,
-    moveIdx: Math.min(askMoveIdx, Math.max(0, total - 1)),
+    moveIdx: Math.min(askSlot, Math.max(0, total - 1)),
     total,
     options: askOptions,
     streak: session.currentStreak,
@@ -140,7 +150,7 @@ export function useAnteRound({
     misses,
     history,
     beat,
-    move: deck.moves[Math.min(askMoveIdx, Math.max(0, total - 1))],
+    move: deck.moves[deckMoveIdx],
   }
 
   useEffect(() => {
@@ -161,16 +171,17 @@ export function useAnteRound({
     if (!timeline) return
     if (phase !== "asking" || session.locked) return
 
-    const moveIdx = session.moveSequence.length
-    if (moveIdx >= total) return
+    const slot = session.moveSequence.length
+    if (slot >= total) return
 
+    const deckMoveIdx = moveOrder[slot]
     setPaid(null)
     setRemaining(ANTE_CLOCK_MS)
 
     const openClock = () => {
       const snap = sessionRef.current
       const optsAtOpen = snap.options
-      const slot = snap.moveSequence.length
+      const slotAtOpen = snap.moveSequence.length
       askedAtRef.current = performance.now()
       setRemaining(ANTE_CLOCK_MS)
       setPaid(null)
@@ -179,24 +190,22 @@ export function useAnteRound({
       clockRef.current = window.setTimeout(() => {
         clockRef.current = 0
         setLive(false)
-        setMarks(m => ({ ...m, [slot]: "clock" }))
-        const wrongIdx = optsAtOpen.findIndex(o => !o.correct)
-        setFrozen({ moveIdx: slot, options: optsAtOpen })
+        setMarks(m => ({ ...m, [slotAtOpen]: "clock" }))
+        setFrozen({
+          slot: slotAtOpen,
+          deckMoveIdx: moveOrder[slotAtOpen],
+          options: optsAtOpen,
+        })
         setPhase("wrong")
         setPicked(null)
         setBeat(b => b + 1)
-        onOptionClickRef.current(wrongIdx >= 0 ? wrongIdx : 0)
+        onTapOutRef.current?.()
       }, ANTE_CLOCK_MS)
     }
 
-    if (moveIdx === 0) {
-      hold(0)
-      openClock()
-    } else {
-      setReady(false)
-      setLive(false)
-      play(leadInSegment(timeline, moveIdx), { onEnd: openClock })
-    }
+    const t = timeline.timestamps[deckMoveIdx]
+    hold(isFiniteTimestamp(t) ? t : 0)
+    openClock()
 
     return () => {
       if (clockRef.current) window.clearTimeout(clockRef.current)
@@ -209,7 +218,7 @@ export function useAnteRound({
   useEffect(() => {
     if (!timeline) return
     if (phase !== "correct" && phase !== "wrong") return
-    const moveIdx = frozen?.moveIdx
+    const moveIdx = frozen?.deckMoveIdx
     if (moveIdx == null) return
 
     setReady(false)
@@ -221,7 +230,7 @@ export function useAnteRound({
         ? correctHoldMs(won)
         : correctHoldMs ?? (won >= 3 ? 800 : 460)
       play(revealSegment(timeline, moveIdx), {
-        rate: 1 + won * 0.3,
+        rate: CORRECT_REVEAL_PLAYBACK_RATE,
         onEnd: () => after(holdMs, () => {
           setPhase("asking")
           setPicked(null)
@@ -230,26 +239,29 @@ export function useAnteRound({
         }),
       })
     } else {
-      if (buzzed && buzzReplay) {
+      const settle = () => {
+        setPhase("asking")
+        setPicked(null)
+        setFrozen(null)
+        setBeat(b => b + 1)
+      }
+      if (!buzzed) {
+        const holdMs = typeof correctHoldMs === "function"
+          ? correctHoldMs(0)
+          : correctHoldMs ?? 460
+        play(revealSegment(timeline, moveIdx), {
+          rate: CORRECT_REVEAL_PLAYBACK_RATE,
+          onEnd: () => after(holdMs, settle),
+        })
+      } else if (buzzReplay) {
         const loop = () => play(revealSegment(timeline, moveIdx), { rate: 0.75, onEnd: loop })
         loop()
       } else {
-        hold(timeline.timestamps[moveIdx])
+        const t = timeline.timestamps[moveIdx]
+        hold(isFiniteTimestamp(t) ? t : 0)
       }
-      if (!buzzed) {
-        after(1600, () => {
-          setPhase("asking")
-          setPicked(null)
-          setFrozen(null)
-          setBeat(b => b + 1)
-        })
-      } else if (buzzHoldMs !== null) {
-        after(buzzHoldMs, () => {
-          setPhase("asking")
-          setPicked(null)
-          setFrozen(null)
-          setBeat(b => b + 1)
-        })
+      if (buzzed && buzzHoldMs !== null) {
+        after(buzzHoldMs, settle)
       }
     }
 
@@ -257,7 +269,7 @@ export function useAnteRound({
       cancel()
       clearAll()
     }
-  }, [timeline, phase, beat, frozen?.moveIdx, picked])
+  }, [timeline, phase, beat, frozen?.deckMoveIdx, picked])
 
   const answer = (optionIndex: number) => {
     if (phase !== "asking" || !live || session.locked) return
@@ -266,20 +278,21 @@ export function useAnteRound({
     setLive(false)
     clearAll()
     const opts = session.options
-    const moveIdx = session.moveSequence.length
+    const slot = session.moveSequence.length
+    const deckMoveIdx = moveOrder[slot]
     const correct = !!opts[optionIndex]?.correct
     const won = anteStake(performance.now() - askedAtRef.current)
-    setFrozen({ moveIdx, options: opts })
+    setFrozen({ slot, deckMoveIdx, options: opts })
     setPhase(correct ? "correct" : "wrong")
     setPicked(optionIndex)
     setBeat(b => b + 1)
     if (correct) {
       setPaid(won)
       setScore(s => s + won)
-      setMarks(m => ({ ...m, [moveIdx]: won }))
+      setMarks(m => ({ ...m, [slot]: won }))
     } else {
       setPaid(null)
-      setMarks(m => ({ ...m, [moveIdx]: "miss" }))
+      setMarks(m => ({ ...m, [slot]: "miss" }))
     }
     onOptionClick(optionIndex)
   }

@@ -1,3 +1,4 @@
+import OptionMoveText from "../../OptionMoveText"
 import { ANTE_TOP_STAKE, type AnteRound } from "./useAnteRound"
 
 /** Option buttons shared by every variant; the wrapping container owns layout. */
@@ -20,7 +21,7 @@ export function AnteOptions({ round }: { round: AnteRound }) {
             disabled={drill.phase !== "asking" || !round.live}
             onClick={() => round.answer(i)}
           >
-            {opt.text}
+            <OptionMoveText move={opt} revealed={revealed} />
           </button>
         )
       })}
