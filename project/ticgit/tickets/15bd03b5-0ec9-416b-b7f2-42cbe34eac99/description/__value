@@ -1,0 +1,1 @@
+Clean up tagger module per audit: share unsorted-safe moveIndexAtTime with cinema, delete dead initEqualTimestamps, drop unused parse deckId, fix SEED wiping edits on tab remount, then merge tagger train/review preview session with appMachine (preview mode that does not persist progress).

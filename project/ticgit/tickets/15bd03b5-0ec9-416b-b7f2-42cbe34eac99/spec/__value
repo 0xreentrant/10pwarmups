@@ -1,0 +1,13 @@
+## Goal
+Clean up tagger and drive train/review preview from appMachine without persisting progress.
+
+## Done when
+1. moveIndexAtTime lives in data/moveTimestamps and is used by useMoveTimeline and tagger (unsorted A2-safe).
+2. initEqualTimestamps removed; equal-slice only via resolveMoveTimestamps.
+3. parseTimestampsJson does not expose unused deckId (or deck switch is intentional - prefer drop).
+4. SEED does not wipe in-memory timestamps when returning from train/review tab.
+5. Tagger train preview uses appMachine session path with a preview/ephemeral flag so progress is not saved; local createPreviewSession/advancePreviewSession removed from TaggerView.
+6. Tests green for moveTimestamps, taggerMachine, useMoveTimeline unsorted case.
+
+## Out of scope
+Enforcing monotonic timestamps on drag; visual scrubber redesign.
