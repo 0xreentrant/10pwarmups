@@ -187,12 +187,6 @@ export default function CinemaOverlay({
             />
           ))}
         </div>
-        {review && (
-          <div className="ct-review-legend">
-            <span className="ct-review-legend-a">■ Person A</span>
-            <span className="ct-review-legend-b">■ Person B</span>
-          </div>
-        )}
       </div>
 
       {review && movesOpen && (
@@ -464,14 +458,6 @@ function CinemaStyles() {
       @keyframes ct-drawer-in {
         from { transform: translateY(100%); }
         to { transform: translateY(0); }
-      }
-
-      .ct-review-legend {
-        display: flex;
-        gap: 14px;
-        margin-top: 10px;
-        font-size: 10px;
-        letter-spacing: 0.06em;
       }
 
       .ct-review-legend-a { color: var(--color-partner-a); }
