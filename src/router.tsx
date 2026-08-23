@@ -11,8 +11,8 @@ import { useSelector } from "@xstate/react"
 import CompletionScreen from "./components/CompletionScreen"
 import HomeScreen from "./components/HomeScreen"
 import ProgressScreen from "./components/ProgressScreen"
-import ShowcaseScreen from "./components/showcase/ShowcaseScreen"
-import TrainingScreen from "./components/TrainingScreen"
+import CinemaReviewView from "./components/training/CinemaReviewView"
+import Dusk2TrainingView from "./components/training/Dusk2TrainingView"
 import WhatsNewPopover from "./components/WhatsNewPopover"
 import { appActor, getAppSnapshot } from "./appActor"
 import { hasRestorableCompletion } from "./appMachine"
@@ -35,12 +35,6 @@ const allProgressRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/progress",
   component: AllProgressRoute,
-})
-
-const showcaseRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/showcase",
-  component: ShowcaseScreen,
 })
 
 const deckRoute = createRoute({
@@ -115,7 +109,6 @@ const completedRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   allProgressRoute,
-  showcaseRoute,
   deckRoute.addChildren([
     deckIndexRoute,
     trainingRoute,
@@ -173,7 +166,7 @@ function RootLayout() {
   }, [routerInstance])
 
   return (
-    <div className="mx-auto max-w-[480px] px-4">
+    <div className="mx-auto max-w-[520px] px-4">
       <Outlet />
       <div className="mb-4 text-muted">
         (c) 0xreentrant 2026 · <a href="updates.html" className="text-muted no-underline">Latest Updates</a>
@@ -225,9 +218,8 @@ function TrainingRoute() {
   }, [deckId, routerInstance])
 
   return (
-    <TrainingScreen
+    <Dusk2TrainingView
       deck={deck}
-      mode="training"
       session={session}
       onOptionClick={optionIndex => appActor.send({ type: "OPTION_CLICK", optionIndex })}
       onBack={() => {
@@ -238,7 +230,9 @@ function TrainingRoute() {
         appActor.send({ type: "START_REVIEW", deckId })
         routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
       }}
-      onSwitchToTrain={() => {}}
+      onRestart={() => {
+        appActor.send({ type: "START_DECK", deckId })
+      }}
     />
   )
 }
@@ -249,16 +243,12 @@ function ReviewRoute() {
   const deck = DECKS.find(d => d.id === deckId)!
 
   return (
-    <TrainingScreen
+    <CinemaReviewView
       deck={deck}
-      mode="review"
-      session={null}
-      onOptionClick={() => {}}
       onBack={() => {
         appActor.send({ type: "REQUEST_EXIT" })
         routerInstance.navigate({ to: "/" })
       }}
-      onSwitchToReview={() => {}}
       onSwitchToTrain={() => {
         appActor.send({ type: "START_DECK", deckId })
         routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })

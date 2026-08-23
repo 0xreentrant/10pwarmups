@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react"
-import { Link } from "@tanstack/react-router"
-import DeckLink from "./DeckLink"
 import HeatGradientCrownBar from "./HeatGradientCrownBar"
 import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS, SERIES } from "../data/decks"
@@ -14,7 +12,7 @@ const SERIES_NAV_LINK = "font-disp font-bold text-[0.85rem] tracking-widest uppe
 const SCROLL_TOP_BTN = [
   "fixed z-50 bottom-6 w-11 h-11 rounded-full border-0 bg-surface shadow-[0_4px_16px_rgba(0,0,0,0.4)]",
   "flex items-center justify-center origin-center",
-  "right-[max(16px,calc(50%-240px+16px))]",
+  "right-[max(16px,calc(50%-260px+16px))]",
   "transition-[opacity,transform] duration-300 ease-in-out",
   "hover:bg-[color-mix(in_srgb,var(--color-surface),white_8%)]",
 ].join(" ")
@@ -40,22 +38,37 @@ function DeckRow({ deck, progress, onDeckClick, onReviewClick, showId }: DeckRow
     : label === "incomplete" ? "pulse-edge"
     : "none"
 
+  const goReview = () => {
+    analytics.event({
+      action: "deck_review",
+      category: "Review",
+      label: `${deck.id} - ${deck.name}`,
+    })
+    onReviewClick(deck.id)
+  }
+
   return (
     <tr>
       <td className="py-2 align-top w-[4.75rem]">
-        <div className="flex flex-col items-center gap-1">
+        <button
+          type="button"
+          className="flex flex-col items-center gap-1 w-full border-0 bg-transparent p-0 cursor-pointer text-muted hover:text-accent"
+          aria-label={`Review ${deck.name}`}
+          onClick={goReview}
+        >
           {showId ? (
-            <span className="font-disp font-extrabold text-base tracking-wide text-muted leading-none">{deck.id}</span>
+            <span className="font-disp font-extrabold text-base tracking-wide leading-none">{deck.id}</span>
           ) : null}
-          <DeckLink link={deck.link} variant="emoji" />
-        </div>
+          <span className="text-3xl leading-none" aria-hidden>🎞️</span>
+          <span className="text-xs leading-tight text-center">watch</span>
+        </button>
       </td>
-      <td className="py-2 pr-2.5 align-top">
+      <td className="py-2 pr-1.5 align-top">
         <div className="font-disp font-semibold text-base tracking-tight">{deck.name}</div>
         <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} moves · {label}</div>
         <HeatGradientCrownBar value={prog.bestStreak} max={total} animation={animation} />
       </td>
-      <td className="py-2 align-middle w-[9.5rem]">
+      <td className="py-2 pl-2 align-middle w-[13rem]">
         <div className="flex gap-1 items-center justify-end">
           <button className="btn btn-primary" onClick={() => {
             analytics.event({
@@ -65,14 +78,7 @@ function DeckRow({ deck, progress, onDeckClick, onReviewClick, showId }: DeckRow
             })
             onDeckClick(deck.id)
           }}>Train</button>
-          <button className="btn" onClick={() => {
-            analytics.event({
-              action: 'deck_review',
-              category: 'Review',
-              label: `${deck.id} - ${deck.name}`
-            })
-            onReviewClick(deck.id)
-          }}>Review</button>
+          <button className="btn" onClick={goReview}>Review</button>
         </div>
       </td>
     </tr>
@@ -165,7 +171,6 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
       <hr />
       <div className="flex gap-2 mt-3 flex-wrap">
         <button className="btn" onClick={onStats}>Stats</button>
-        <Link to="/showcase" className="btn no-underline">Video Playback</Link>
         <button
           className="btn"
           onClick={() => { if (!resetConfirm) onReset() }}

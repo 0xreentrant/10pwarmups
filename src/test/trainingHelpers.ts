@@ -1,0 +1,50 @@
+import { screen, fireEvent, waitFor } from "@testing-library/react"
+
+export function getOptionButtons() {
+  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".bl-deck .ao-option"))
+  if (buttons.length === 0) throw new Error("No dusk2 option buttons found")
+  return buttons
+}
+
+export async function waitForLiveOptions() {
+  await waitFor(() => {
+    // bl-ghost only mounts while the ante clock is live - avoids the brief
+    // disabled window at the start of each asking effect run (incl. Strict Mode).
+    expect(document.querySelector(".bl-ghost")).toBeTruthy()
+    const buttons = getOptionButtons()
+    expect(buttons.some(b => !b.disabled)).toBe(true)
+  }, { timeout: 5000 })
+  return getOptionButtons()
+}
+
+export async function clickOptionWithText(text: string) {
+  let btn: HTMLButtonElement | undefined
+  await waitFor(() => {
+    expect(document.querySelector(".bl-ghost")).toBeTruthy()
+    btn = getOptionButtons().find(b => !b.disabled && b.textContent?.includes(text))
+    expect(btn).toBeTruthy()
+  }, { timeout: 5000 })
+  fireEvent.click(btn!)
+}
+
+export async function answerDeckMoves(moves: string[]) {
+  for (const move of moves) {
+    await clickOptionWithText(move)
+  }
+}
+
+export async function startFirstDeck() {
+  const trainButtons = await screen.findAllByText("Train")
+  fireEvent.click(trainButtons[0])
+  await waitForLiveOptions()
+}
+
+export async function clickWrongOption(excludeText: string) {
+  let btn: HTMLButtonElement | undefined
+  await waitFor(() => {
+    expect(document.querySelector(".bl-ghost")).toBeTruthy()
+    btn = getOptionButtons().find(b => !b.disabled && !b.textContent?.includes(excludeText))
+    expect(btn).toBeTruthy()
+  }, { timeout: 5000 })
+  fireEvent.click(btn!)
+}

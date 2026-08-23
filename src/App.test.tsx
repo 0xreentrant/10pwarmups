@@ -2,42 +2,18 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { DECKS } from './data/decks';
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from './data/whatsNew';
-import { restartAppActor } from './appActor';
+import { restartAppActor, getAppSnapshot } from './appActor';
 import { renderWithRouter } from './test/renderWithRouter';
+import {
+  answerDeckMoves,
+  clickOptionWithText,
+  clickWrongOption,
+  getOptionButtons,
+  startFirstDeck,
+  waitForLiveOptions,
+} from './test/trainingHelpers';
 
 const A1_MOVES = ['Kneeling Granby', 'Seated Granby', 'Bridging Granby', 'Belly to Belly Granby', 'Granby Flow'];
-
-function getOptionButtons() {
-  const legend = screen.getByText(/What's next/)
-  const fieldset = legend.closest('fieldset')
-  if (!fieldset) throw new Error('Options fieldset not found')
-  return Array.from(fieldset.querySelectorAll('button'))
-}
-
-function clickOptionWithText(text: string) {
-  const btn = getOptionButtons().find(b => b.textContent!.includes(text));
-  if (!btn) throw new Error(`No option button found for "${text}"`);
-  fireEvent.click(btn);
-}
-
-function clickWrongOption(excludeText: string) {
-  const btn = getOptionButtons().find(b => !b.textContent!.includes(excludeText));
-  if (!btn) throw new Error(`No wrong option found excluding "${excludeText}"`);
-  fireEvent.click(btn);
-}
-
-async function startFirstDeck() {
-  const trainButtons = await screen.findAllByText('Train');
-  fireEvent.click(trainButtons[0]);
-  await screen.findByText(/What's next/);
-}
-
-async function answerDeckMoves(moves: string[], delay = 100) {
-  for (let i = 0; i < moves.length; i++) {
-    clickOptionWithText(moves[i]);
-    if (delay > 0) await new Promise(r => setTimeout(r, delay));
-  }
-}
 
 async function confirmLeaveTest() {
   await screen.findByText("10th Planet")
@@ -96,9 +72,8 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       await startFirstDeck(); // First deck (A1)
 
-      expect(screen.getByText('A1')).toBeInTheDocument();
-      expect(screen.getByText('Kneeling')).toBeInTheDocument();
-      expect(screen.getByText(/Sequence/)).toBeInTheDocument();
+      expect(document.querySelector('.bl-overlay')).toBeTruthy();
+      expect(screen.getByLabelText(/Streak:/)).toBeInTheDocument();
     });
 
     it('shows multiple choice options for the first move', async () => {
@@ -116,10 +91,11 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
       const moves = A1_MOVES;
       for (let i = 0; i < moves.length - 1; i++) {
+        await waitForLiveOptions();
         expect(getOptionButtons().some(b => b.textContent!.includes(moves[i]))).toBe(true);
-        clickOptionWithText(moves[i]);
-        await new Promise(r => setTimeout(r, 50));
+        await clickOptionWithText(moves[i]);
       }
+      await waitForLiveOptions();
       expect(getOptionButtons().some(b => b.textContent!.includes(moves[moves.length - 1]))).toBe(true);
     });
 
@@ -127,18 +103,10 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       await startFirstDeck();
 
-      const initialSequence = screen.getByText(/Sequence/);
-      expect(initialSequence).toBeInTheDocument();
+      await clickOptionWithText(A1_MOVES[0]);
 
-      // Click first option
-      clickOptionWithText(A1_MOVES[0]);
-
-      // Wait for options to change (next move's options should appear)
-      await waitFor(() => {
-        const newOptionButtons = getOptionButtons();
-        // Options might be different or take time to load
-        expect(newOptionButtons.length).toBeGreaterThanOrEqual(0);
-      }, { timeout: 2000 });
+      await waitForLiveOptions();
+      expect(getOptionButtons().length).toBe(4);
     });
 
     it('completes a short deck successfully', async () => {
@@ -165,7 +133,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       await startFirstDeck();
 
-      clickOptionWithText(A1_MOVES[0]);
+      await clickOptionWithText(A1_MOVES[0]);
       await new Promise(r => setTimeout(r, 100));
 
       const saved = JSON.parse(localStorage.getItem('tp_progress')!);
@@ -222,26 +190,29 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       await startFirstDeck();
 
-      clickOptionWithText(A1_MOVES[0]);
+      await clickOptionWithText(A1_MOVES[0]);
 
       await waitFor(() => {
         expect(screen.getByLabelText(/Streak: 1/)).toBeInTheDocument();
-      }, { timeout: 1000 });
+      }, { timeout: 2000 });
     });
 
     it('resets streak on wrong answer', async () => {
       await renderWithRouter("/");
       await startFirstDeck();
 
-      clickOptionWithText(A1_MOVES[0]);
+      await clickOptionWithText(A1_MOVES[0]);
+      await waitFor(() => {
+        expect(getAppSnapshot().context.session?.currentStreak).toBe(1);
+      });
 
-      await new Promise(r => setTimeout(r, 200));
-
-      clickWrongOption(A1_MOVES[1]);
+      await waitForLiveOptions();
+      await clickWrongOption(A1_MOVES[1]);
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/Streak: 1/)).toBeInTheDocument();
-      }, { timeout: 1000 });
+        expect(getAppSnapshot().context.session?.currentStreak).toBe(0);
+        expect(screen.getByLabelText(/Streak: 0/)).toBeInTheDocument();
+      }, { timeout: 2000 });
     });
 
     it('tracks wrong moves and displays them in results', async () => {
@@ -251,20 +222,19 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const answerSequence = [true, false, true, true, true];
 
       for (let i = 0; i < answerSequence.length; i++) {
+        await waitForLiveOptions();
         if (answerSequence[i]) {
-          clickOptionWithText(A1_MOVES[i]);
+          await clickOptionWithText(A1_MOVES[i]);
         } else {
-          clickWrongOption(A1_MOVES[i]);
+          await clickWrongOption(A1_MOVES[i]);
         }
-
-        await new Promise(r => setTimeout(r, 100));
       }
 
       // The single wrong answer (move index 1) must be recorded as a non-perfect completion
       await waitFor(() => {
         const heading = screen.getByRole('heading', { level: 2 });
         expect(heading.textContent).toMatch(/Complete/);
-      }, { timeout: 5000 });
+      }, { timeout: 8000 });
 
       const saved = JSON.parse(localStorage.getItem('tp_progress')!);
       expect(saved['A1'].attempts[0].wrongMoves).toContain(1);
@@ -278,19 +248,19 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const answerSequence = [true, false, true, true, true];
 
       for (let i = 0; i < answerSequence.length; i++) {
+        await waitForLiveOptions();
         if (answerSequence[i]) {
-          clickOptionWithText(moves[i]);
+          await clickOptionWithText(moves[i]);
         } else {
-          clickWrongOption(moves[i]);
+          await clickWrongOption(moves[i]);
         }
-        await new Promise(r => setTimeout(r, 100));
       }
 
       await waitFor(() => {
         expect(screen.getByText('Final streak')).toBeInTheDocument();
         const row = screen.getByText('Final streak').closest('tr');
         expect(row).toHaveTextContent('3');
-      }, { timeout: 5000 });
+      }, { timeout: 8000 });
 
       await waitFor(() => {
         const saved = JSON.parse(localStorage.getItem('tp_progress')!);
@@ -308,10 +278,9 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       await startFirstDeck();
 
-      expect(screen.getByText('Kneeling')).toBeInTheDocument();
+      expect(document.querySelector('.bl-overlay')).toBeTruthy();
 
-      const backButton = screen.getByText(/← Back/);
-      fireEvent.click(backButton);
+      fireEvent.click(screen.getByLabelText('Exit training'));
       await confirmLeaveTest();
     });
 
@@ -353,12 +322,10 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await startFirstDeck();
 
       // Answer one question then abandon
-      clickOptionWithText(A1_MOVES[0]);
+      await clickOptionWithText(A1_MOVES[0]);
+      await waitForLiveOptions();
 
-      await new Promise(r => setTimeout(r, 100));
-
-      const backButton = screen.getByText(/← Back/);
-      fireEvent.click(backButton);
+      fireEvent.click(screen.getByLabelText("Exit training"));
       await confirmLeaveTest();
 
       // Check that in-progress attempt was discarded
@@ -425,16 +392,15 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       await startFirstDeck(); // A1: 5 moves
 
-      // Check for sequence indicators (should have a fieldset with Sequence legend)
-      const legends = screen.getAllByText(/Sequence/);
-      expect(legends.length).toBeGreaterThan(0);
+      expect(document.querySelector('.ao-hud')?.textContent).toMatch(/1\s*\/\s*5/);
     });
 
     it('shows next move prompt correctly', async () => {
       await renderWithRouter("/");
       await startFirstDeck();
 
-      expect(screen.getByText(/What's next/i)).toBeInTheDocument();
+      expect(getOptionButtons().length).toBe(4);
+      expect(document.querySelector('.bl-deck')).toBeTruthy();
     });
 
     it('displays completion results with accuracy metrics', async () => {
@@ -442,7 +408,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await startFirstDeck(); // A1
 
       // Complete the deck
-      await answerDeckMoves(A1_MOVES, 150);
+      await answerDeckMoves(A1_MOVES);
 
       await waitFor(() => {
         // Should see result metrics like "Correct", "Final streak", etc.
@@ -481,7 +447,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await startFirstDeck(); // A1
 
       // Complete deck
-      await answerDeckMoves(A1_MOVES, 50);
+      await answerDeckMoves(A1_MOVES);
 
       await waitFor(() => {
         const saved = JSON.parse(localStorage.getItem('tp_progress')!);
@@ -495,7 +461,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await startFirstDeck(); // A1
 
       // Complete the deck
-      await answerDeckMoves(A1_MOVES, 200);
+      await answerDeckMoves(A1_MOVES);
 
       await waitFor(() => {
         const saved = JSON.parse(localStorage.getItem('tp_progress')!);

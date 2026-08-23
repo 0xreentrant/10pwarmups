@@ -3,35 +3,14 @@ import { screen, fireEvent, waitFor } from "@testing-library/react"
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from "./data/whatsNew"
 import { restartAppActor } from "./appActor"
 import { renderWithRouter } from "./test/renderWithRouter"
+import {
+  answerDeckMoves,
+  clickOptionWithText,
+  startFirstDeck,
+  waitForLiveOptions,
+} from "./test/trainingHelpers"
 
 const A1_MOVES = ["Kneeling Granby", "Seated Granby", "Bridging Granby", "Belly to Belly Granby", "Granby Flow"]
-
-function getOptionButtons() {
-  const legend = screen.getByText(/What's next/)
-  const fieldset = legend.closest("fieldset")
-  if (!fieldset) throw new Error("Options fieldset not found")
-  return Array.from(fieldset.querySelectorAll("button"))
-}
-
-function clickOptionWithText(text: string) {
-  const buttons = getOptionButtons()
-  const btn = buttons.find(b => b.textContent?.includes(text))
-  if (!btn) throw new Error(`No option button found for "${text}". Have: ${buttons.map(b => b.textContent).join(" | ")}`)
-  fireEvent.click(btn)
-}
-
-async function answerDeckMoves(moves: string[], delay = 100) {
-  for (let i = 0; i < moves.length; i++) {
-    clickOptionWithText(moves[i])
-    if (delay > 0) await new Promise(r => setTimeout(r, delay))
-  }
-}
-
-async function startFirstDeck() {
-  const trainButtons = await screen.findAllByText("Train")
-  fireEvent.click(trainButtons[0])
-  await screen.findByText(/What's next/)
-}
 
 function watchForText(text: string) {
   let seen = document.body.textContent?.includes(text) ?? false
@@ -77,8 +56,8 @@ describe("routing", () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()
     expect(router.state.location.pathname).toBe("/A1/training")
-    expect(screen.getByText("Kneeling")).toBeInTheDocument()
-    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
+    expect(document.querySelector(".bl-overlay")).toBeTruthy()
+    expect(screen.getByLabelText(/Streak:/)).toBeInTheDocument()
   })
 
   it("navigates to /progress when Stats is clicked", async () => {
@@ -102,8 +81,8 @@ describe("routing", () => {
   it("browser back from training after one answer returns home immediately", async () => {
     const { router, history } = await renderWithRouter("/")
     await startFirstDeck()
-    clickOptionWithText(A1_MOVES[0])
-    await new Promise(r => setTimeout(r, 100))
+    await clickOptionWithText(A1_MOVES[0])
+    await waitForLiveOptions()
     const homeScreen = watchForText("10th Planet")
 
     try {
@@ -125,8 +104,8 @@ describe("routing", () => {
   it("allows router navigation away from active training without a prompt", async () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()
-    clickOptionWithText(A1_MOVES[0])
-    await new Promise(r => setTimeout(r, 100))
+    await clickOptionWithText(A1_MOVES[0])
+    await waitForLiveOptions()
 
     void router.navigate({ to: "/" })
 
@@ -141,7 +120,7 @@ describe("routing", () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()
 
-    fireEvent.click(screen.getByText(/← Back/))
+    fireEvent.click(screen.getByLabelText("Exit training"))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
@@ -157,25 +136,25 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/review")
     })
+    expect(document.querySelector(".ct-overlay")).toBeTruthy()
     expect(screen.getByText("Kneeling")).toBeInTheDocument()
-    expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
     expect(screen.getByText("Kneeling Granby")).toBeInTheDocument()
-    expect(screen.getByText("Granby Flow")).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Train" })).toBeInTheDocument()
+    expect(screen.getByRole("button", { name: "Show moves" })).toBeInTheDocument()
   })
 
   it("confirms before switching from training to review and resets quiz progress", async () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()
-    clickOptionWithText(A1_MOVES[0])
-    await new Promise(r => setTimeout(r, 100))
+    await clickOptionWithText(A1_MOVES[0])
+    await waitForLiveOptions()
 
     fireEvent.click(screen.getByRole("button", { name: "Review" }))
     expect(screen.getByText(/Switch to review/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByText("Keep training"))
     expect(screen.queryByText(/Switch to review/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
+    expect(document.querySelector(".bl-overlay")).toBeTruthy()
     expect(router.state.location.pathname).toBe("/A1/training")
 
     fireEvent.click(screen.getByRole("button", { name: "Review" }))
@@ -184,7 +163,8 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/review")
     })
-    expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
+    expect(document.querySelector(".bl-overlay")).toBeFalsy()
+    expect(document.querySelector(".ct-overlay")).toBeTruthy()
     expect(screen.getByText("Kneeling Granby")).toBeInTheDocument()
   })
 
@@ -200,7 +180,8 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/training")
     })
-    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
+    await waitForLiveOptions()
+    expect(document.querySelector(".bl-overlay")).toBeTruthy()
     expect(screen.queryByText(/Switch to review/i)).not.toBeInTheDocument()
   })
 
@@ -212,7 +193,7 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/A1/review")
     })
 
-    fireEvent.click(screen.getByText(/← Back/))
+    fireEvent.click(screen.getByLabelText("Exit review"))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
