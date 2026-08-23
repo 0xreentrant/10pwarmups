@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
+import { moveIndexAtTime, resolveMoveTimestamps } from "../../data/moveTimestamps"
 import { FALLBACK_TIMELINE_SEC } from "../../utils/deckVideo"
 
 export interface MoveTimeline {
@@ -7,14 +8,13 @@ export interface MoveTimeline {
   moveIndexAt: (time: number) => number
 }
 
-// ponytail: no per-move video tags exist yet, so each move gets an equal
-// slice of the clip. Good enough to demo the sync interaction; the upgrade
-// path is a small per-deck timestamp file (or a manual tagging pass) once a
-// concept is picked for production.
 export function useMoveTimeline(
+  deckId: string,
   moveCount: number,
   videoEl: HTMLVideoElement | null,
   fallbackDurationSec = FALLBACK_TIMELINE_SEC,
+  /** When length matches moveCount, used instead of MOVE_TIMESTAMPS / equal slice. */
+  timestampOverrides?: number[] | null,
 ): MoveTimeline | null {
   const [duration, setDuration] = useState<number | null>(() =>
     videoEl ? null : fallbackDurationSec,
@@ -39,19 +39,15 @@ export function useMoveTimeline(
   return useMemo(() => {
     if (!duration) return null
 
-    const step = duration / moveCount
-    const timestamps = Array.from({ length: moveCount }, (_, i) => i * step)
+    const timestamps =
+      timestampOverrides && timestampOverrides.length === moveCount
+        ? timestampOverrides
+        : resolveMoveTimestamps(deckId, moveCount, duration)
 
     return {
       duration,
       timestamps,
-      moveIndexAt: (time: number) => {
-        let idx = 0
-        for (let i = 0; i < timestamps.length; i++) {
-          if (time >= timestamps[i]) idx = i
-        }
-        return idx
-      },
+      moveIndexAt: (time: number) => moveIndexAtTime(timestamps, time),
     }
-  }, [duration, moveCount])
+  }, [deckId, duration, moveCount, timestampOverrides])
 }

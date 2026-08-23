@@ -26,11 +26,12 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 })
 
-// jsdom has no real media pipeline: give every <video> a duration and make
-// play() jump to the end so useSegmentPlayer's RAF watcher fires onEnd.
+// jsdom has no real media pipeline: give every <video> a duration long
+// enough for tagged move timestamps, and make play() jump to the end so
+// useSegmentPlayer's RAF watcher fires onEnd.
 Object.defineProperty(HTMLMediaElement.prototype, 'duration', {
   configurable: true,
-  get() { return 10 },
+  get() { return 120 },
 })
 Object.defineProperty(HTMLMediaElement.prototype, 'readyState', {
   configurable: true,
@@ -39,7 +40,7 @@ Object.defineProperty(HTMLMediaElement.prototype, 'readyState', {
 HTMLMediaElement.prototype.load = function load() {}
 HTMLMediaElement.prototype.pause = function pause() {}
 HTMLMediaElement.prototype.play = function play() {
-  this.currentTime = Number(this.duration) || 10
+  this.currentTime = Number(this.duration) || 120
   return Promise.resolve()
 }
 

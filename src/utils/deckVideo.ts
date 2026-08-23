@@ -1,5 +1,5 @@
 /** Decks with a committed mp4 under public/videos/{id}.mp4 */
-const VIDEO_DECK_IDS = new Set([
+const VIDEO_DECK_ID_LIST = [
   "A1", "A2", "A3", "A4",
   "B1", "B2", "B3", "B4",
   "C1", "C2", "C3", "C4",
@@ -9,7 +9,14 @@ const VIDEO_DECK_IDS = new Set([
   "G1", "G2", "G3", "G4",
   "H1", "H2", "H3", "H4",
   "ramey-flow",
-])
+] as const
+
+const VIDEO_DECK_IDS = new Set<string>(VIDEO_DECK_ID_LIST)
+
+/** Ordered ids that have a local training clip. */
+export function listVideoDeckIds(): readonly string[] {
+  return VIDEO_DECK_ID_LIST
+}
 
 /** Local training clip, or null when the deck has no video yet. */
 export function videoSrcForDeck(deckId: string): string | null {
