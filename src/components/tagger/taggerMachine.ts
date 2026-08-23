@@ -7,6 +7,8 @@ export const SELECT_NUDGE_SEC = 0.01
 export interface TaggerContext {
   deckId: string
   moveCount: number
+  /** Display/export names per move index (editable in tagger). */
+  moveNames: string[]
   /** Start time per move index - null = missing / not placed yet. */
   timestamps: (number | null)[]
   duration: number
@@ -21,7 +23,7 @@ export interface TaggerContext {
 }
 
 export type TaggerEvent =
-  | { type: "SET_DECK"; deckId: string; moveCount: number }
+  | { type: "SET_DECK"; deckId: string; moveCount: number; moveNames: string[] }
   | { type: "SEED"; duration: number; timestamps: (number | null)[] }
   | { type: "TIME"; time: number }
   | { type: "SCRUB"; time: number }
@@ -29,8 +31,10 @@ export type TaggerEvent =
   | { type: "DRAG_START"; index: number; time: number }
   | { type: "DRAG"; time: number }
   | { type: "DRAG_END" }
-  | { type: "LOAD"; timestamps: (number | null)[] }
-  | { type: "RESET"; timestamps: (number | null)[] }
+  | { type: "LOAD"; timestamps: (number | null)[]; names?: string[] }
+  | { type: "RESET"; timestamps: (number | null)[]; moveNames: string[] }
+  | { type: "DELETE_SELECTED" }
+  | { type: "SET_MOVE_NAME"; index: number; name: string }
 
 function clampTime(time: number, duration: number): number {
   if (duration <= 0) return 0
@@ -53,6 +57,7 @@ const taggerSetup = setup({
       return {
         deckId: event.deckId,
         moveCount: event.moveCount,
+        moveNames: event.moveNames.slice(0, event.moveCount),
         timestamps: [],
         duration: 0,
         currentTime: 0,
@@ -148,12 +153,42 @@ const taggerSetup = setup({
     load: assign(({ context, event }) => {
       if (event.type !== "LOAD") return {}
       if (event.timestamps.length !== context.moveCount) return {}
-      return { timestamps: event.timestamps }
+      const updates: Pick<TaggerContext, "timestamps" | "moveNames"> = {
+        timestamps: event.timestamps,
+      }
+      if (event.names?.length === context.moveCount) {
+        updates.moveNames = event.names
+      }
+      return updates
     }),
     reset: assign(({ context, event }) => {
       if (event.type !== "RESET") return {}
       if (event.timestamps.length !== context.moveCount) return {}
-      return { timestamps: event.timestamps, selectedIndex: null }
+      if (event.moveNames.length !== context.moveCount) return {}
+      return {
+        timestamps: event.timestamps,
+        moveNames: event.moveNames,
+        selectedIndex: null,
+      }
+    }),
+    deleteSelected: assign(({ context }) => {
+      const idx = context.selectedIndex
+      if (idx === null || idx < 0 || idx >= context.timestamps.length) return {}
+      const t = context.timestamps[idx]
+      if (typeof t !== "number" || !Number.isFinite(t)) return {}
+      const next = context.timestamps.slice()
+      next[idx] = null
+      return { timestamps: next }
+    }),
+    setMoveName: assign(({ context, event }) => {
+      if (event.type !== "SET_MOVE_NAME") return {}
+      if (event.index < 0 || event.index >= context.moveCount) return {}
+      const trimmed = event.name.trim()
+      if (!trimmed) return {}
+      const next = context.moveNames.slice()
+      while (next.length < context.moveCount) next.push(`Move ${next.length + 1}`)
+      next[event.index] = trimmed
+      return { moveNames: next }
     }),
   },
 })
@@ -164,6 +199,7 @@ export const taggerMachine = taggerSetup.createMachine({
   context: {
     deckId: "",
     moveCount: 0,
+    moveNames: [],
     timestamps: [],
     duration: 0,
     currentTime: 0,
@@ -181,6 +217,8 @@ export const taggerMachine = taggerSetup.createMachine({
         SELECT: { actions: "select" },
         LOAD: { actions: "load" },
         RESET: { actions: "reset" },
+        DELETE_SELECTED: { actions: "deleteSelected" },
+        SET_MOVE_NAME: { actions: "setMoveName" },
         DRAG_START: { target: "dragging", actions: "dragStart" },
       },
     },

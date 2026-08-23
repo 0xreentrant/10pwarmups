@@ -21,10 +21,12 @@ describe("usePersistedNudgeMs storage", () => {
   })
 
   it("clamps and round-trips", () => {
-    expect(clampNudgeMs(50)).toBe(MIN_NUDGE_MS)
+    expect(clampNudgeMs(0)).toBe(MIN_NUDGE_MS)
+    expect(clampNudgeMs(50)).toBe(50)
+    expect(clampNudgeMs(250)).toBe(250)
     expect(clampNudgeMs(999_999)).toBe(MAX_NUDGE_MS)
-    saveNudgeMs(500)
-    expect(loadNudgeMs()).toBe(500)
-    expect(localStorage.getItem(NUDGE_MS_STORAGE_KEY)).toBe("500")
+    saveNudgeMs(250)
+    expect(loadNudgeMs()).toBe(250)
+    expect(localStorage.getItem(NUDGE_MS_STORAGE_KEY)).toBe("250")
   })
 })

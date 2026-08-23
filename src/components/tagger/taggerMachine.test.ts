@@ -9,10 +9,13 @@ function start() {
   return actor
 }
 
+const NAMES3 = ["Move 1", "Move 2", "Move 3"]
+const NAMES2 = ["Move 1", "Move 2"]
+
 describe("taggerMachine", () => {
   it("SELECT sets selection and seeks; TIME does not clear selection", () => {
     const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3 })
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3 })
     actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
     actor.send({ type: "SELECT", index: 1 })
     expect(actor.getSnapshot().context.selectedIndex).toBe(1)
@@ -27,7 +30,7 @@ describe("taggerMachine", () => {
 
   it("SELECT seek survives video undershoot without highlighting the previous move", () => {
     const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3 })
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3 })
     actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
     actor.send({ type: "SELECT", index: 1 })
     actor.send({ type: "TIME", time: 9.995 })
@@ -38,7 +41,7 @@ describe("taggerMachine", () => {
 
   it("SCRUB moves playhead without changing selection", () => {
     const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3 })
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3 })
     actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
     actor.send({ type: "SELECT", index: 2 })
     actor.send({ type: "SCRUB", time: 5 })
@@ -50,7 +53,7 @@ describe("taggerMachine", () => {
 
   it("DRAG rewrites owned marker timestamp and seeks", () => {
     const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3 })
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3 })
     actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
     actor.send({ type: "DRAG_START", index: 1, time: 12 })
     expect(actor.getSnapshot().value).toBe("dragging")
@@ -65,7 +68,7 @@ describe("taggerMachine", () => {
 
   it("SELECT on missing timestamp places marker at playhead", () => {
     const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3 })
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3 })
     actor.send({ type: "SEED", duration: 30, timestamps: [0, null, 20] })
     actor.send({ type: "SCRUB", time: 7 })
     actor.send({ type: "SELECT", index: 1 })
@@ -78,7 +81,7 @@ describe("taggerMachine", () => {
 
   it("holds seek until TIME is within epsilon or advances past", () => {
     const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 2 })
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 2, moveNames: NAMES2 })
     actor.send({ type: "SEED", duration: 20, timestamps: [0, 10] })
     actor.send({ type: "SCRUB", time: 10 })
     actor.send({ type: "TIME", time: 9.5 })
@@ -99,7 +102,7 @@ describe("taggerMachine", () => {
 
   it("SEED keeps in-memory timestamps when already seeded for the deck", () => {
     const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3 })
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3 })
     actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
     actor.send({ type: "DRAG_START", index: 1, time: 12 })
     actor.send({ type: "DRAG_END" })
@@ -107,5 +110,64 @@ describe("taggerMachine", () => {
     actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
     expect(actor.getSnapshot().context.timestamps[1]).toBe(12)
     expect(actor.getSnapshot().context.duration).toBe(30)
+  })
+
+  it("DELETE_SELECTED clears timestamp for selected move", () => {
+    const actor = start()
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3 })
+    actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
+    actor.send({ type: "SELECT", index: 1 })
+    actor.send({ type: "DELETE_SELECTED" })
+    const ctx = actor.getSnapshot().context
+    expect(ctx.selectedIndex).toBe(1)
+    expect(ctx.timestamps[1]).toBe(null)
+    expect(ctx.timestamps[0]).toBe(0)
+    expect(ctx.timestamps[2]).toBe(20)
+  })
+
+  it("DELETE_SELECTED no-ops when nothing is selected", () => {
+    const actor = start()
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3 })
+    actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
+    actor.send({ type: "DELETE_SELECTED" })
+    expect(actor.getSnapshot().context.timestamps).toEqual([0, 10, 20])
+    expect(actor.getSnapshot().context.selectedIndex).toBe(null)
+  })
+
+  it("SET_MOVE_NAME updates moveNames at index", () => {
+    const actor = start()
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3 })
+    actor.send({ type: "SET_MOVE_NAME", index: 1, name: "Renamed" })
+    expect(actor.getSnapshot().context.moveNames[1]).toBe("Renamed")
+    expect(actor.getSnapshot().context.moveNames[0]).toBe("Move 1")
+  })
+
+  it("LOAD applies names when provided", () => {
+    const actor = start()
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 2, moveNames: NAMES2 })
+    actor.send({
+      type: "LOAD",
+      timestamps: [0, 5],
+      names: ["Alpha", "Beta"],
+    })
+    const ctx = actor.getSnapshot().context
+    expect(ctx.timestamps).toEqual([0, 5])
+    expect(ctx.moveNames).toEqual(["Alpha", "Beta"])
+  })
+
+  it("RESET restores timestamps and moveNames from decks.ts defaults", () => {
+    const actor = start()
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 2, moveNames: NAMES2 })
+    actor.send({ type: "SEED", duration: 30, timestamps: [0, 10] })
+    actor.send({ type: "SET_MOVE_NAME", index: 0, name: "Renamed" })
+    actor.send({
+      type: "RESET",
+      timestamps: [null, null],
+      moveNames: ["Deck Alpha", "Deck Beta"],
+    })
+    const ctx = actor.getSnapshot().context
+    expect(ctx.timestamps).toEqual([null, null])
+    expect(ctx.moveNames).toEqual(["Deck Alpha", "Deck Beta"])
+    expect(ctx.selectedIndex).toBe(null)
   })
 })

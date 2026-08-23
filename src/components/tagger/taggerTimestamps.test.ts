@@ -1,5 +1,29 @@
 import { describe, expect, it } from "vitest"
-import { moveIndexAtTime, parseTimestampsJson, timeFromClientX } from "./taggerTimestamps"
+import { MOVE_TIMESTAMPS } from "../../data/moveTimestamps"
+import {
+  buildJsonText,
+  buildSavePrompt,
+  moveIndexAtTime,
+  parseTimestampsJson,
+  taggerSeedTimestamps,
+  timeFromClientX,
+} from "./taggerTimestamps"
+
+describe("taggerSeedTimestamps", () => {
+  it("returns stored tags when count matches and times fit", () => {
+    expect(taggerSeedTimestamps("A1", 5, 50)).toEqual(MOVE_TIMESTAMPS.A1)
+  })
+
+  it("returns nulls instead of equal slices when untagged or invalid", () => {
+    expect(taggerSeedTimestamps("B1", 4, 20)).toEqual([null, null, null, null])
+    expect(taggerSeedTimestamps("A1", 3, 30)).toEqual([null, null, null])
+    expect(taggerSeedTimestamps("A1", 5, 10)).toEqual([null, null, null, null, null])
+  })
+
+  it("loads stored tags when duration is not known yet", () => {
+    expect(taggerSeedTimestamps("A2", MOVE_TIMESTAMPS.A2.length, 0)).toEqual(MOVE_TIMESTAMPS.A2)
+  })
+})
 
 describe("timeFromClientX", () => {
   it("maps left edge to 0 and right edge to duration", () => {
@@ -26,6 +50,7 @@ describe("parseTimestampsJson", () => {
     expect(parseTimestampsJson(text, 2)).toEqual({
       ok: true,
       timestamps: [1, 2],
+      names: ["A", "B"],
     })
   })
 
@@ -45,6 +70,7 @@ describe("parseTimestampsJson", () => {
     expect(parseTimestampsJson(text, 3)).toEqual({
       ok: true,
       timestamps: [1, null, 3],
+      names: ["A", "B", ""],
     })
   })
 
@@ -67,6 +93,38 @@ describe("parseTimestampsJson", () => {
     expect(result.timestamps.slice(11)).toEqual(Array(19).fill(null))
   })
 
+  it("nulls removed move by name when json is shorter than moveCount", () => {
+    const refNames = ["Alpha", "Beta", "Gamma"]
+    const text = JSON.stringify({
+      deckId: "x",
+      timestamps: [
+        { name: "Alpha", t: 1 },
+        { name: "Gamma", t: 3 },
+      ],
+    })
+    expect(parseTimestampsJson(text, 3, refNames)).toEqual({
+      ok: true,
+      timestamps: [1, null, 3],
+      names: ["Alpha", "Beta", "Gamma"],
+    })
+  })
+
+  it("matches duplicate names by occurrence rank", () => {
+    const refNames = ["Granby", "Pass", "Granby", "Finish"]
+    const text = JSON.stringify({
+      timestamps: [
+        { name: "Granby", t: 1 },
+        { name: "Pass", t: 2 },
+        { name: "Finish", t: 4 },
+      ],
+    })
+    expect(parseTimestampsJson(text, 4, refNames)).toEqual({
+      ok: true,
+      timestamps: [1, 2, null, 4],
+      names: ["Granby", "Pass", "Granby", "Finish"],
+    })
+  })
+
   it("rejects too many timestamps and bad json", () => {
     expect(parseTimestampsJson("{", 2).ok).toBe(false)
     expect(parseTimestampsJson(JSON.stringify({ timestamps: [1, 2, 3] }), 2).ok).toBe(false)
@@ -74,6 +132,30 @@ describe("parseTimestampsJson", () => {
     expect(tooLong.ok).toBe(false)
     if (tooLong.ok) return
     expect(tooLong.error).toBe("Need at most 2 timestamps, got 3")
+  })
+})
+
+describe("buildJsonText", () => {
+  it("includes move names and null times in export", () => {
+    const json = buildJsonText("A1", [0, null, 2.5], ["First", "Second", "Third"])
+    const parsed = JSON.parse(json)
+    expect(parsed.deckId).toBe("A1")
+    expect(parsed.timestamps).toEqual([
+      { name: "First", t: 0 },
+      { name: "Second", t: null },
+      { name: "Third", t: 2.5 },
+    ])
+  })
+})
+
+describe("buildSavePrompt", () => {
+  it("mentions decks.ts move names and includes json block", () => {
+    const json = buildJsonText("A1", [0], ["Granby"])
+    const prompt = buildSavePrompt(json)
+    expect(prompt).toContain("MOVE_TIMESTAMPS")
+    expect(prompt).toContain("src/data/decks.ts")
+    expect(prompt).toContain("same index")
+    expect(prompt).toContain(json)
   })
 })
 

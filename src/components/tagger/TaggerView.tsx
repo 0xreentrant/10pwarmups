@@ -3,9 +3,19 @@ import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, ty
 import { appMachine } from "../../appMachine"
 import { DECKS } from "../../data/decks"
 import { warmupNoteForDeck } from "../../data/warmupNotes"
-import { resolveMoveTimestamps } from "../../data/moveTimestamps"
+import { playableIndicesFromTimestamps } from "../../data/moveTimestamps"
 import { usePersistedMediaVolume } from "../../hooks/usePersistedMediaVolume"
-import { usePersistedNudgeMs } from "../../hooks/usePersistedNudgeMs"
+import {
+  MAX_NUDGE_MS,
+  MIN_NUDGE_MS,
+  usePersistedNudgeMs,
+} from "../../hooks/usePersistedNudgeMs"
+import {
+  clearMoveNamesForDeck,
+  loadMoveNamesByDeck,
+  resolveMoveNames,
+  saveMoveNamesForDeck,
+} from "../../hooks/usePersistedTaggerMoveNames"
 import { precomputeDeckOptions } from "../../utils/deckUtils"
 import { listVideoDeckIds, videoSrcForDeck } from "../../utils/deckVideo"
 import { BleedDusk2Overlay, DUSK2_BLEED_VARIANT } from "../cinema/dusk2"
@@ -13,15 +23,22 @@ import { CinemaOverlay } from "../cinema/review"
 import MoveLabel from "../MoveLabel"
 import { SELECT_NUDGE_SEC, taggerMachine } from "./taggerMachine"
 import {
+  buildJsonText,
+  buildSavePrompt,
   isFiniteTimestamp,
   moveIndexAtTime,
   parseTimestampsJson,
+  taggerSeedTimestamps,
   timeFromClientX,
 } from "./taggerTimestamps"
 
 const VIDEO_IDS = listVideoDeckIds()
 
 type TaggerTab = "edit" | "train" | "review"
+
+function deckMoveNames(deckId: string, defaultNames: string[]): string[] {
+  return resolveMoveNames(deckId, defaultNames, loadMoveNamesByDeck())
+}
 
 /** iPhone 13 Pro Max CSS viewport (428×926). transform contains fixed cinema overlays. */
 function PhonePreviewFrame({ children }: { children: ReactNode }) {
@@ -36,30 +53,6 @@ function PhonePreviewFrame({ children }: { children: ReactNode }) {
 
 const CURSOR_PROMPT_DEEPLINK = "cursor://anysphere.cursor-deeplink/prompt"
 const CURSOR_DEEPLINK_MAX_URL = 8000
-
-function buildJsonText(deckId: string, timestamps: (number | null)[], moveNames: string[]): string {
-  return JSON.stringify(
-    {
-      deckId,
-      timestamps: timestamps.map((t, i) => ({
-        name: moveNames[i] ?? `Move ${i + 1}`,
-        t: isFiniteTimestamp(t) ? t : null,
-      })),
-    },
-    null,
-    2,
-  )
-}
-
-function buildSavePrompt(jsonText: string): string {
-  return [
-    "Update the warmup timestamps for this deck using the JSON below. Write the times into MOVE_TIMESTAMPS (or the project's stored timestamp source) for the deckId in the JSON.",
-    "",
-    "```json",
-    jsonText,
-    "```",
-  ].join("\n")
-}
 
 function buildNoteSavePrompt(deckId: string, noteText: string): string {
   return [
@@ -101,13 +94,13 @@ export default function TaggerView() {
   const {
     deckId,
     moveCount,
+    moveNames,
     timestamps,
     duration,
     currentTime,
     selectedIndex,
   } = tagger.context
 
-  // Isolated appMachine actor so tagger preview never persists via appActor.
   const [preview, previewSend] = useMachine(appMachine, {
     input: { decks: DECKS, precomputeDeckOptions },
   })
@@ -122,28 +115,39 @@ export default function TaggerView() {
   const trackRef = useRef<HTMLDivElement>(null)
   const settingsRef = useRef<HTMLDivElement>(null)
   const nudgeDialogRef = useRef<HTMLDialogElement>(null)
+  const moveNameDialogRef = useRef<HTMLDialogElement>(null)
   const [editVideoEl, setEditVideoEl] = useState<HTMLVideoElement | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [nudgeMs, setNudgeMs] = usePersistedNudgeMs()
   const [nudgeDraft, setNudgeDraft] = useState(String(nudgeMs))
+  const [editingMoveIndex, setEditingMoveIndex] = useState<number | null>(null)
+  const [moveNameDraft, setMoveNameDraft] = useState("")
 
   const deck = DECKS.find(d => d.id === deckId)
+  const defaultMoveNames = deck?.moves.map(m => m.text) ?? []
   const videoSrc = deckId ? videoSrcForDeck(deckId) : null
   const timestampsReady =
     timestamps.length === moveCount &&
     moveCount > 0 &&
-    timestamps.every(isFiniteTimestamp)
+    playableIndicesFromTimestamps(timestamps).length > 0
   const activeIndex =
     timestamps.length === moveCount && moveCount > 0
       ? moveIndexAtTime(timestamps, currentTime)
       : -1
-  const finiteTimestamps = timestampsReady ? (timestamps as number[]) : null
+  const previewTimestamps = timestampsReady ? timestamps : null
 
   useEffect(() => {
     const id = VIDEO_IDS[0] ?? ""
-    const moves = DECKS.find(d => d.id === id)?.moves.length ?? 0
-    send({ type: "SET_DECK", deckId: id, moveCount: moves })
+    const d = DECKS.find(x => x.id === id)
+    const moves = d?.moves.length ?? 0
+    const names = deckMoveNames(id, d?.moves.map(m => m.text) ?? [])
+    send({ type: "SET_DECK", deckId: id, moveCount: moves, moveNames: names })
   }, [send])
+
+  useEffect(() => {
+    if (!deckId || moveNames.length !== moveCount) return
+    saveMoveNamesForDeck(deckId, moveNames)
+  }, [deckId, moveCount, moveNames])
 
   useEffect(() => {
     setEditVideoEl(tab === "edit" && videoSrc ? videoRef.current : null)
@@ -166,13 +170,24 @@ export default function TaggerView() {
   }, [deckId])
 
   useEffect(() => {
-    const names = DECKS.find(d => d.id === deckId)?.moves.map(m => m.text) ?? []
-    setJsonDraft(buildJsonText(deckId, timestamps, names))
-  }, [deckId, timestamps])
+    setJsonDraft(buildJsonText(deckId, timestamps, moveNames))
+  }, [deckId, timestamps, moveNames])
 
   useEffect(() => {
     setNotesDraft(warmupNoteForDeck(deckId))
   }, [deckId])
+
+  useEffect(() => {
+    if (!deckId || moveCount <= 0 || timestamps.length === moveCount) return
+    send({
+      type: "LOAD",
+      timestamps: taggerSeedTimestamps(
+        deckId,
+        moveCount,
+        duration > 0 ? duration : Number.POSITIVE_INFINITY,
+      ),
+    })
+  }, [deckId, moveCount, duration, timestamps.length, send])
 
   useEffect(() => {
     const video = videoRef.current
@@ -183,7 +198,7 @@ export default function TaggerView() {
       send({
         type: "SEED",
         duration: d,
-        timestamps: resolveMoveTimestamps(deckId, moveCount, d),
+        timestamps: taggerSeedTimestamps(deckId, moveCount, d),
       })
     }
     const onTime = () => send({ type: "TIME", time: video.currentTime })
@@ -241,8 +256,6 @@ export default function TaggerView() {
       if (e.code === "ArrowRight" || e.key === "ArrowRight") return nudgeSec
       return null
     }
-    // Space toggle on keydown: video.play() needs user-activation; keyup is not one
-    // when focus is in native media controls. keyup still blocks <select> Space.
     const onKeyDown = (e: KeyboardEvent) => {
       if (isTyping(e)) return
       const video = videoRef.current
@@ -256,6 +269,13 @@ export default function TaggerView() {
         const t = Math.min(dur, Math.max(0, video.currentTime + delta))
         send({ type: "SCRUB", time: t })
         video.currentTime = t
+        return
+      }
+
+      if (e.code === "Delete" || e.key === "Delete") {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        deleteSelectedMarker()
         return
       }
 
@@ -282,7 +302,16 @@ export default function TaggerView() {
       video?.removeEventListener("keydown", onKeyDown, true)
       video?.removeEventListener("keyup", onKeyUp, true)
     }
-  }, [tab, videoSrc, deckId, duration, send, nudgeMs])
+  }, [tab, videoSrc, deckId, duration, send, nudgeMs, selectedIndex, timestamps])
+
+  function deleteSelectedMarker() {
+    if (selectedIndex === null) return
+    const t = timestamps[selectedIndex]
+    if (!isFiniteTimestamp(t)) return
+    const label = moveNames[selectedIndex] ?? `Move ${selectedIndex + 1}`
+    if (!window.confirm(`Remove timestamp for ${label}?`)) return
+    send({ type: "DELETE_SELECTED" })
+  }
 
   function applyVideoTime(t: number) {
     const video = videoRef.current
@@ -325,22 +354,41 @@ export default function TaggerView() {
   }
 
   function loadJson() {
-    const result = parseTimestampsJson(jsonDraft, moveCount)
+    const refNames =
+      moveNames.length === moveCount ? moveNames : defaultMoveNames
+    const result = parseTimestampsJson(jsonDraft, moveCount, refNames)
     if (!result.ok) {
       setLoadError(result.error)
       return
     }
     setLoadError(null)
-    send({ type: "LOAD", timestamps: result.timestamps })
+    const names = result.names
+      ? defaultMoveNames.map((name, i) => {
+          const loaded = result.names![i]?.trim()
+          return loaded || name
+        })
+      : undefined
+    send({ type: "LOAD", timestamps: result.timestamps, names })
   }
 
   function resetTimestamps() {
-    if (duration <= 0) return
-    if (!window.confirm("Discard current timestamps and restore defaults?")) return
+    if (
+      !window.confirm(
+        "Discard timestamps and move names, restoring the moveset from decks.ts for this deck?",
+      )
+    ) {
+      return
+    }
     setLoadError(null)
+    clearMoveNamesForDeck(deckId)
     send({
       type: "RESET",
-      timestamps: resolveMoveTimestamps(deckId, moveCount, duration),
+      timestamps: taggerSeedTimestamps(
+        deckId,
+        moveCount,
+        duration > 0 ? duration : Number.POSITIVE_INFINITY,
+      ),
+      moveNames: defaultMoveNames,
     })
   }
 
@@ -358,8 +406,30 @@ export default function TaggerView() {
   }
 
   function onDeckChange(nextId: string) {
-    const moves = DECKS.find(d => d.id === nextId)?.moves.length ?? 0
-    send({ type: "SET_DECK", deckId: nextId, moveCount: moves })
+    const nextDeck = DECKS.find(d => d.id === nextId)
+    const moves = nextDeck?.moves.length ?? 0
+    const names = deckMoveNames(nextId, nextDeck?.moves.map(m => m.text) ?? [])
+    send({
+      type: "SET_DECK",
+      deckId: nextId,
+      moveCount: moves,
+      moveNames: names,
+    })
+  }
+
+  function openMoveNameEditor(index: number) {
+    setEditingMoveIndex(index)
+    setMoveNameDraft(moveNames[index] ?? deck?.moves[index]?.text ?? `Move ${index + 1}`)
+    moveNameDialogRef.current?.showModal()
+  }
+
+  function saveMoveName() {
+    if (editingMoveIndex === null) return
+    const trimmed = moveNameDraft.trim()
+    if (!trimmed) return
+    send({ type: "SET_MOVE_NAME", index: editingMoveIndex, name: trimmed })
+    moveNameDialogRef.current?.close()
+    setEditingMoveIndex(null)
   }
 
   function openNudgeSettings() {
@@ -422,7 +492,7 @@ export default function TaggerView() {
 
       <dialog
         ref={nudgeDialogRef}
-        className="w-[min(22rem,calc(100vw-2rem))] border border-border bg-surface p-4 text-text backdrop:bg-black/60"
+        className="fixed top-1/2 left-1/2 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 border border-border bg-surface p-4 text-text backdrop:bg-black/60"
       >
         <form
           method="dialog"
@@ -437,9 +507,9 @@ export default function TaggerView() {
             <span className="text-muted text-[11px] uppercase tracking-wider">Amount (ms)</span>
             <input
               type="number"
-              min={100}
-              max={60000}
-              step={100}
+              min={MIN_NUDGE_MS}
+              max={MAX_NUDGE_MS}
+              step={1}
               value={nudgeDraft}
               onChange={e => setNudgeDraft(e.target.value)}
               className="border border-border bg-black px-2 py-1.5 text-sm tabular-nums"
@@ -450,6 +520,48 @@ export default function TaggerView() {
               type="button"
               className="text-muted text-[11px] uppercase tracking-wider"
               onClick={() => nudgeDialogRef.current?.close()}
+            >
+              Cancel
+            </button>
+            <button type="submit" className="text-[11px] uppercase tracking-wider text-text">
+              Save
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <dialog
+        ref={moveNameDialogRef}
+        className="fixed top-1/2 left-1/2 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 border border-border bg-surface p-4 text-text backdrop:bg-black/60"
+      >
+        <form
+          method="dialog"
+          className="flex flex-col gap-3"
+          onSubmit={e => {
+            e.preventDefault()
+            saveMoveName()
+          }}
+        >
+          <p className="text-muted text-[11px] uppercase tracking-wider">
+            Edit move {editingMoveIndex !== null ? editingMoveIndex + 1 : ""} name
+          </p>
+          <label className="flex flex-col gap-1">
+            <span className="text-muted text-[11px] uppercase tracking-wider">Name</span>
+            <input
+              type="text"
+              value={moveNameDraft}
+              onChange={e => setMoveNameDraft(e.target.value)}
+              className="border border-border bg-black px-2 py-1.5 text-sm"
+            />
+          </label>
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              className="text-muted text-[11px] uppercase tracking-wider"
+              onClick={() => {
+                setEditingMoveIndex(null)
+                moveNameDialogRef.current?.close()
+              }}
             >
               Cancel
             </button>
@@ -509,23 +621,55 @@ export default function TaggerView() {
               )}
             </div>
 
-            <div className="max-h-[60vh] w-full shrink-0 overflow-y-auto sm:ml-auto sm:w-56">
+            <div className="max-h-[60vh] w-full shrink-0 overflow-y-auto sm:ml-auto sm:w-[15.4rem]">
               <p className="mb-1 text-muted text-[11px] uppercase tracking-wider">Moves</p>
               {deck?.moves.map((move, i) => (
-                <button
+                <div
                   key={i}
-                  type="button"
-                  className={`flex w-full gap-2 py-0.5 text-left text-xs ${
-                    i === selectedIndex ? "bg-surface" : ""
-                  } ${i === activeIndex ? "outline outline-1 outline-accent" : ""}`}
-                  onClick={() => selectMove(i)}
+                  className={`flex w-full items-center gap-1 py-0.5 ${
+                    i === activeIndex ? "outline outline-1 outline-accent" : ""
+                  }`}
                 >
-                  <span className="min-w-5 text-muted">{i + 1}</span>
-                  <MoveLabel move={move} />
-                  <span className="ml-auto text-muted tabular-nums">
-                    {isFiniteTimestamp(timestamps[i]) ? `${timestamps[i]!.toFixed(2)}s` : "-"}
-                  </span>
-                </button>
+                  <button
+                    type="button"
+                    className={`flex min-w-0 flex-1 gap-2 text-left text-xs ${
+                      i === selectedIndex ? "bg-surface" : ""
+                    }`}
+                    onClick={() => selectMove(i)}
+                  >
+                    <span className="min-w-5 text-muted">{i + 1}</span>
+                    <MoveLabel move={{ ...move, text: moveNames[i] ?? move.text }} />
+                    <span className="ml-auto text-muted tabular-nums">
+                      {isFiniteTimestamp(timestamps[i]) ? `${timestamps[i]!.toFixed(2)}s` : "-"}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Edit name for move ${i + 1}`}
+                    className="shrink-0 p-0.5 text-muted hover:text-text"
+                    onClick={e => {
+                      e.stopPropagation()
+                      openMoveNameEditor(i)
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z"
+                      />
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="m13.5 6.5 3 3"
+                      />
+                    </svg>
+                  </button>
+                </div>
               ))}
             </div>
           </div>
@@ -582,8 +726,7 @@ export default function TaggerView() {
               </button>
               <button
                 type="button"
-                className="text-muted text-[11px] uppercase tracking-wider disabled:opacity-40"
-                disabled={duration <= 0}
+                className="text-muted text-[11px] uppercase tracking-wider"
                 onClick={resetTimestamps}
               >
                 Reset
@@ -621,7 +764,7 @@ export default function TaggerView() {
 
       {tab === "train" && (
         !deck || !timestampsReady ? (
-          <p className="text-muted text-sm">Load video timestamps in Edit first.</p>
+          <p className="text-muted text-sm">Tag at least one move in Edit first.</p>
         ) : previewSession?.locked ? (
           <div className="flex flex-col items-start gap-2 py-8">
             <p className="text-sm">Preview complete (not scored).</p>
@@ -639,10 +782,11 @@ export default function TaggerView() {
               session={previewSession}
               videoSrc={videoSrc}
               variant={DUSK2_BLEED_VARIANT}
-              timestamps={finiteTimestamps}
+              timestamps={previewTimestamps}
               onOptionClick={optionIndex => {
                 previewSend({ type: "OPTION_CLICK", optionIndex })
               }}
+              onTapOut={() => previewSend({ type: "TAP_OUT" })}
               onClose={() => setTab("edit")}
               onReview={() => setTab("review")}
               onRestart={restartTrainPreview}
@@ -653,14 +797,14 @@ export default function TaggerView() {
 
       {tab === "review" && (
         !deck || !timestampsReady ? (
-          <p className="text-muted text-sm">Load video timestamps in Edit first.</p>
+          <p className="text-muted text-sm">Tag at least one move in Edit first.</p>
         ) : (
           <PhonePreviewFrame>
             <CinemaOverlay
               deck={deck}
               videoSrc={videoSrc}
               review
-              timestamps={finiteTimestamps}
+              timestamps={previewTimestamps}
               onClose={() => setTab("edit")}
               onTrain={() => setTab("train")}
             />
