@@ -1,4 +1,5 @@
 import { setup, assign } from "xstate"
+import { playableMoveIndices } from "./data/moveTimestamps"
 import type { Deck, MoveAnswer, ProgressMap, QuestionOption, Session } from "./types/domain"
 
 const STORAGE_KEY = "tp_progress"
@@ -89,6 +90,7 @@ export type AppEvent =
   | { type: "START_PREVIEW"; deckId: string }
   | { type: "START_REVIEW"; deckId: string }
   | { type: "OPTION_CLICK"; optionIndex: number }
+  | { type: "TAP_OUT" }
   | { type: "RESET" }
   | { type: "CANCEL_RESET" }
   | { type: "GO_HOME" }
@@ -131,17 +133,19 @@ const appMachineSetup = setup({
       const d = context.decks.find(x => x.id === event.deckId)
       if (!d) return {}
       const allOptions = context.precomputeDeckOptions(d, context.decks)
+      const moveOrder = playableMoveIndices(d.id, d.moves.length)
       return {
         currentDeckId: event.deckId,
         preview: event.type === "START_PREVIEW",
         session: {
           moveSequence: [],
+          moveOrder,
           currentStreak: 0,
           startTime: Date.now(),
           pausedAt: null,
           accumulatedPauseMs: 0,
           allOptions,
-          options: allOptions[0],
+          options: allOptions[moveOrder[0]],
           locked: false,
         },
       }
@@ -165,18 +169,28 @@ const appMachineSetup = setup({
       const d = getDeck(context)
       if (!d || !context.session || context.session.locked) return {}
       const moveIdx = context.session.moveSequence.length
+      const deckMoveIdx = context.session.moveOrder[moveIdx]
       const opt = context.session.options[event.optionIndex]
       const correct = opt.correct
       const newStreak = correct ? context.session.currentStreak + 1 : 0
-      const newSeq = [...context.session.moveSequence, { moveIndex: moveIdx, correct }]
-      const nextMoveIdx = moveIdx + 1
+      const newSeq = [...context.session.moveSequence, { moveIndex: deckMoveIdx, correct }]
+      const nextSlot = moveIdx + 1
       return {
         session: {
           ...context.session,
           moveSequence: newSeq,
           currentStreak: newStreak,
-          options: context.session.allOptions[nextMoveIdx],
+          options: context.session.allOptions[context.session.moveOrder[nextSlot]],
           locked: false,
+        },
+      }
+    }),
+    tapOut: assign(({ context }) => {
+      if (!context.session || context.session.locked) return {}
+      return {
+        session: {
+          ...context.session,
+          currentStreak: 0,
         },
       }
     }),
@@ -185,10 +199,11 @@ const appMachineSetup = setup({
       const d = getDeck(context)
       if (!d || !context.session || context.session.locked) return {}
       const moveIdx = context.session.moveSequence.length
+      const deckMoveIdx = context.session.moveOrder[moveIdx]
       const opt = context.session.options[event.optionIndex]
       const correct = opt.correct
       const newStreak = correct ? context.session.currentStreak + 1 : 0
-      const newSeq = [...context.session.moveSequence, { moveIndex: moveIdx, correct }]
+      const newSeq = [...context.session.moveSequence, { moveIndex: deckMoveIdx, correct }]
       const duration = Math.floor(getActiveSessionElapsedMs(context.session) / 1000)
       const wrongMoves = newSeq.filter(x => !x.correct).map(x => x.moveIndex)
       const longestStreak = getLongestStreak(newSeq)
@@ -234,7 +249,7 @@ const appMachineSetup = setup({
     isLastMove: ({ context }) => {
       const d = getDeck(context)
       if (!d || !context.session) return false
-      return context.session.moveSequence.length === d.moves.length - 1
+      return context.session.moveSequence.length === context.session.moveOrder.length - 1
     },
     canRestoreCompleted: ({ context }) =>
       !!context.session?.locked && !!context.session.finalAttempt && !!context.currentDeckId,
@@ -302,6 +317,10 @@ export const appMachine = appMachineSetup.createMachine({
             actions: "advanceSession",
           },
         ],
+        TAP_OUT: {
+          guard: "sessionNotLocked",
+          actions: "tapOut",
+        },
         START_REVIEW: {
           guard: "reviewDeckExists",
           target: "review",

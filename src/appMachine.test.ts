@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { createActor } from "xstate"
 import { appMachine, loadProgress } from "./appMachine"
+import { DECKS } from "./data/decks"
+import { playableMoveIndices } from "./data/moveTimestamps"
 import { precomputeDeckOptions } from "./utils/deckUtils"
 import type { Deck } from "./types/domain"
 
@@ -126,6 +128,18 @@ describe("appMachine", () => {
     const wrongIndex = actor.getSnapshot().context.session!.options.findIndex(o => !o.correct)
     actor.send({ type: "OPTION_CLICK", optionIndex: wrongIndex })
     expect(actor.getSnapshot().context.session?.currentStreak).toBe(0)
+  })
+
+  it("tap out resets streak without advancing the move", () => {
+    const actor = makeActor()
+    startDeck(actor)
+    answerCurrent(actor)
+    const before = actor.getSnapshot().context.session!
+    actor.send({ type: "TAP_OUT" })
+    const after = actor.getSnapshot().context.session!
+    expect(after.currentStreak).toBe(0)
+    expect(after.moveSequence).toEqual(before.moveSequence)
+    expect(after.options).toEqual(before.options)
   })
 
   it("raises bestStreak on completion but does not lower it on a worse run", () => {
@@ -266,6 +280,28 @@ describe("appMachine", () => {
     expect(actor.getSnapshot().context.session?.locked).toBe(true)
     expect(actor.getSnapshot().context.progress.A1.attempts).toHaveLength(0)
     expect(actor.getSnapshot().context.preview).toBe(true)
+  })
+
+  it("skips untagged moves when training a partially tagged deck", () => {
+    const a2 = DECKS.find(d => d.id === "A2")!
+    const order = playableMoveIndices("A2", a2.moves.length)
+    const actor = createActor(appMachine, {
+      input: { decks: [a2], precomputeDeckOptions },
+    })
+    actor.start()
+    actor.send({ type: "START_DECK", deckId: "A2" })
+
+    expect(actor.getSnapshot().context.session?.moveOrder).toEqual(order)
+    expect(order.length).toBeLessThan(a2.moves.length)
+
+    for (let i = 0; i < order.length; i++) {
+      answerCurrent(actor)
+    }
+
+    const snap = actor.getSnapshot()
+    expect(snap.value).toBe("completed")
+    expect(snap.context.session?.moveSequence).toHaveLength(order.length)
+    expect(snap.context.session?.moveSequence.every(a => order.includes(a.moveIndex))).toBe(true)
   })
 })
 

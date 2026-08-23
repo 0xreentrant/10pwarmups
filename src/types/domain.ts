@@ -48,6 +48,8 @@ export type ProgressMap = Record<string, DeckProgress>
 
 export interface Session {
   moveSequence: MoveAnswer[]
+  /** Deck move indices asked in order; omits untagged moves when timestamps are partial. */
+  moveOrder: number[]
   currentStreak: number
   startTime: number
   pausedAt: number | null
