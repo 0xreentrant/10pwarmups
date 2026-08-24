@@ -25,7 +25,7 @@ export function bleedVideoFilter(
   if (!ready) return "brightness(0.85)"
   return askingLook.filter
 }
-const EARNED_CLARITY = 4
+const CLARITY_PER_STAKE = 10
 
 interface OverlayProps {
   deck: Deck
@@ -97,7 +97,7 @@ export default function BleedDusk2Overlay({
       correctHoldMs: CORRECT_HOLD_MS,
     },
   })
-  const { drill, live, paused, ready, stake, remaining, togglePause, segmentActive, segmentPaused } = round
+  const { drill, live, paused, ready, stake, paid, remaining, togglePause, segmentActive, segmentPaused } = round
 
   useEffect(() => {
     if (drill.phase === "asking") streakRef.current = drill.streak
@@ -216,7 +216,7 @@ export default function BleedDusk2Overlay({
         {drill.phase === "correct" && !showComplete && (
           <div className="bl2-earned" key={`earned-${drill.beat}`}>
             <span className="bl2-earned-word">Sharp</span>
-            <span className="bl2-earned-sub">+{EARNED_CLARITY} clarity</span>
+            <span className="bl2-earned-sub">{(paid ?? 1) * CLARITY_PER_STAKE} points</span>
           </div>
         )}
 
