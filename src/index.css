@@ -240,7 +240,7 @@
   .popover-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 100;
+    z-index: 600;
     background: var(--color-overlay);
   }
 
@@ -249,7 +249,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    z-index: 101;
+    z-index: 601;
     width: min(448px, calc(100vw - 32px));
     background: var(--color-surface);
     border: 1px solid var(--color-border);
