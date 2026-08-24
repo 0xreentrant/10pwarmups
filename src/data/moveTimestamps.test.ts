@@ -19,7 +19,7 @@ describe("resolveMoveTimestamps", () => {
   it("keeps saved tags when deck count mismatches, padding or truncating", () => {
     expect(resolveMoveTimestamps("B1", 4, 20)).toEqual(MOVE_TIMESTAMPS.B1.slice(0, 4))
     expect(resolveMoveTimestamps("A1", 3, 30)).toEqual(MOVE_TIMESTAMPS.A1.slice(0, 3))
-    expect(resolveMoveTimestamps("H3", 16, 50)).toEqual([
+    expect(resolveMoveTimestamps("H3", 22, 50)).toEqual([
       ...MOVE_TIMESTAMPS.H3,
       null,
       null,
