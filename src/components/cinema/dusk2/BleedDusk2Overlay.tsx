@@ -452,7 +452,7 @@ function BleedDusk2Styles() {
         align-self: flex-start;
         font-family: var(--font-family-disp);
         font-weight: 700;
-        font-size: 0.65rem;
+        font-size: 0.936rem;
         letter-spacing: 0.1em;
         text-transform: uppercase;
         padding: 2px 8px;
