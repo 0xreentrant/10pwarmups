@@ -3,8 +3,19 @@ import type { Deck, Move, QuestionOption } from "../types/domain"
 
 const SERIES_DECKS = DECKS.filter(d => d.series)
 
+const NAMED_FLOW_CODES: Record<string, string> = {
+  "attack-series": "AS",
+  "ramey-flow": "RF",
+  "marvin-flow": "MF",
+}
+
 export function deckLabel(deck: Deck): string {
   return deck.series ? deck.id : deck.name
+}
+
+export function homeDeckRowLabel(deck: Deck): string {
+  if (deck.series) return deck.id
+  return NAMED_FLOW_CODES[deck.id] ?? deck.name
 }
 
 export function homeSectionHash(deck: Deck): string {

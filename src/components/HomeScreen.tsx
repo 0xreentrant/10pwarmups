@@ -4,6 +4,7 @@ import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS, SERIES } from "../data/decks"
 import type { Deck, ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
+import { homeDeckRowLabel } from "../utils/deckUtils"
 
 const NAMED_FLOWS = DECKS.filter(d => !d.series)
 
@@ -22,10 +23,9 @@ interface DeckRowProps {
   progress: ProgressMap
   onDeckClick: (deckId: string) => void
   onReviewClick: (deckId: string) => void
-  showId: boolean
 }
 
-function DeckRow({ deck, progress, onDeckClick, onReviewClick, showId }: DeckRowProps) {
+function DeckRow({ deck, progress, onDeckClick, onReviewClick }: DeckRowProps) {
   const prog = progress[deck.id] || { bestStreak: 0, attempts: [] }
   const total = deck.moves.length
   const label = prog.attempts.length === 0
@@ -37,6 +37,7 @@ function DeckRow({ deck, progress, onDeckClick, onReviewClick, showId }: DeckRow
     label === "complete" ? "lava"
     : label === "incomplete" ? "pulse-edge"
     : "none"
+  const rowLabel = homeDeckRowLabel(deck)
 
   const goReview = () => {
     analytics.event({
@@ -49,19 +50,12 @@ function DeckRow({ deck, progress, onDeckClick, onReviewClick, showId }: DeckRow
 
   return (
     <tr>
-      <td className="py-2 align-top w-[4.75rem]">
-        <button
-          type="button"
-          className="flex flex-col items-center gap-1 w-full border-0 bg-transparent p-0 cursor-pointer text-muted hover:text-accent"
-          aria-label={`Review ${deck.name}`}
-          onClick={goReview}
-        >
-          {showId ? (
-            <span className="font-disp font-extrabold text-base tracking-wide leading-none">{deck.id}</span>
-          ) : null}
-          <span className="text-3xl leading-none" aria-hidden>🎞️</span>
-          <span className="text-xs leading-tight text-center">watch</span>
-        </button>
+      <td className="py-2 align-middle w-[4.75rem] overflow-hidden">
+        <div className="flex items-center justify-center w-full min-h-[3.25rem] text-muted">
+          <span className="font-disp font-extrabold tracking-wide leading-none text-3xl">
+            {rowLabel}
+          </span>
+        </div>
       </td>
       <td className="py-2 pr-1.5 align-top">
         <div className="font-disp font-semibold text-base tracking-tight">{deck.name}</div>
@@ -145,7 +139,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
             <table className="w-full table-fixed border-collapse">
               <tbody>
                 {seriesDecks.map(d => (
-                  <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} onReviewClick={onReviewClick} showId />
+                  <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} onReviewClick={onReviewClick} />
                 ))}
               </tbody>
             </table>
@@ -161,7 +155,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
           <table className="w-full table-fixed border-collapse">
             <tbody>
               {NAMED_FLOWS.map(d => (
-                <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} onReviewClick={onReviewClick} showId={false} />
+                <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} onReviewClick={onReviewClick} />
               ))}
             </tbody>
           </table>

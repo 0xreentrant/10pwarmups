@@ -37,6 +37,7 @@ export default function CinemaOverlay({
   const [time, setTime] = useState(0)
   const [glow, setGlow] = useState("rgb(192, 57, 43)")
   const [movesOpen, setMovesOpen] = useState(false)
+  const [reviewEnded, setReviewEnded] = useState(false)
   const timeline = useMoveTimeline(deck.id, deck.moves.length, videoEl, undefined, timestampOverrides)
   const currentIndex = timeline ? timeline.moveIndexAt(time) : 0
   const playableIndices = timeline
@@ -45,6 +46,7 @@ export default function CinemaOverlay({
 
   useEffect(() => {
     setVideoEl(videoSrc ? videoRef.current : null)
+    setReviewEnded(false)
   }, [videoSrc])
 
   usePersistedMediaVolume(videoEl)
@@ -79,6 +81,7 @@ export default function CinemaOverlay({
   }, [onClose, movesOpen])
 
   const seekToIndex = (i: number) => {
+    setReviewEnded(false)
     if (!timeline) return
     if (!isFiniteTimestamp(timeline.timestamps[i])) return
     const clamped = Math.min(deck.moves.length - 1, Math.max(0, i))
@@ -121,8 +124,25 @@ export default function CinemaOverlay({
   const togglePlay = () => {
     const video = videoRef.current
     if (!video) return
-    if (video.paused) video.play()
-    else video.pause()
+    if (video.paused) {
+      setReviewEnded(false)
+      video.play()
+    } else {
+      video.pause()
+    }
+  }
+
+  const handleEnded = () => {
+    if (!review) return
+    syncTimeFromVideo()
+    setReviewEnded(true)
+  }
+
+  const handlePlayAgain = () => {
+    setReviewEnded(false)
+    const first = playableIndices[0] ?? 0
+    seekToIndex(first)
+    videoRef.current?.play().catch(() => {})
   }
 
   const move = deck.moves[Math.max(0, currentIndex)]
@@ -150,6 +170,7 @@ export default function CinemaOverlay({
           playsInline
           onSeeked={handleSeeked}
           onTimeUpdate={e => handleTimeUpdate(e.currentTarget.currentTime)}
+          onEnded={handleEnded}
         />
       ) : (
         <div className="ct-video ct-video--empty" aria-hidden />
@@ -165,25 +186,38 @@ export default function CinemaOverlay({
               {deck.series && <span className="ct-review-id">{deck.id}</span>}
               <span className="ct-review-name">{deck.name}</span>
             </div>
-            <button type="button" className="ct-review-train" onClick={handleTrain}>Train</button>
+            <div className="ct-review-actions">
+              <button
+                type="button"
+                className="ct-review-moves-btn"
+                onClick={() => setMovesOpen(true)}
+              >
+                Show moves
+              </button>
+              <button type="button" className="ct-review-train" onClick={handleTrain}>Train</button>
+            </div>
           </div>
-          <button
-            type="button"
-            className="ct-review-moves-link"
-            onClick={() => setMovesOpen(true)}
-          >
-            Show moves
-          </button>
         </div>
       )}
 
       <button type="button" className="ct-close" onClick={onClose} aria-label="Exit review">✕</button>
 
-      <div className="ct-tapzones">
-        <button type="button" className="ct-tapzone" aria-label="Previous move" onClick={seekPrev} />
-        <button type="button" className="ct-tapzone" aria-label="Play or pause" onClick={togglePlay} />
-        <button type="button" className="ct-tapzone" aria-label="Next move" onClick={seekNext} />
-      </div>
+      {!reviewEnded && (
+        <div className="ct-tapzones">
+          <button type="button" className="ct-tapzone" aria-label="Previous move" onClick={seekPrev} />
+          <button type="button" className="ct-tapzone" aria-label="Play or pause" onClick={togglePlay} />
+          <button type="button" className="ct-tapzone" aria-label="Next move" onClick={seekNext} />
+        </div>
+      )}
+
+      {review && reviewEnded && (
+        <div className="ct-play-again">
+          <button type="button" className="ct-play-again-btn" onClick={handlePlayAgain}>
+            <span className="ct-play-again-icon" aria-hidden>↺</span>
+            <span className="ct-play-again-label">Play again</span>
+          </button>
+        </div>
+      )}
 
       <div className={`ct-caption${review ? " ct-caption--review" : ""}`}>
         <span className={`ct-partner-tag ct-partner-tag--${move.partner}`}>Person {move.partner}</span>
@@ -238,10 +272,8 @@ export default function CinemaOverlay({
                   deck={deck}
                   moveSequence={[]}
                   visibleThroughIndex={deck.moves.length - 1}
-                  onMoveClick={i => {
-                    if (timeline && !isFiniteTimestamp(timeline.timestamps[i])) return
-                    seekToIndex(i)
-                  }}
+                  moveIndices={playableIndices}
+                  onMoveClick={seekToIndex}
                 />
               </div>
             </div>
@@ -288,8 +320,8 @@ function CinemaStyles() {
         top: 0;
         left: 0;
         right: 0;
-        height: 90px;
-        background: linear-gradient(180deg, rgba(0, 0, 0, 0.65), transparent);
+        height: 140px;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent);
       }
 
       .ct-scrim-bottom {
@@ -322,10 +354,6 @@ function CinemaStyles() {
         left: 14px;
         right: 54px;
         z-index: 25;
-        display: flex;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 4px;
         pointer-events: none;
       }
 
@@ -336,6 +364,13 @@ function CinemaStyles() {
         gap: 12px;
         min-width: 0;
         pointer-events: auto;
+      }
+
+      .ct-review-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
       }
 
       .ct-review-title-row {
@@ -380,24 +415,22 @@ function CinemaStyles() {
         line-height: 1;
       }
 
-      .ct-review-moves-link {
-        pointer-events: auto;
-        align-self: flex-start;
+      .ct-review-moves-btn {
         font-family: var(--font-family-disp);
-        font-weight: 700;
-        font-size: 0.65rem;
-        letter-spacing: 0.14em;
+        font-weight: 800;
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
         color: #ffd9a0;
-        background: transparent;
-        border: none;
-        padding: 2px 0;
-        text-decoration: underline;
-        text-underline-offset: 4px;
+        background: rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 217, 160, 0.55);
+        padding: 7px 12px;
+        line-height: 1;
       }
 
-      .ct-review-moves-link:hover {
+      .ct-review-moves-btn:hover {
         color: #fff;
+        border-color: rgba(255, 255, 255, 0.55);
       }
 
       .ct-drawer-backdrop {
@@ -587,8 +620,64 @@ function CinemaStyles() {
         background: var(--color-accent);
       }
 
+      .ct-play-again {
+        position: absolute;
+        inset: 0;
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.4);
+        animation: ct-play-again-in 200ms ease-out forwards;
+      }
+
+      .ct-play-again-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.65);
+        border: 2px solid rgba(255, 255, 255, 0.45);
+        color: #fff;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+      }
+
+      .ct-play-again-btn:hover {
+        border-color: var(--color-accent);
+        background: rgba(255, 255, 255, 0.16);
+      }
+
+      .ct-play-again-btn:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 3px;
+      }
+
+      .ct-play-again-icon {
+        font-size: 2.15rem;
+        line-height: 1;
+      }
+
+      .ct-play-again-label {
+        font-family: var(--font-family-disp);
+        font-weight: 800;
+        font-size: 0.74rem;
+        letter-spacing: 0.02em;
+        line-height: 0.95;
+        text-transform: uppercase;
+      }
+
+      @keyframes ct-play-again-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
       @media (prefers-reduced-motion: reduce) {
         .ct-drawer { animation: none; }
+        .ct-play-again { animation: none; }
       }
     `}</style>
   )

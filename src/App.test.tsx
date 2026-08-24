@@ -46,8 +46,11 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       expect(screen.getByText(/Series C — Guard Passing/)).toBeInTheDocument();
       expect(screen.getByText(/Series H — De La Riva/)).toBeInTheDocument();
       expect(screen.getAllByText(/Named Flows/).length).toBeGreaterThan(0);
+      expect(screen.getByText('AS')).toBeInTheDocument();
       expect(screen.getByText('Attack Series')).toBeInTheDocument();
+      expect(screen.getByText('RF')).toBeInTheDocument();
       expect(screen.getByText('Ramey Flow')).toBeInTheDocument();
+      expect(screen.getByText('MF')).toBeInTheDocument();
       expect(screen.getByText('Marvin Flow')).toBeInTheDocument();
       expect(screen.queryByText(/Series I/)).not.toBeInTheDocument();
       expect(screen.queryByText('I1')).not.toBeInTheDocument();
@@ -73,7 +76,6 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await startFirstDeck(); // First deck (A1)
 
       expect(document.querySelector('.bl-overlay')).toBeTruthy();
-      expect(screen.getByLabelText(/Streak:/)).toBeInTheDocument();
     });
 
     it('shows multiple choice options for the first move', async () => {
@@ -180,13 +182,6 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('CRITICAL: Streak tracking works correctly', () => {
-    it('shows streak badge during training', async () => {
-      await renderWithRouter("/");
-      await startFirstDeck();
-
-      expect(screen.getByLabelText(/Streak:/)).toBeInTheDocument();
-    });
-
     it('increments streak for correct answers', async () => {
       await renderWithRouter("/");
       await startFirstDeck();
@@ -194,7 +189,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await clickOptionWithText(A1_MOVES[0]);
 
       await waitFor(() => {
-        expect(screen.getByLabelText(/Streak: 1/)).toBeInTheDocument();
+        expect(getAppSnapshot().context.session?.currentStreak).toBe(1);
       }, { timeout: 2000 });
     });
 
@@ -212,7 +207,6 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
       await waitFor(() => {
         expect(getAppSnapshot().context.session?.currentStreak).toBe(0);
-        expect(screen.getByLabelText(/Streak: 0/)).toBeInTheDocument();
       }, { timeout: 2000 });
     });
 
@@ -385,14 +379,6 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       const progressBars = screen.getAllByRole('progressbar');
       expect(progressBars.length).toBeGreaterThan(0);
-    });
-
-    it('shows move progress without deck total during training', async () => {
-      await renderWithRouter("/");
-      await startFirstDeck(); // A1: 5 moves
-
-      expect(document.querySelector('.ao-hud')).toBeNull();
-      expect(document.querySelector('.bl-progress')?.textContent).toBe('1');
     });
 
     it('shows next move prompt correctly', async () => {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createDistractorPool, getMoveNote, homeSectionHash, precomputeDeckOptions } from './utils/deckUtils'
+import { createDistractorPool, getMoveNote, homeDeckRowLabel, homeSectionHash, precomputeDeckOptions } from './utils/deckUtils'
 import type { Deck } from './types/domain'
 
 const mockDecks: Deck[] = [
@@ -125,6 +125,22 @@ describe('precomputeDeckOptions', () => {
       expect(wrongTexts.every(t => t !== move.text)).toBe(true)
       expect(new Set(wrongTexts).size).toBe(3)
     })
+  })
+})
+
+describe('homeDeckRowLabel', () => {
+  it('returns deck id for series decks', () => {
+    expect(homeDeckRowLabel(mockDecks[0])).toBe('A1')
+  })
+
+  it('returns short code for named flows', () => {
+    expect(homeDeckRowLabel({ id: 'attack-series', name: 'Attack Series', moves: [] })).toBe('AS')
+    expect(homeDeckRowLabel({ id: 'ramey-flow', name: 'Ramey Flow', moves: [] })).toBe('RF')
+    expect(homeDeckRowLabel({ id: 'marvin-flow', name: 'Marvin Flow', moves: [] })).toBe('MF')
+  })
+
+  it('falls back to deck name for unknown named flows', () => {
+    expect(homeDeckRowLabel({ id: 'custom-flow', name: 'Custom Flow', moves: [] })).toBe('Custom Flow')
   })
 })
 

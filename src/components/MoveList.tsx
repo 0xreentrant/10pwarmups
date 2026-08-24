@@ -7,17 +7,22 @@ interface MoveListProps {
   deck: Deck
   moveSequence: MoveAnswer[]
   visibleThroughIndex: number
+  /** When set, only these indices are listed (still capped by visibleThroughIndex). */
+  moveIndices?: readonly number[]
   /** When set, move label click jumps (e.g. video seek) instead of opening notes. */
   onMoveClick?: (moveIndex: number) => void
 }
 
-export default function MoveList({ deck, moveSequence, visibleThroughIndex, onMoveClick }: MoveListProps) {
+export default function MoveList({ deck, moveSequence, visibleThroughIndex, moveIndices, onMoveClick }: MoveListProps) {
   const { moveIndex, popoverRef, open, close } = useMoveNotesPopover()
+  const indices = moveIndices ?? deck.moves.map((_, i) => i)
 
   return (
     <div className="relative">
-      {deck.moves.map((move, i) => {
+      {indices.map(i => {
         if (i > visibleThroughIndex) return null
+        const move = deck.moves[i]
+        if (!move) return null
         const answered = moveSequence[i]
         const symbolClass = answered?.correct
           ? "text-green"
