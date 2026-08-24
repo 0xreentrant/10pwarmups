@@ -23,7 +23,7 @@ function makeRound(drillOverrides: Partial<AnteDrillView> = {}): AnteRound {
     move: { text: "Kneeling Granby", partner: "A" },
     ...drillOverrides,
   }
-  return { drill, live: true, answer: vi.fn() } as AnteRound
+  return { drill, live: true, answer: vi.fn() } as unknown as AnteRound
 }
 
 describe("AnteOptions", () => {
