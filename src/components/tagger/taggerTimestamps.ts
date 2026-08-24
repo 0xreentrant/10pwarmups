@@ -53,17 +53,6 @@ export function buildJsonText(
   )
 }
 
-export function buildSavePrompt(jsonText: string): string {
-  return [
-    "Update the warmup timestamps for this deck using the JSON below. Write the times into MOVE_TIMESTAMPS (or the project's stored timestamp source) for the deckId in the JSON.",
-    "Also update move names in src/data/decks.ts for that deck so each move's text matches the JSON name at the same index (order matters).",
-    "",
-    "```json",
-    jsonText,
-    "```",
-  ].join("\n")
-}
-
 type ParsedTimestampEntry = { name?: string; t: number | null }
 
 function nameOccurrenceIndex(names: readonly string[], index: number): number {

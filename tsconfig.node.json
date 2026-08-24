@@ -12,5 +12,5 @@
     "forceConsistentCasingInFileNames": true,
     "types": ["node"]
   },
-  "include": ["vite.config.ts", "vitest.config.ts", "vitest.pwa.config.ts", "tests/**/*.test.ts"]
+  "include": ["vite.config.ts", "vitest.config.ts", "vitest.pwa.config.ts", "tests/**/*.test.ts", "vite/**/*.ts"]
 }

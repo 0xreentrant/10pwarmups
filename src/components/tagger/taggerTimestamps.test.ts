@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest"
 import { MOVE_TIMESTAMPS } from "../../data/moveTimestamps"
 import {
   buildJsonText,
-  buildSavePrompt,
   moveIndexAtTime,
   parseTimestampsJson,
   taggerSeedTimestamps,
@@ -145,17 +144,6 @@ describe("buildJsonText", () => {
       { name: "Second", t: null },
       { name: "Third", t: 2.5 },
     ])
-  })
-})
-
-describe("buildSavePrompt", () => {
-  it("mentions decks.ts move names and includes json block", () => {
-    const json = buildJsonText("A1", [0], ["Granby"])
-    const prompt = buildSavePrompt(json)
-    expect(prompt).toContain("MOVE_TIMESTAMPS")
-    expect(prompt).toContain("src/data/decks.ts")
-    expect(prompt).toContain("same index")
-    expect(prompt).toContain(json)
   })
 })
 

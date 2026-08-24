@@ -49,4 +49,16 @@ describe("playableMoveIndices", () => {
   it("falls back to every move when the deck is untagged", () => {
     expect(playableMoveIndices("B1", 4)).toEqual([0, 1, 2, 3])
   })
+
+  it("uses override timestamps when provided (tagger live tags)", () => {
+    expect(playableMoveIndices("A4", 4, [0, null, 10, 20])).toEqual([0, 2, 3])
+  })
+
+  it("keeps A4 kob → wheel kick → under jack consecutive when tagged", () => {
+    const a4 = MOVE_TIMESTAMPS.A4
+    const order = playableMoveIndices("A4", a4.length)
+    const kob = order.indexOf(4)
+    expect(kob).toBeGreaterThanOrEqual(0)
+    expect(order.slice(kob, kob + 3)).toEqual([4, 5, 6])
+  })
 })

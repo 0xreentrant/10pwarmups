@@ -11,6 +11,11 @@ import {
   usePersistedNudgeMs,
 } from "../../hooks/usePersistedNudgeMs"
 import {
+  clearNoteDraftForDeck,
+  resolveNoteDraft,
+  saveNoteDraftForDeck,
+} from "../../hooks/usePersistedTaggerNoteDrafts"
+import {
   clearMoveNamesForDeck,
   loadMoveNamesByDeck,
   resolveMoveNames,
@@ -93,6 +98,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const [notesDraft, setNotesDraft] = useState("")
   const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState<SavedTarget | null>(null)
+  const [saving, setSaving] = useState<SavedTarget | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -119,6 +125,10 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       ? moveIndexAtTime(timestamps, currentTime)
       : -1
   const previewTimestamps = timestampsReady ? timestamps : null
+  const onDiskJson = buildJsonText(deckId, timestamps, moveNames)
+  const savedNoteText = warmupNoteForDeck(deckId)
+  const jsonUnsaved = jsonDraft !== onDiskJson
+  const notesUnsaved = notesDraft !== savedNoteText
 
   useEffect(() => {
     const d = DECKS.find(x => x.id === warmup)
@@ -154,12 +164,19 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   }, [deckId])
 
   useEffect(() => {
-    setJsonDraft(buildJsonText(deckId, timestamps, moveNames))
-  }, [deckId, timestamps, moveNames])
+    setJsonDraft(onDiskJson)
+  }, [deckId, onDiskJson])
 
   useEffect(() => {
-    setNotesDraft(warmupNoteForDeck(deckId))
+    setNotesDraft(resolveNoteDraft(deckId, warmupNoteForDeck(deckId)))
   }, [deckId])
+
+  useEffect(() => {
+    if (!deckId) return
+    const saved = warmupNoteForDeck(deckId)
+    if (notesDraft === saved) clearNoteDraftForDeck(deckId)
+    else saveNoteDraftForDeck(deckId, notesDraft)
+  }, [deckId, notesDraft])
 
   useEffect(() => {
     if (!deckId || moveCount <= 0 || timestamps.length === moveCount) return
@@ -201,8 +218,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       if (preview.value !== "home") previewSend({ type: "REQUEST_EXIT" })
       return
     }
-    previewSend({ type: "START_PREVIEW", deckId })
-  }, [mode, deckId, timestampsReady, previewSend])
+    previewSend({ type: "START_PREVIEW", deckId, timestamps })
+  }, [mode, deckId, timestampsReady, timestamps, previewSend])
 
   useEffect(() => {
     if (tagger.value !== "dragging") return
@@ -377,7 +394,9 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   }
 
   function saveJson() {
+    if (saving) return
     setSaveError(null)
+    setSaving("json")
     void postTaggerApi("/api/tagger/save-json", { jsonText: jsonDraft })
       .then(() => {
         setSaved("json")
@@ -386,23 +405,28 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       .catch(err => {
         setSaveError(err instanceof Error ? err.message : "Save failed")
       })
+      .finally(() => setSaving(null))
   }
 
   function saveNote() {
+    if (saving) return
     setSaveError(null)
+    setSaving("note")
     void postTaggerApi("/api/tagger/save-note", { deckId, noteText: notesDraft })
       .then(() => {
+        clearNoteDraftForDeck(deckId)
         setSaved("note")
         window.setTimeout(() => setSaved(null), 1200)
       })
       .catch(err => {
         setSaveError(err instanceof Error ? err.message : "Save failed")
       })
+      .finally(() => setSaving(null))
   }
 
   function restartTrainPreview() {
     if (!deckId) return
-    previewSend({ type: "START_PREVIEW", deckId })
+    previewSend({ type: "START_PREVIEW", deckId, timestamps })
   }
 
   function onDeckChange(nextId: string) {
@@ -704,7 +728,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
 
           <div className="mb-1 flex items-baseline justify-between gap-3">
             <p className="text-muted text-[11px] uppercase tracking-wider">
-              JSON{copied ? " - copied" : saved === "json" ? " - saved" : ""}
+              JSON
+              {copied ? " - copied" : jsonUnsaved ? " - unsaved" : saved === "json" ? " - saved" : ""}
             </p>
             <div className="flex items-baseline gap-3">
               <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={copyJson}>
@@ -713,8 +738,13 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
               <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={loadJson}>
                 Load
               </button>
-              <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={saveJson}>
-                Save
+              <button
+                type="button"
+                className="text-muted text-[11px] uppercase tracking-wider disabled:opacity-50"
+                onClick={saveJson}
+                disabled={saving === "json"}
+              >
+                {saving === "json" ? "Saving..." : "Save"}
               </button>
               <button
                 type="button"
@@ -739,14 +769,16 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
 
           <div className="mt-4 mb-1 flex items-baseline justify-between gap-3">
             <p className="text-muted text-[11px] uppercase tracking-wider">
-              Notes{saved === "note" ? " - saved" : ""}
+              Notes
+              {notesUnsaved ? " - unsaved" : saved === "note" ? " - saved" : ""}
             </p>
             <button
               type="button"
-              className="text-muted text-[11px] uppercase tracking-wider"
+              className="text-muted text-[11px] uppercase tracking-wider disabled:opacity-50"
               onClick={saveNote}
+              disabled={saving === "note"}
             >
-              Save note
+              {saving === "note" ? "Saving..." : "Save note"}
             </button>
           </div>
           <textarea

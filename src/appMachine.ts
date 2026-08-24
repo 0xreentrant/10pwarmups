@@ -87,7 +87,7 @@ interface AppInput {
 
 export type AppEvent =
   | { type: "START_DECK"; deckId: string }
-  | { type: "START_PREVIEW"; deckId: string }
+  | { type: "START_PREVIEW"; deckId: string; timestamps?: (number | null)[] }
   | { type: "START_REVIEW"; deckId: string }
   | { type: "OPTION_CLICK"; optionIndex: number }
   | { type: "TAP_OUT" }
@@ -133,7 +133,11 @@ const appMachineSetup = setup({
       const d = context.decks.find(x => x.id === event.deckId)
       if (!d) return {}
       const allOptions = context.precomputeDeckOptions(d, context.decks)
-      const moveOrder = playableMoveIndices(d.id, d.moves.length)
+      const moveOrder = playableMoveIndices(
+        d.id,
+        d.moves.length,
+        event.type === "START_PREVIEW" ? event.timestamps : undefined,
+      )
       return {
         currentDeckId: event.deckId,
         preview: event.type === "START_PREVIEW",

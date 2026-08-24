@@ -1,4 +1,5 @@
 /** Per-deck move start times (seconds), from /tagger. null = not tagged yet. */
+
 export const MOVE_TIMESTAMPS: Record<string, (number | null)[]> = {
   A1: [
     0,
@@ -39,6 +40,54 @@ export const MOVE_TIMESTAMPS: Record<string, (number | null)[]> = {
     null,
     null,
   ],
+  A3: [
+    null,
+    0,
+    0.704170721989579,
+    1.9911870000000003,
+    2.4543939999999997,
+    3.2224559999999998,
+    4.373849,
+    null,
+    5.913272,
+    6.478855,
+    9.926200000000001,
+    null,
+    11.483068000000001,
+    15.145908,
+    15.937336000000002,
+    23.159136,
+    24.582459,
+    29.283205000000002,
+    32.045508999999996,
+    36.285678999999995,
+    39.994146,
+    42.433758999999995,
+    46.110257999999995,
+    47.23777204257904,
+    48.215683999999996,
+    54.013438,
+    null,
+    55.548387999999996,
+  ],
+  A4: [
+    0,
+    1.297639376850055,
+    6.2221116374126115,
+    8.769252461841521,
+    12.917453233054317,
+    13.936309562825878,
+    15.367560121314504,
+    17.55082368511071,
+    20.29203238187706,
+    23.383044,
+    null,
+    null,
+    26.963115493476586,
+    32.893132,
+    39.259519,
+    null,
+  ]
 }
 
 /** Tagged starts when length matches and times fit the clip; else equal slices. */
@@ -70,8 +119,12 @@ export function playableIndicesFromTimestamps(
 }
 
 /** Quiz order: all moves, or only those with a tagged start time. */
-export function playableMoveIndices(deckId: string, moveCount: number): number[] {
-  const tagged = MOVE_TIMESTAMPS[deckId]
+export function playableMoveIndices(
+  deckId: string,
+  moveCount: number,
+  timestamps?: readonly (number | null)[],
+): number[] {
+  const tagged = timestamps ?? MOVE_TIMESTAMPS[deckId]
   if (tagged?.length === moveCount) {
     const playable = playableIndicesFromTimestamps(tagged)
     if (playable.length > 0 && playable.length < moveCount) return playable

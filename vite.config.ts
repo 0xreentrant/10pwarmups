@@ -2,12 +2,24 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import { VitePWA } from "vite-plugin-pwa"
+import { taggerApiPlugin } from "./vite/taggerApiPlugin"
 
 const base = "/"
 
 export default defineConfig({
   base,
+  // ponytail: tagger API writes these files; ignore so saves do not trigger a dev reload.
+  server: {
+    watch: {
+      ignored: [
+        "**/src/data/warmup-notes/**",
+        "**/src/data/moveTimestamps.ts",
+        "**/src/data/decks.ts",
+      ],
+    },
+  },
   plugins: [
+    taggerApiPlugin(),
     react(),
     tailwindcss(),
     VitePWA({
