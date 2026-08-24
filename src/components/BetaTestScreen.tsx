@@ -36,11 +36,11 @@ export default function BetaTestScreen({
       </h1>
 
       <p className="font-disp font-semibold text-[1.05rem] leading-snug tracking-tight text-text mb-1 text-wrap-balance">
-        You&apos;re testing the new{" "}
+        You&apos;re testing the new <b>SECRET</b> {" "}
         <span className="inline-block font-bold italic text-accent -skew-x-6 tracking-wide">
           BETA
         </span>{" "}
-        flow.
+        flow for today's warmup.
       </p>
       <p className="text-[12px] text-muted leading-relaxed mb-8 max-w-[36ch] text-wrap-pretty">
         The new V2 "Cinematic" training and review.  One warmup below - train it, break it, tell me what sticks in the Signal chat.
