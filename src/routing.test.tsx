@@ -391,6 +391,7 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/beta-test/B3/review")
     })
     expect(document.querySelector(".ct-overlay")).toBeTruthy()
+    expect(document.querySelector(".ct-tap-demo")).toBeTruthy()
   })
 
   it("confirms before switching from cinematic training to review", async () => {

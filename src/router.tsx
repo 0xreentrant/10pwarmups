@@ -548,6 +548,7 @@ function BetaTestReviewRoute() {
   return (
     <CinemaReviewView
       deck={deck}
+      tapDemo
       onBack={() => {
         appActor.send({ type: "REQUEST_EXIT" })
         routerInstance.navigate({ to: "/beta-test/$warmup", params: { warmup } })

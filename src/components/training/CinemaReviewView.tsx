@@ -6,12 +6,15 @@ import * as analytics from "../../utils/analytics"
 
 interface CinemaReviewViewProps {
   deck: Deck
+  /** Beta-only tap-zone walkthrough before review playback. */
+  tapDemo?: boolean
   onBack: () => void
   onSwitchToTrain: () => void
 }
 
 export default function CinemaReviewView({
   deck,
+  tapDemo = false,
   onBack,
   onSwitchToTrain,
 }: CinemaReviewViewProps) {
@@ -26,6 +29,7 @@ export default function CinemaReviewView({
       deck={deck}
       videoSrc={videoSrc}
       review
+      tapDemo={tapDemo}
       onClose={onBack}
       onTrain={onSwitchToTrain}
     />

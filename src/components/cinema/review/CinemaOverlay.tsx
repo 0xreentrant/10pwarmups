@@ -11,12 +11,15 @@ import {
   playableIndicesFromTimestamps,
 } from "../../../data/moveTimestamps"
 import { useMoveTimeline } from "../useMoveTimeline"
+import ReviewTapDemo from "./ReviewTapDemo"
 
 interface CinemaOverlayProps {
   deck: Deck
   videoSrc: string | null
   /** Full sequence on the scrubber with Train affordance, no quiz. */
   review?: boolean
+  /** Beta-only tap-zone walkthrough before playback starts. */
+  tapDemo?: boolean
   /** Optional in-memory timestamps (e.g. tagger preview). */
   timestamps?: (number | null)[] | null
   onClose: () => void
@@ -27,6 +30,7 @@ export default function CinemaOverlay({
   deck,
   videoSrc,
   review = false,
+  tapDemo = false,
   timestamps: timestampOverrides = null,
   onClose,
   onTrain,
@@ -38,6 +42,8 @@ export default function CinemaOverlay({
   const [glow, setGlow] = useState("rgb(192, 57, 43)")
   const [movesOpen, setMovesOpen] = useState(false)
   const [reviewEnded, setReviewEnded] = useState(false)
+  const [demoComplete, setDemoComplete] = useState(!tapDemo)
+  const showTapDemo = tapDemo && !demoComplete
   const timeline = useMoveTimeline(deck.id, deck.moves.length, videoEl, undefined, timestampOverrides)
   const currentIndex = timeline ? timeline.moveIndexAt(time) : 0
   const playableIndices = timeline
@@ -48,6 +54,15 @@ export default function CinemaOverlay({
     setVideoEl(videoSrc ? videoRef.current : null)
     setReviewEnded(false)
   }, [videoSrc])
+
+  useEffect(() => {
+    setDemoComplete(!tapDemo)
+  }, [tapDemo, videoSrc])
+
+  useEffect(() => {
+    if (!demoComplete || !tapDemo) return
+    videoRef.current?.play().catch(() => {})
+  }, [demoComplete, tapDemo])
 
   usePersistedMediaVolume(videoEl)
 
@@ -74,11 +89,11 @@ export default function CinemaOverlay({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !movesOpen) onClose()
+      if (e.key === "Escape" && !movesOpen && !showTapDemo) onClose()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [onClose, movesOpen])
+  }, [onClose, movesOpen, showTapDemo])
 
   const seekToIndex = (i: number) => {
     setReviewEnded(false)
@@ -166,7 +181,7 @@ export default function CinemaOverlay({
           ref={videoRef}
           src={videoSrc}
           className="ct-video"
-          autoPlay
+          autoPlay={!tapDemo}
           playsInline
           onSeeked={handleSeeked}
           onTimeUpdate={e => handleTimeUpdate(e.currentTarget.currentTime)}
@@ -179,7 +194,7 @@ export default function CinemaOverlay({
       <div className="ct-scrim-top" />
       <div className="ct-scrim-bottom" />
 
-      {review && (
+      {review && !showTapDemo && (
         <div className="ct-review-bar">
           <div className="ct-review-head">
             <div className="ct-review-title-row">
@@ -200,9 +215,11 @@ export default function CinemaOverlay({
         </div>
       )}
 
-      <button type="button" className="ct-close" onClick={onClose} aria-label="Exit review">✕</button>
+      {!showTapDemo && (
+        <button type="button" className="ct-close" onClick={onClose} aria-label="Exit review">✕</button>
+      )}
 
-      {!reviewEnded && (
+      {!reviewEnded && !showTapDemo && (
         <div className="ct-tapzones">
           <button type="button" className="ct-tapzone" aria-label="Previous move" onClick={seekPrev} />
           <button type="button" className="ct-tapzone" aria-label="Play or pause" onClick={togglePlay} />
@@ -218,7 +235,9 @@ export default function CinemaOverlay({
         </div>
       )}
 
-      <div className={`ct-caption${review ? " ct-caption--review" : ""}`}>
+      {showTapDemo && <ReviewTapDemo onComplete={() => setDemoComplete(true)} />}
+
+      <div className={`ct-caption${review ? " ct-caption--review" : ""}${showTapDemo ? " ct-caption--demo" : ""}`}>
         <span className={`ct-partner-tag ct-partner-tag--${move.partner}`}>Person {move.partner}</span>
         {!review && (
           <div className="ct-caption-index">Move {currentIndex + 1} / {deck.moves.length}</div>
@@ -553,6 +572,10 @@ function CinemaStyles() {
         z-index: 15;
         padding: 0 20px 28px;
         pointer-events: auto;
+      }
+
+      .ct-caption--demo {
+        opacity: 0.35;
       }
 
       .ct-partner-tag {
