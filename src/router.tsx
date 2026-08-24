@@ -9,8 +9,11 @@ import {
 } from "@tanstack/react-router"
 import { useSelector } from "@xstate/react"
 import HomeScreen from "./components/HomeScreen"
+import BetaTestScreen from "./components/BetaTestScreen"
+import CompletionScreen from "./components/CompletionScreen"
 import ProgressScreen from "./components/ProgressScreen"
 import TaggerView, { type TaggerTab } from "./components/tagger/TaggerView"
+import TrainingScreen from "./components/TrainingScreen"
 import CinemaReviewView from "./components/training/CinemaReviewView"
 import TrainingSessionView from "./components/training/TrainingSessionView"
 import WhatsNewPopover from "./components/WhatsNewPopover"
@@ -32,6 +35,18 @@ function defaultTaggerWarmup(): string {
   return listVideoDeckIds()[0] ?? ""
 }
 
+function isValidWarmup(warmup: string): boolean {
+  return DECKS.some(d => d.id === warmup)
+}
+
+function trainingPathMatches(path: string, deckId: string): boolean {
+  return path === `/${deckId}/training` || path === `/beta-test/${deckId}/train`
+}
+
+function reviewPathMatches(path: string, deckId: string): boolean {
+  return path === `/${deckId}/review` || path === `/beta-test/${deckId}/review`
+}
+
 const rootRoute = createRootRoute({
   component: RootLayout,
 })
@@ -46,6 +61,75 @@ const allProgressRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/progress",
   component: AllProgressRoute,
+})
+
+const betaTestRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/beta-test/$warmup",
+  beforeLoad: ({ params }) => {
+    if (!isValidWarmup(params.warmup)) {
+      throw redirect({ to: "/" })
+    }
+  },
+})
+
+const betaTestIndexRoute = createRoute({
+  getParentRoute: () => betaTestRoute,
+  path: "/",
+  component: BetaTestLandingRoute,
+})
+
+const betaTestTrainRoute = createRoute({
+  getParentRoute: () => betaTestRoute,
+  path: "/train",
+  beforeLoad: ({ params }) => {
+    const snap = getAppSnapshot()
+    if (snap.value !== "training" || snap.context.currentDeckId !== params.warmup) {
+      throw redirect({ to: "/beta-test/$warmup", params: { warmup: params.warmup } })
+    }
+  },
+  component: BetaTestTrainingRoute,
+})
+
+const betaTestReviewRoute = createRoute({
+  getParentRoute: () => betaTestRoute,
+  path: "/review",
+  beforeLoad: ({ params }) => {
+    const snap = getAppSnapshot()
+    if (snap.value !== "review" || snap.context.currentDeckId !== params.warmup) {
+      throw redirect({ to: "/beta-test/$warmup", params: { warmup: params.warmup } })
+    }
+  },
+  component: BetaTestReviewRoute,
+})
+
+const betaTestCompletedRoute = createRoute({
+  getParentRoute: () => betaTestRoute,
+  path: "/completed",
+  beforeLoad: ({ params }) => {
+    const snap = getAppSnapshot()
+    const warmup = params.warmup
+    if (snap.value === "completed" && snap.context.currentDeckId === warmup) {
+      return
+    }
+    if (hasRestorableCompletion(snap, warmup)) {
+      if (consumePopNavigation()) {
+        appActor.send({ type: "RESTORE_COMPLETED" })
+        return
+      }
+      throw redirect({ to: "/beta-test/$warmup", params: { warmup } })
+    }
+    if (
+      snap.value === "training" &&
+      snap.context.currentDeckId === warmup &&
+      snap.context.session &&
+      !snap.context.session.locked
+    ) {
+      throw redirect({ to: "/beta-test/$warmup/train", params: { warmup } })
+    }
+    throw redirect({ to: "/beta-test/$warmup", params: { warmup } })
+  },
+  component: BetaTestCompletedRoute,
 })
 
 const taggerRoute = createRoute({
@@ -170,6 +254,12 @@ const completedRoute = createRoute({
 export const routeTree = rootRoute.addChildren([
   indexRoute,
   allProgressRoute,
+  betaTestRoute.addChildren([
+    betaTestIndexRoute,
+    betaTestTrainRoute,
+    betaTestReviewRoute,
+    betaTestCompletedRoute,
+  ]),
   taggerRoute.addChildren([
     taggerIndexRoute,
     taggerWarmupRoute.addChildren([taggerWarmupIndexRoute, taggerModeRoute]),
@@ -211,15 +301,15 @@ function RootLayout() {
         snap.context.session &&
         !snap.context.session.locked
       ) {
-        const trainingPath = `/${snap.context.currentDeckId}/training`
-        if (path !== trainingPath) {
+        const deckId = snap.context.currentDeckId
+        if (!trainingPathMatches(path, deckId)) {
           appActor.send({ type: "REQUEST_EXIT" })
           return
         }
       }
       if (snap.value === "review" && snap.context.currentDeckId) {
-        const reviewPath = `/${snap.context.currentDeckId}/review`
-        if (path !== reviewPath) {
+        const deckId = snap.context.currentDeckId
+        if (!reviewPathMatches(path, deckId)) {
           appActor.send({ type: "REQUEST_EXIT" })
           return
         }
@@ -267,43 +357,60 @@ function HomeRoute() {
   )
 }
 
-function appSessionHandlers(
+function BetaTestLandingRoute() {
+  const routerInstance = useRouter()
+  const { warmup } = betaTestRoute.useParams()
+  const deck = DECKS.find(d => d.id === warmup)!
+  const progress = useSelector(appActor, s => s.context.progress)
+
+  return (
+    <BetaTestScreen
+      deck={deck}
+      progress={progress}
+      onDeckClick={deckId => {
+        appActor.send({ type: "START_DECK", deckId })
+        routerInstance.navigate({ to: "/beta-test/$warmup/train", params: { warmup: deckId } })
+      }}
+      onReviewClick={deckId => {
+        appActor.send({ type: "START_REVIEW", deckId })
+        routerInstance.navigate({ to: "/beta-test/$warmup/review", params: { warmup: deckId } })
+      }}
+      onHome={() => routerInstance.navigate({ to: "/" })}
+    />
+  )
+}
+
+function betaSessionHandlers(
   routerInstance: ReturnType<typeof useRouter>,
   deck: (typeof DECKS)[number],
-  deckId: string,
+  warmup: string,
 ) {
   return {
     onExit: () => {
       appActor.send({ type: "REQUEST_EXIT" })
-      routerInstance.navigate({ to: "/" })
+      routerInstance.navigate({ to: "/beta-test/$warmup", params: { warmup } })
     },
     onSwitchToReview: () => {
-      appActor.send({ type: "START_REVIEW", deckId })
-      routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
+      appActor.send({ type: "START_REVIEW", deckId: warmup })
+      routerInstance.navigate({ to: "/beta-test/$warmup/review", params: { warmup } })
     },
     onRestart: () => {
-      appActor.send({ type: "START_DECK", deckId })
-      routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
+      appActor.send({ type: "START_DECK", deckId: warmup })
+      routerInstance.navigate({ to: "/beta-test/$warmup/train", params: { warmup } })
     },
     onTryAgain: () => {
       appActor.send({ type: "START_DECK", deckId: deck.id })
-      routerInstance.navigate({ to: "/$deckId/training", params: { deckId: deck.id } })
+      routerInstance.navigate({ to: "/beta-test/$warmup/train", params: { warmup: deck.id } })
     },
     onNext: () => {
-      const nid = nextDeckId(deck.id)
-      if (nid) {
-        appActor.send({ type: "START_DECK", deckId: nid })
-        routerInstance.navigate({ to: "/$deckId/training", params: { deckId: nid } })
-      } else {
-        appActor.send({ type: "GO_HOME" })
-        routerInstance.navigate({ to: "/" })
-      }
+      appActor.send({ type: "GO_HOME" })
+      routerInstance.navigate({ to: "/beta-test/$warmup", params: { warmup } })
     },
     onHome: () => {
       appActor.send({ type: "GO_HOME" })
-      routerInstance.navigate({ to: "/", hash: homeSectionHash(deck), hashScrollIntoView: false })
+      routerInstance.navigate({ to: "/beta-test/$warmup", params: { warmup } })
     },
-    onStats: () => routerInstance.navigate({ to: "/$deckId", params: { deckId } }),
+    onStats: () => routerInstance.navigate({ to: "/$deckId", params: { deckId: warmup } }),
   }
 }
 
@@ -311,8 +418,7 @@ function TrainingRoute() {
   const routerInstance = useRouter()
   const { deckId } = trainingRoute.useParams()
   const deck = DECKS.find(d => d.id === deckId)!
-  const snap = useSelector(appActor, s => s)
-  const handlers = appSessionHandlers(routerInstance, deck, deckId)
+  const session = useSelector(appActor, s => s.context.session)!
 
   useEffect(() => {
     const sub = appActor.subscribe(snapshot => {
@@ -324,14 +430,20 @@ function TrainingRoute() {
   }, [deckId, routerInstance])
 
   return (
-    <TrainingSessionView
-      snap={snap}
-      send={appActor.send}
+    <TrainingScreen
       deck={deck}
-      {...handlers}
-      onRestart={() => {
-        appActor.send({ type: "START_DECK", deckId })
+      mode="training"
+      session={session}
+      onOptionClick={optionIndex => appActor.send({ type: "OPTION_CLICK", optionIndex })}
+      onBack={() => {
+        appActor.send({ type: "REQUEST_EXIT" })
+        routerInstance.navigate({ to: "/" })
       }}
+      onSwitchToReview={() => {
+        appActor.send({ type: "START_REVIEW", deckId })
+        routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
+      }}
+      onSwitchToTrain={() => {}}
     />
   )
 }
@@ -342,12 +454,16 @@ function ReviewRoute() {
   const deck = DECKS.find(d => d.id === deckId)!
 
   return (
-    <CinemaReviewView
+    <TrainingScreen
       deck={deck}
+      mode="review"
+      session={null}
+      onOptionClick={() => {}}
       onBack={() => {
         appActor.send({ type: "REQUEST_EXIT" })
         routerInstance.navigate({ to: "/" })
       }}
+      onSwitchToReview={() => {}}
       onSwitchToTrain={() => {
         appActor.send({ type: "START_DECK", deckId })
         routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
@@ -360,6 +476,94 @@ function CompletedRoute() {
   const routerInstance = useRouter()
   const { deckId } = completedRoute.useParams()
   const deck = DECKS.find(d => d.id === deckId)!
+  const progress = useSelector(appActor, s => s.context.progress)
+  const session = useSelector(appActor, s => s.context.session)!
+
+  return (
+    <CompletionScreen
+      deck={deck}
+      session={session}
+      progress={progress}
+      onNext={() => {
+        const nid = nextDeckId(deck.id)
+        if (nid) {
+          appActor.send({ type: "START_DECK", deckId: nid })
+          routerInstance.navigate({ to: "/$deckId/training", params: { deckId: nid } })
+        } else {
+          appActor.send({ type: "GO_HOME" })
+          routerInstance.navigate({ to: "/" })
+        }
+      }}
+      onHome={() => {
+        appActor.send({ type: "GO_HOME" })
+        routerInstance.navigate({ to: "/", hash: homeSectionHash(deck), hashScrollIntoView: false })
+      }}
+      onTryAgain={() => {
+        appActor.send({ type: "START_DECK", deckId: deck.id })
+        routerInstance.navigate({ to: "/$deckId/training", params: { deckId: deck.id } })
+      }}
+      onStats={() => routerInstance.navigate({ to: "/$deckId", params: { deckId } })}
+    />
+  )
+}
+
+function BetaTestTrainingRoute() {
+  const routerInstance = useRouter()
+  const { warmup } = betaTestTrainRoute.useParams()
+  const deck = DECKS.find(d => d.id === warmup)!
+  const snap = useSelector(appActor, s => s)
+  const handlers = betaSessionHandlers(routerInstance, deck, warmup)
+
+  useEffect(() => {
+    const sub = appActor.subscribe(snapshot => {
+      if (snapshot.value === "completed" && snapshot.context.currentDeckId === warmup) {
+        routerInstance.navigate({
+          to: "/beta-test/$warmup/completed",
+          params: { warmup },
+          replace: true,
+        })
+      }
+    })
+    return () => sub.unsubscribe()
+  }, [warmup, routerInstance])
+
+  return (
+    <TrainingSessionView
+      snap={snap}
+      send={appActor.send}
+      deck={deck}
+      {...handlers}
+      onRestart={() => {
+        appActor.send({ type: "START_DECK", deckId: warmup })
+      }}
+    />
+  )
+}
+
+function BetaTestReviewRoute() {
+  const routerInstance = useRouter()
+  const { warmup } = betaTestReviewRoute.useParams()
+  const deck = DECKS.find(d => d.id === warmup)!
+
+  return (
+    <CinemaReviewView
+      deck={deck}
+      onBack={() => {
+        appActor.send({ type: "REQUEST_EXIT" })
+        routerInstance.navigate({ to: "/beta-test/$warmup", params: { warmup } })
+      }}
+      onSwitchToTrain={() => {
+        appActor.send({ type: "START_DECK", deckId: warmup })
+        routerInstance.navigate({ to: "/beta-test/$warmup/train", params: { warmup } })
+      }}
+    />
+  )
+}
+
+function BetaTestCompletedRoute() {
+  const routerInstance = useRouter()
+  const { warmup } = betaTestCompletedRoute.useParams()
+  const deck = DECKS.find(d => d.id === warmup)!
   const snap = useSelector(appActor, s => s)
 
   return (
@@ -367,7 +571,7 @@ function CompletedRoute() {
       snap={snap}
       send={appActor.send}
       deck={deck}
-      {...appSessionHandlers(routerInstance, deck, deckId)}
+      {...betaSessionHandlers(routerInstance, deck, warmup)}
     />
   )
 }

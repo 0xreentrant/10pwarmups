@@ -10,7 +10,6 @@ import {
   clickWrongOption,
   getOptionButtons,
   startFirstDeck,
-  waitForLiveOptions,
 } from './test/trainingHelpers';
 
 const A1_MOVES = DECKS.find(d => d.id === 'A1')!.moves.map(m => m.text);
@@ -75,7 +74,9 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       await startFirstDeck(); // First deck (A1)
 
-      expect(document.querySelector('.bl-overlay')).toBeTruthy();
+      expect(screen.getByText('A1')).toBeInTheDocument();
+      expect(screen.getByText('Kneeling')).toBeInTheDocument();
+      expect(screen.getByText(/Sequence/)).toBeInTheDocument();
     });
 
     it('shows multiple choice options for the first move', async () => {
@@ -85,7 +86,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const optionButtons = getOptionButtons();
       expect(optionButtons.length).toBe(4);
       expect(screen.getByRole('button', { name: new RegExp(A1_MOVES[0], 'i') })).toBeInTheDocument();
-      expect(screen.getByText('Person A')).toBeInTheDocument();
+      expect(screen.getByText(/Person A/)).toBeInTheDocument();
     });
 
     it('always includes the correct next move in precomputed options', async () => {
@@ -94,11 +95,10 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
       const moves = A1_MOVES;
       for (let i = 0; i < moves.length - 1; i++) {
-        await waitForLiveOptions();
         expect(getOptionButtons().some(b => b.textContent!.includes(moves[i]))).toBe(true);
-        await clickOptionWithText(moves[i]);
+        clickOptionWithText(moves[i]);
+        await new Promise(r => setTimeout(r, 50));
       }
-      await waitForLiveOptions();
       expect(getOptionButtons().some(b => b.textContent!.includes(moves[moves.length - 1]))).toBe(true);
     });
 
@@ -108,8 +108,9 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
       await clickOptionWithText(A1_MOVES[0]);
 
-      await waitForLiveOptions();
-      expect(getOptionButtons().length).toBe(4);
+      await waitFor(() => {
+        expect(getOptionButtons().length).toBe(4);
+      }, { timeout: 2000 });
     });
 
     it('completes a short deck successfully', async () => {
@@ -202,8 +203,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
         expect(getAppSnapshot().context.session?.currentStreak).toBe(1);
       });
 
-      await waitForLiveOptions();
-      await clickWrongOption(A1_MOVES[1]);
+      clickWrongOption(A1_MOVES[1]);
 
       await waitFor(() => {
         expect(getAppSnapshot().context.session?.currentStreak).toBe(0);
@@ -217,12 +217,12 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const answerSequence = [true, false, true, true, true];
 
       for (let i = 0; i < answerSequence.length; i++) {
-        await waitForLiveOptions();
         if (answerSequence[i]) {
-          await clickOptionWithText(A1_MOVES[i]);
+          clickOptionWithText(A1_MOVES[i]);
         } else {
-          await clickWrongOption(A1_MOVES[i]);
+          clickWrongOption(A1_MOVES[i]);
         }
+        await new Promise(r => setTimeout(r, 50));
       }
 
       // The single wrong answer (move index 1) must be recorded as a non-perfect completion
@@ -243,16 +243,17 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       const answerSequence = [true, false, true, true, true];
 
       for (let i = 0; i < answerSequence.length; i++) {
-        await waitForLiveOptions();
         if (answerSequence[i]) {
-          await clickOptionWithText(moves[i]);
+          clickOptionWithText(moves[i]);
         } else {
-          await clickWrongOption(moves[i]);
+          clickWrongOption(moves[i]);
         }
+        await new Promise(r => setTimeout(r, 50));
       }
 
       await waitFor(() => {
-        expect(screen.getByText(/streak 3 · best/i)).toBeInTheDocument()
+        expect(screen.getByText('Final streak')).toBeInTheDocument()
+        expect(screen.getByText('3')).toBeInTheDocument()
       }, { timeout: 8000 });
 
       await waitFor(() => {
@@ -271,9 +272,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await renderWithRouter("/");
       await startFirstDeck();
 
-      expect(document.querySelector('.bl-overlay')).toBeTruthy();
-
-      fireEvent.click(screen.getByLabelText('Exit training'));
+      fireEvent.click(screen.getByText(/← Back/));
       await confirmLeaveTest();
     });
 
@@ -316,9 +315,9 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
       // Answer one question then abandon
       await clickOptionWithText(A1_MOVES[0]);
-      await waitForLiveOptions();
+      await new Promise(r => setTimeout(r, 100));
 
-      fireEvent.click(screen.getByLabelText("Exit training"));
+      fireEvent.click(screen.getByText(/← Back/));
       await confirmLeaveTest();
 
       // Check that in-progress attempt was discarded
@@ -386,7 +385,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await startFirstDeck();
 
       expect(getOptionButtons().length).toBe(4);
-      expect(document.querySelector('.bl-deck')).toBeTruthy();
+      expect(screen.getByText(/What's next/i)).toBeInTheDocument();
     });
 
     it('displays completion results with accuracy metrics', async () => {
@@ -398,8 +397,8 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
       await waitFor(() => {
         expect(screen.getByRole('heading', { level: 2 }).textContent).toMatch(/Perfect|Complete/)
-        expect(screen.getByText(/\d+\/\d+ correct/i)).toBeInTheDocument()
-        expect(screen.getByText(/streak \d+ · best/i)).toBeInTheDocument()
+        expect(screen.getByText('Correct')).toBeInTheDocument()
+        expect(screen.getByText('Final streak')).toBeInTheDocument()
       }, { timeout: 8000 });
     });
   });

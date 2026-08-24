@@ -8,8 +8,8 @@ import {
   answerDeckMoves,
   clickOptionWithText,
   startFirstDeck,
-  waitForLiveOptions,
 } from "./test/trainingHelpers"
+import { startBetaFirstDeck } from "./test/cinematicTrainingHelpers"
 
 const A1_MOVES = DECKS.find(d => d.id === "A1")!.moves.map(m => m.text)
 
@@ -57,7 +57,8 @@ describe("routing", () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()
     expect(router.state.location.pathname).toBe("/A1/training")
-    expect(document.querySelector(".bl-overlay")).toBeTruthy()
+    expect(screen.getByText("Kneeling")).toBeInTheDocument()
+    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
   })
 
   it("navigates to /progress when Stats is clicked", async () => {
@@ -81,8 +82,8 @@ describe("routing", () => {
   it("browser back from training after one answer returns home immediately", async () => {
     const { router, history } = await renderWithRouter("/")
     await startFirstDeck()
-    await clickOptionWithText(A1_MOVES[0])
-    await waitForLiveOptions()
+    clickOptionWithText(A1_MOVES[0])
+    await new Promise(r => setTimeout(r, 100))
     const homeScreen = watchForText("10th Planet")
 
     try {
@@ -104,8 +105,8 @@ describe("routing", () => {
   it("allows router navigation away from active training without a prompt", async () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()
-    await clickOptionWithText(A1_MOVES[0])
-    await waitForLiveOptions()
+    clickOptionWithText(A1_MOVES[0])
+    await new Promise(r => setTimeout(r, 100))
 
     void router.navigate({ to: "/" })
 
@@ -120,7 +121,7 @@ describe("routing", () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()
 
-    fireEvent.click(screen.getByLabelText("Exit training"))
+    fireEvent.click(screen.getByText(/← Back/))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
@@ -136,25 +137,24 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/review")
     })
-    expect(document.querySelector(".ct-overlay")).toBeTruthy()
     expect(screen.getByText("Kneeling")).toBeInTheDocument()
+    expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
     expect(screen.getByText(A1_MOVES[0])).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Train" })).toBeInTheDocument()
-    expect(screen.getByRole("button", { name: "Show moves" })).toBeInTheDocument()
   })
 
   it("confirms before switching from training to review and resets quiz progress", async () => {
     const { router } = await renderWithRouter("/")
     await startFirstDeck()
-    await clickOptionWithText(A1_MOVES[0])
-    await waitForLiveOptions()
+    clickOptionWithText(A1_MOVES[0])
+    await new Promise(r => setTimeout(r, 100))
 
     fireEvent.click(screen.getByRole("button", { name: "Review" }))
     expect(screen.getByText(/Switch to review/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByText("Keep training"))
     expect(screen.queryByText(/Switch to review/i)).not.toBeInTheDocument()
-    expect(document.querySelector(".bl-overlay")).toBeTruthy()
+    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
     expect(router.state.location.pathname).toBe("/A1/training")
 
     fireEvent.click(screen.getByRole("button", { name: "Review" }))
@@ -163,8 +163,7 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/review")
     })
-    expect(document.querySelector(".bl-overlay")).toBeFalsy()
-    expect(document.querySelector(".ct-overlay")).toBeTruthy()
+    expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
     expect(screen.getByText(A1_MOVES[0])).toBeInTheDocument()
   })
 
@@ -180,8 +179,7 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/training")
     })
-    await waitForLiveOptions()
-    expect(document.querySelector(".bl-overlay")).toBeTruthy()
+    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
     expect(screen.queryByText(/Switch to review/i)).not.toBeInTheDocument()
   })
 
@@ -193,7 +191,7 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/A1/review")
     })
 
-    fireEvent.click(screen.getByLabelText("Exit review"))
+    fireEvent.click(screen.getByText(/← Back/))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
@@ -356,5 +354,56 @@ describe("routing", () => {
 
     await screen.findByRole("heading", { name: "Video Tagger" })
     expect(router.state.location.pathname).toBe("/tagger/A1/edit")
+  })
+
+  it("renders beta test landing for a valid warmup", async () => {
+    await renderWithRouter("/beta-test/B3")
+
+    expect(screen.getByText("Beta")).toBeInTheDocument()
+    expect(screen.getByText("V2 Warmups")).toBeInTheDocument()
+    expect(screen.getByText("Trainer")).toBeInTheDocument()
+    expect(screen.getByText("Stalk")).toBeInTheDocument()
+    expect(screen.getAllByText("Train")).toHaveLength(1)
+  })
+
+  it("redirects invalid beta warmup to home", async () => {
+    const { router } = await renderWithRouter("/beta-test/ZZZ")
+
+    await screen.findByText("10th Planet")
+    expect(router.state.location.pathname).toBe("/")
+  })
+
+  it("navigates to cinematic training from beta test landing", async () => {
+    const { router } = await renderWithRouter("/beta-test/B3")
+
+    fireEvent.click(screen.getByText("Train"))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/beta-test/B3/train")
+    })
+    expect(document.querySelector(".bl-overlay")).toBeTruthy()
+  })
+
+  it("navigates to cinematic review from beta test landing", async () => {
+    const { router } = await renderWithRouter("/beta-test/B3")
+
+    fireEvent.click(screen.getByText("Review"))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/beta-test/B3/review")
+    })
+    expect(document.querySelector(".ct-overlay")).toBeTruthy()
+  })
+
+  it("confirms before switching from cinematic training to review", async () => {
+    const { router } = await renderWithRouter("/beta-test/B3")
+    await startBetaFirstDeck()
+
+    fireEvent.click(screen.getByRole("button", { name: "Review" }))
+    expect(screen.getByText(/Switch to review/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText("Go to review"))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/beta-test/B3/review")
+    })
+    expect(document.querySelector(".ct-overlay")).toBeTruthy()
   })
 })

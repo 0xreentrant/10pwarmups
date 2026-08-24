@@ -1,42 +1,28 @@
 import { screen, fireEvent, waitFor } from "@testing-library/react"
 
 export function getOptionButtons() {
-  const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>(".bl-deck .ao-option"))
-  if (buttons.length === 0) throw new Error("No dusk2 option buttons found")
-  return buttons
+  const legend = screen.getByText(/What's next/)
+  const fieldset = legend.closest("fieldset")
+  if (!fieldset) throw new Error("Options fieldset not found")
+  return Array.from(fieldset.querySelectorAll("button"))
 }
 
-export async function waitForLiveOptions() {
-  await waitFor(() => {
-    // bl-ghost only mounts while the ante clock is live - avoids the brief
-    // disabled window at the start of each asking effect run (incl. Strict Mode).
-    expect(document.querySelector(".bl-ghost")).toBeTruthy()
-    const buttons = getOptionButtons()
-    expect(buttons.some(b => !b.disabled)).toBe(true)
-  }, { timeout: 5000 })
-  return getOptionButtons()
+export function clickOptionWithText(text: string) {
+  const buttons = getOptionButtons()
+  const btn = buttons.find(b => b.textContent?.includes(text))
+  if (!btn) throw new Error(`No option button found for "${text}". Have: ${buttons.map(b => b.textContent).join(" | ")}`)
+  fireEvent.click(btn)
 }
 
-export async function clickOptionWithText(text: string) {
-  let btn: HTMLButtonElement | undefined
-  await waitFor(() => {
-    expect(document.querySelector(".bl-ghost")).toBeTruthy()
-    btn = getOptionButtons().find(b => !b.disabled && b.textContent?.includes(text))
-    expect(btn).toBeTruthy()
-  }, { timeout: 5000 })
-  fireEvent.click(btn!)
-}
-
-export async function answerDeckMoves(moves: string[]) {
+export async function answerDeckMoves(moves: string[], delay = 100) {
   for (let i = 0; i < moves.length; i++) {
-    await clickOptionWithText(moves[i])
-    const isLast = i === moves.length - 1
-    if (isLast) {
+    clickOptionWithText(moves[i])
+    if (i === moves.length - 1) {
       await waitFor(() => {
         expect(screen.getByRole("heading", { level: 2 }).textContent).toMatch(/Perfect|Complete/)
-      }, { timeout: 15000 })
-    } else {
-      await waitForLiveOptions()
+      }, { timeout: 5000 })
+    } else if (delay > 0) {
+      await new Promise(r => setTimeout(r, delay))
     }
   }
 }
@@ -44,15 +30,11 @@ export async function answerDeckMoves(moves: string[]) {
 export async function startFirstDeck() {
   const trainButtons = await screen.findAllByText("Train")
   fireEvent.click(trainButtons[0])
-  await waitForLiveOptions()
+  await screen.findByText(/What's next/)
 }
 
-export async function clickWrongOption(excludeText: string) {
-  let btn: HTMLButtonElement | undefined
-  await waitFor(() => {
-    expect(document.querySelector(".bl-ghost")).toBeTruthy()
-    btn = getOptionButtons().find(b => !b.disabled && !b.textContent?.includes(excludeText))
-    expect(btn).toBeTruthy()
-  }, { timeout: 5000 })
-  fireEvent.click(btn!)
+export function clickWrongOption(excludeText: string) {
+  const btn = getOptionButtons().find(b => !b.textContent!.includes(excludeText))
+  if (!btn) throw new Error(`No wrong option found excluding "${excludeText}"`)
+  fireEvent.click(btn)
 }
