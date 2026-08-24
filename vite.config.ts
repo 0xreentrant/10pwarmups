@@ -5,11 +5,25 @@ import { VitePWA } from "vite-plugin-pwa"
 import { taggerApiPlugin } from "./vite/taggerApiPlugin"
 
 const base = "/"
+const tailscaleHost = process.env.TAILSCALE_HOST
+const tailscaleServeHost = process.env.TAILSCALE_SERVE_HOST?.replace(/\.$/, "")
 
 export default defineConfig({
   base,
   // ponytail: tagger API writes these files; ignore so saves do not trigger a dev reload.
   server: {
+    ...(tailscaleHost && {
+      host: tailscaleHost,
+      hmr: { host: tailscaleHost },
+    }),
+    ...(tailscaleServeHost && {
+      allowedHosts: [tailscaleServeHost, ".ts.net"],
+      hmr: {
+        protocol: "wss",
+        host: tailscaleServeHost,
+        clientPort: 443,
+      },
+    }),
     watch: {
       ignored: [
         "**/src/data/warmup-notes/**",
