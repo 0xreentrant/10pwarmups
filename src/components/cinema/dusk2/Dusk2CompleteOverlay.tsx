@@ -90,32 +90,6 @@ function Dusk2CompleteStyles() {
           0 0 48px rgba(255, 170, 60, 0.55),
           0 2px 0 rgba(0, 0, 0, 0.55);
       }
-
-      .tp-actions {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        margin-top: 8px;
-        width: min(100%, 280px);
-      }
-
-      .tp-actions .tp-action {
-        width: 100%;
-        margin-top: 0;
-      }
-
-      .tp-action--ghost {
-        color: #fff;
-        background: rgba(10, 10, 12, 0.55);
-        border: 1px solid rgba(255, 255, 255, 0.28);
-        box-shadow: none;
-      }
-
-      .tp-action--ghost:hover {
-        background: rgba(10, 10, 12, 0.72);
-        box-shadow: 0 0 18px rgba(255, 255, 255, 0.12);
-      }
     `}</style>
   )
 }

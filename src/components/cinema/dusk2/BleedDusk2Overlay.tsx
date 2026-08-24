@@ -97,7 +97,7 @@ export default function BleedDusk2Overlay({
       correctHoldMs: CORRECT_HOLD_MS,
     },
   })
-  const { drill, live, ready, stake, remaining } = round
+  const { drill, live, paused, ready, stake, remaining, togglePause } = round
 
   useEffect(() => {
     if (drill.phase === "asking") streakRef.current = drill.streak
@@ -124,7 +124,9 @@ export default function BleedDusk2Overlay({
   }, [onClose])
 
   const finale = showComplete || drill.phase === "done" || session.locked
-  const p = live ? 1 - remaining / ANTE_CLOCK_MS : 0
+  const clockOpen = live || paused
+  const canPauseClock = !finale && drill.phase === "asking" && ready && clockOpen
+  const p = clockOpen ? 1 - remaining / ANTE_CLOCK_MS : 0
   const look = fadeLook("dissolve", p)
   const dissolveFull = fadeLook("dissolve", 1)
   const buzzed = !finale && drill.phase === "wrong" && drill.picked === null
@@ -140,7 +142,7 @@ export default function BleedDusk2Overlay({
         ? look.videoOpacity
         : 1
   const seconds = (remaining / 1000).toFixed(1)
-  const ctx: TappedCtx = { round, deck, prevStreak: streakRef.current }
+  const ctx: TappedCtx = { round, deck, prevStreak: streakRef.current, onHome }
 
   return (
     <div className="bl-overlay" data-variant={variant.id}>
@@ -151,7 +153,6 @@ export default function BleedDusk2Overlay({
       {!showComplete && (
         <div className="bl-top-bar">
           <div className="bl-top-left">
-            <span className="bl-progress">{drill.moveIdx + 1}</span>
             {onReview && (
               <button type="button" className="bl-review" onClick={onReview}>
                 Review
@@ -159,9 +160,6 @@ export default function BleedDusk2Overlay({
             )}
           </div>
           <div className="bl-top-right">
-            <span className="bl-streak" aria-label={`Streak: ${drill.streak}`}>
-              {drill.streak} streak
-            </span>
             <button type="button" className="bl-close" onClick={onClose} aria-label="Exit training">
               ✕
             </button>
@@ -175,10 +173,12 @@ export default function BleedDusk2Overlay({
             ref={videoRef}
             src={videoSrc}
             className={`bl-video ${sharp ? "bl2-video--sharp" : ""}`}
-            style={{ filter: videoFilter, opacity: videoOpacity }}
+            style={{ filter: videoFilter, opacity: videoOpacity, cursor: canPauseClock ? "pointer" : undefined }}
             muted
             playsInline
             preload="auto"
+            onClick={canPauseClock ? togglePause : undefined}
+            aria-label={canPauseClock ? (paused ? "Resume timer" : "Pause timer") : undefined}
           />
         ) : (
           <div className="bl-video bl-video--empty" aria-hidden />
@@ -188,7 +188,7 @@ export default function BleedDusk2Overlay({
           <div className="bl2-wipe" key={`wipe-${drill.beat}`} />
         )}
 
-        {(live || buzzed) && (
+        {(clockOpen || buzzed) && (
           <div className="bl-static" style={{ opacity: buzzed ? dissolveFull.veil : look.veil }} />
         )}
 
@@ -204,13 +204,13 @@ export default function BleedDusk2Overlay({
 
         {!finale && !buzzed && !sharp && <AnteVerdict round={round} buzzerWord="Tapped out!" />}
 
-        {live && (
+        {clockOpen && (
           <div className="bl-ghost" aria-hidden>
             <span className="bl-seconds">{seconds}</span>
             <span className="bl-stake" key={`stake-${stake}`}>×{stake}</span>
           </div>
         )}
-        {drill.phase === "asking" && !live && !finale && (
+        {drill.phase === "asking" && !clockOpen && !finale && (
           <span className="bl-wait">{videoSrc ? "tape rolling" : "get ready"}</span>
         )}
 
@@ -230,7 +230,10 @@ export default function BleedDusk2Overlay({
 
         {!finale && !buzzed && (
           <div className="bl-quiz">
-            <span className={`bl-partner-tag bl-partner-tag--${drill.move.partner}`}>
+            <span
+              key={`partner-${drill.move.partner}`}
+              className={`bl-partner-tag bl-partner-tag--${drill.move.partner} bl-partner-tag--pop`}
+            >
               Person {drill.move.partner}
             </span>
             <div className="bl-deck">
@@ -384,24 +387,6 @@ function BleedDusk2Styles() {
         pointer-events: auto;
       }
 
-      .bl-progress {
-        font-family: var(--font-family-disp);
-        font-size: 10px;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: #fff;
-        line-height: 1;
-      }
-
-      .bl-streak {
-        font-family: var(--font-family-disp);
-        font-size: 10px;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-        color: #fff;
-        line-height: 1;
-      }
-
       .bl-review {
         font-family: var(--font-family-disp);
         font-weight: 700;
@@ -509,6 +494,94 @@ function BleedDusk2Styles() {
       .bl-partner-tag--B {
         background: rgba(120, 165, 255, 0.18);
         color: #78a5ff;
+      }
+
+      .bl-partner-tag--pop {
+        transform-origin: left center;
+      }
+
+      .bl-partner-tag--A.bl-partner-tag--pop {
+        --partner-glow: rgba(93, 226, 93, 0.55);
+        animation: bl-partner-pop-a 640ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .bl-partner-tag--B.bl-partner-tag--pop {
+        --partner-glow: rgba(120, 165, 255, 0.55);
+        animation: bl-partner-pop-b 640ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes bl-partner-pop-a {
+        0% {
+          transform: translate(-18px, 0) scale(0.72) rotate(-6deg);
+          opacity: 0;
+          filter: blur(5px);
+          box-shadow: 0 0 0 transparent;
+        }
+        28% {
+          transform: translate(4px, 0) scale(1.14) rotate(2deg);
+          opacity: 1;
+          filter: blur(0);
+          box-shadow: 0 0 18px var(--partner-glow), 0 0 36px var(--partner-glow);
+        }
+        42% {
+          transform: translate(-2px, 0) scale(0.96) rotate(-1deg);
+          box-shadow: 0 0 6px var(--partner-glow);
+        }
+        50% {
+          transform: translate(0, 0) scale(1) rotate(0deg);
+          filter: blur(0);
+          box-shadow: none;
+        }
+        56% { transform: translate(-5px, 2px) scale(1.04) rotate(-5deg); }
+        62% { transform: translate(6px, -2px) scale(0.97) rotate(4deg); }
+        68% { transform: translate(-4px, 3px) scale(1.03) rotate(-3deg); }
+        74% { transform: translate(5px, -1px) scale(0.98) rotate(3deg); }
+        80% { transform: translate(-3px, 2px) scale(1.02) rotate(-2deg); }
+        86% { transform: translate(2px, -1px) scale(0.99) rotate(1.5deg); }
+        92% { transform: translate(-1px, 1px) scale(1.01) rotate(-0.8deg); }
+        100% {
+          transform: translate(0, 0) scale(1) rotate(0deg);
+          opacity: 1;
+          filter: blur(0);
+          box-shadow: none;
+        }
+      }
+
+      @keyframes bl-partner-pop-b {
+        0% {
+          transform: translate(18px, 0) scale(0.72) rotate(6deg);
+          opacity: 0;
+          filter: blur(5px);
+          box-shadow: 0 0 0 transparent;
+        }
+        28% {
+          transform: translate(-4px, 0) scale(1.14) rotate(-2deg);
+          opacity: 1;
+          filter: blur(0);
+          box-shadow: 0 0 18px var(--partner-glow), 0 0 36px var(--partner-glow);
+        }
+        42% {
+          transform: translate(2px, 0) scale(0.96) rotate(1deg);
+          box-shadow: 0 0 6px var(--partner-glow);
+        }
+        50% {
+          transform: translate(0, 0) scale(1) rotate(0deg);
+          filter: blur(0);
+          box-shadow: none;
+        }
+        56% { transform: translate(5px, 2px) scale(1.04) rotate(5deg); }
+        62% { transform: translate(-6px, -2px) scale(0.97) rotate(-4deg); }
+        68% { transform: translate(4px, 3px) scale(1.03) rotate(3deg); }
+        74% { transform: translate(-5px, -1px) scale(0.98) rotate(-3deg); }
+        80% { transform: translate(3px, 2px) scale(1.02) rotate(2deg); }
+        86% { transform: translate(-2px, -1px) scale(0.99) rotate(-1.5deg); }
+        92% { transform: translate(1px, 1px) scale(1.01) rotate(0.8deg); }
+        100% {
+          transform: translate(0, 0) scale(1) rotate(0deg);
+          opacity: 1;
+          filter: blur(0);
+          box-shadow: none;
+        }
       }
 
       .bl-deck {
@@ -629,6 +702,7 @@ function BleedDusk2Styles() {
         .bl-stage--slap-buzz .bl-video { transition-duration: 90ms; }
         .bl2-wipe { animation: none; opacity: 0; }
         .bl2-earned { animation: none; opacity: 1; }
+        .bl-partner-tag--pop { animation: none; opacity: 1; transform: none; filter: none; box-shadow: none; }
       }
     `}</style>
   )

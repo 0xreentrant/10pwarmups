@@ -29,7 +29,7 @@ function makeCtx(drillOverrides: Partial<AnteDrillView> = {}): TappedCtx {
       partner: "A" as const,
     })),
   } as Deck
-  return { round, deck, prevStreak: 0 }
+  return { round, deck, prevStreak: 0, onHome: () => {} }
 }
 
 describe("SlapOverlay", () => {
@@ -37,5 +37,12 @@ describe("SlapOverlay", () => {
     render(<SlapOverlay {...makeCtx()} />)
     expect(screen.getByText(/Banana Split/)).toBeInTheDocument()
     expect(screen.queryByText(/Defend/)).not.toBeInTheDocument()
+  })
+
+  it("shows a home escape hatch", () => {
+    let home = false
+    render(<SlapOverlay {...makeCtx()} onHome={() => { home = true }} />)
+    screen.getByRole("button", { name: /home/i }).click()
+    expect(home).toBe(true)
   })
 })

@@ -58,7 +58,6 @@ describe("routing", () => {
     await startFirstDeck()
     expect(router.state.location.pathname).toBe("/A1/training")
     expect(document.querySelector(".bl-overlay")).toBeTruthy()
-    expect(screen.getByLabelText(/Streak:/)).toBeInTheDocument()
   })
 
   it("navigates to /progress when Stats is clicked", async () => {

@@ -5,6 +5,7 @@ export interface TappedCtx {
   round: AnteRound
   deck: Deck
   prevStreak: number
+  onHome: () => void
 }
 
 function missedMove(ctx: TappedCtx) {
@@ -21,9 +22,14 @@ export function SlapOverlay(ctx: TappedCtx) {
         {ctx.prevStreak > 0 ? <> That tap ate a {ctx.prevStreak}-streak.</> : null}
       </p>
       <p className="tp-note">best run {drill.best} · streak {ctx.prevStreak}</p>
-      <button type="button" className="tp-action" onClick={ctx.round.next}>
-        Slap in - keep rolling
-      </button>
+      <div className="tp-actions">
+        <button type="button" className="tp-action" onClick={ctx.round.next}>
+          Slap in - keep rolling
+        </button>
+        <button type="button" className="tp-action tp-action--ghost" onClick={ctx.onHome}>
+          ← Home
+        </button>
+      </div>
     </div>
   )
 }
@@ -151,6 +157,45 @@ export function TappedStyles() {
       @keyframes tp-action-in {
         from { opacity: 0; transform: translateY(10px); }
         to { opacity: 1; transform: translateY(0); }
+      }
+
+      .tp-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+        width: min(100%, 280px);
+      }
+
+      .tp-veil--slap .tp-actions {
+        width: fit-content;
+        max-width: min(100%, 340px);
+      }
+
+      .tp-actions .tp-action {
+        margin-top: 0;
+        max-width: 100%;
+      }
+
+      .tp-actions .tp-action:not(.tp-action--ghost) {
+        width: fit-content;
+      }
+
+      .tp-actions .tp-action--ghost {
+        width: 100%;
+      }
+
+      .tp-action--ghost {
+        color: #fff;
+        background: rgba(10, 10, 12, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        box-shadow: none;
+      }
+
+      .tp-action--ghost:hover {
+        background: rgba(10, 10, 12, 0.72);
+        box-shadow: 0 0 18px rgba(255, 255, 255, 0.12);
       }
 
       @media (prefers-reduced-motion: reduce) {

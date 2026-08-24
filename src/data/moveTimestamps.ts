@@ -112,6 +112,28 @@ export const MOVE_TIMESTAMPS: Record<string, (number | null)[]> = {
     46.056946,
     52.056940999999995,
   ]
+,
+  B2: [
+    0,
+    2.799984,
+    5.309444663301616,
+    8.84761959716914,
+    15.156485,
+    null,
+    null,
+    null,
+    null,
+    null,
+    17.680886,
+    20.30013319889823,
+    null,
+    28.632828,
+    30.216334000395374,
+    34.865024999999996,
+    38.261914999999995,
+    42.462317,
+    51.000839000000006,
+  ]
 }
 
 /** Tagged starts when length matches and times fit the clip; else equal slices. */

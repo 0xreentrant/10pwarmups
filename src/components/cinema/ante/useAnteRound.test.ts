@@ -167,4 +167,59 @@ describe("useAnteRound wrong-answer playback", () => {
     expect(onOptionClick).toHaveBeenCalledWith(1)
     expect(result.current.drill.phase).toBe("done")
   })
+
+  it("pauses and resumes the ante clock", () => {
+    const onTapOut = vi.fn()
+    const { result } = renderHook(() =>
+      useAnteRound({
+        deck,
+        session: makeSession(),
+        videoEl: fakeVideo(),
+        onOptionClick: vi.fn(),
+        onTapOut,
+        timestamps,
+        config: { buzzHoldMs: null },
+      }),
+    )
+
+    act(() => {
+      vi.advanceTimersByTime(0)
+    })
+    expect(result.current.live).toBe(true)
+
+    act(() => {
+      vi.advanceTimersByTime(2000)
+    })
+
+    const remBeforePause = result.current.remaining
+    expect(remBeforePause).toBeLessThan(6000)
+
+    act(() => {
+      result.current.togglePause()
+    })
+
+    expect(result.current.paused).toBe(true)
+    expect(result.current.live).toBe(false)
+    const frozen = result.current.remaining
+
+    act(() => {
+      vi.advanceTimersByTime(3000)
+    })
+
+    expect(result.current.remaining).toBe(frozen)
+    expect(onTapOut).not.toHaveBeenCalled()
+
+    act(() => {
+      result.current.togglePause()
+    })
+
+    expect(result.current.paused).toBe(false)
+    expect(result.current.live).toBe(true)
+
+    act(() => {
+      vi.advanceTimersByTime(frozen + 100)
+    })
+
+    expect(onTapOut).toHaveBeenCalled()
+  })
 })

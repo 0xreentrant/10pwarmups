@@ -60,6 +60,7 @@ export interface AnteRound {
   drill: AnteDrillView
   ready: boolean
   live: boolean
+  paused: boolean
   remaining: number
   elapsed: number
   /** Live drained stake while the clock is open; opening stake otherwise. */
@@ -73,6 +74,7 @@ export interface AnteRound {
   /** Advance out of a settled round early; the manual path for buzzHoldMs: null. */
   next: () => void
   restart: () => void
+  togglePause: () => void
 }
 
 interface FrozenAsk {
@@ -112,6 +114,7 @@ export function useAnteRound({
   const onOptionClickRef = useRef(onOptionClick)
   const onTapOutRef = useRef(onTapOut)
   const pendingLastRef = useRef<number | null>(null)
+  const expireClockRef = useRef<() => void>(() => {})
   sessionRef.current = session
   onOptionClickRef.current = onOptionClick
   onTapOutRef.current = onTapOut
@@ -120,6 +123,7 @@ export function useAnteRound({
   const [frozen, setFrozen] = useState<FrozenAsk | null>(null)
   const [beat, setBeat] = useState(0)
   const [live, setLive] = useState(false)
+  const [paused, setPaused] = useState(false)
   const [ready, setReady] = useState(false)
   const [remaining, setRemaining] = useState(ANTE_CLOCK_MS)
   const [score, setScore] = useState(0)
@@ -137,6 +141,36 @@ export function useAnteRound({
 
   const moveOrder = session.moveOrder
   const total = moveOrder.length
+
+  expireClockRef.current = () => {
+    const snap = sessionRef.current
+    const slotAtOpen = snap.moveSequence.length
+    const optsAtOpen = snap.options
+    clockRef.current = 0
+    logTrainMode("ante clock expired", {
+      slot: slotAtOpen,
+      deckMoveIdx: snap.moveOrder[slotAtOpen],
+      beat,
+    })
+    setLive(false)
+    setPaused(false)
+    setMarks(m => ({ ...m, [slotAtOpen]: "clock" }))
+    setFrozen({
+      slot: slotAtOpen,
+      deckMoveIdx: snap.moveOrder[slotAtOpen],
+      options: optsAtOpen,
+    })
+    setPhase("wrong")
+    setPicked(null)
+    setBeat(b => b + 1)
+    onTapOutRef.current?.()
+  }
+
+  const scheduleClock = (ms: number) => {
+    if (clockRef.current) window.clearTimeout(clockRef.current)
+    clockRef.current = window.setTimeout(() => expireClockRef.current(), ms)
+  }
+
   const askSlot = frozen?.slot ?? session.moveSequence.length
   const deckMoveIdx = frozen?.deckMoveIdx ?? moveOrder[askSlot] ?? 0
   const askOptions = frozen?.options ?? session.options
@@ -231,6 +265,7 @@ export function useAnteRound({
       askedAtRef.current = performance.now()
       setRemaining(ANTE_CLOCK_MS)
       setPaid(null)
+      setPaused(false)
       setReady(true)
       setLive(true)
       publishTrain({
@@ -241,25 +276,7 @@ export function useAnteRound({
         options: optsAtOpen.map(o => o.text),
         moveText: deck.moves[moveOrder[slotAtOpen]]?.text ?? "",
       })
-      clockRef.current = window.setTimeout(() => {
-        clockRef.current = 0
-        logTrainMode("ante clock expired", {
-          slot: slotAtOpen,
-          deckMoveIdx: moveOrder[slotAtOpen],
-          beat,
-        })
-        setLive(false)
-        setMarks(m => ({ ...m, [slotAtOpen]: "clock" }))
-        setFrozen({
-          slot: slotAtOpen,
-          deckMoveIdx: moveOrder[slotAtOpen],
-          options: optsAtOpen,
-        })
-        setPhase("wrong")
-        setPicked(null)
-        setBeat(b => b + 1)
-        onTapOutRef.current?.()
-      }, ANTE_CLOCK_MS)
+      scheduleClock(ANTE_CLOCK_MS)
     }
 
     const t = timeline.timestamps[deckMoveIdx]
@@ -348,11 +365,33 @@ export function useAnteRound({
     }
   }, [timeline, phase, beat, frozen?.deckMoveIdx, picked])
 
+  const togglePause = () => {
+    if (phase !== "asking" || !ready || session.locked) return
+    if (live) {
+      const rem = Math.max(0, ANTE_CLOCK_MS - (performance.now() - askedAtRef.current))
+      if (clockRef.current) window.clearTimeout(clockRef.current)
+      clockRef.current = 0
+      setRemaining(rem)
+      setLive(false)
+      setPaused(true)
+      logTrainMode("ante clock paused", { remaining: Math.round(rem) })
+      return
+    }
+    if (!paused) return
+    const rem = remaining
+    askedAtRef.current = performance.now() - (ANTE_CLOCK_MS - rem)
+    setLive(true)
+    setPaused(false)
+    scheduleClock(rem)
+    logTrainMode("ante clock resumed", { remaining: Math.round(rem) })
+  }
+
   const answer = (optionIndex: number) => {
     if (phase !== "asking" || !live || session.locked) return
     if (clockRef.current) window.clearTimeout(clockRef.current)
     clockRef.current = 0
     setLive(false)
+    setPaused(false)
     clearAll()
     const opts = session.options
     const slot = session.moveSequence.length
@@ -392,6 +431,7 @@ export function useAnteRound({
     setPhase("asking")
     setPicked(null)
     setFrozen(null)
+    setPaused(false)
     setBeat(b => b + 1)
   }
 
@@ -400,6 +440,7 @@ export function useAnteRound({
     if (clockRef.current) window.clearTimeout(clockRef.current)
     clockRef.current = 0
     setLive(false)
+    setPaused(false)
     clearAll()
     setMarks({})
     setScore(0)
@@ -419,9 +460,10 @@ export function useAnteRound({
     drill,
     ready,
     live,
+    paused,
     remaining,
     elapsed,
-    stake: live ? anteStake(elapsed) : ANTE_TOP_STAKE,
+    stake: live || paused ? anteStake(elapsed) : ANTE_TOP_STAKE,
     paid,
     settled,
     score,
@@ -429,5 +471,6 @@ export function useAnteRound({
     answer,
     next,
     restart,
+    togglePause,
   }
 }
