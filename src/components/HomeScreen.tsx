@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react"
-import HeatGradientCrownBar from "./HeatGradientCrownBar"
+import DeckRow from "./DeckRow"
 import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS, SERIES } from "../data/decks"
-import type { Deck, ProgressMap } from "../types/domain"
+import type { ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
-import { homeDeckRowLabel } from "../utils/deckUtils"
 
 const NAMED_FLOWS = DECKS.filter(d => !d.series)
 
@@ -17,67 +16,6 @@ const SCROLL_TOP_BTN = [
   "transition-[opacity,transform] duration-300 ease-in-out",
   "hover:bg-[color-mix(in_srgb,var(--color-surface),white_8%)]",
 ].join(" ")
-
-interface DeckRowProps {
-  deck: Deck
-  progress: ProgressMap
-  onDeckClick: (deckId: string) => void
-  onReviewClick: (deckId: string) => void
-}
-
-function DeckRow({ deck, progress, onDeckClick, onReviewClick }: DeckRowProps) {
-  const prog = progress[deck.id] || { bestStreak: 0, attempts: [] }
-  const total = deck.moves.length
-  const label = prog.attempts.length === 0
-    ? "untrained"
-    : prog.bestStreak === total
-    ? "complete"
-    : "incomplete"
-  const animation =
-    label === "complete" ? "lava"
-    : label === "incomplete" ? "pulse-edge"
-    : "none"
-  const rowLabel = homeDeckRowLabel(deck)
-
-  const goReview = () => {
-    analytics.event({
-      action: "deck_review",
-      category: "Review",
-      label: `${deck.id} - ${deck.name}`,
-    })
-    onReviewClick(deck.id)
-  }
-
-  return (
-    <tr>
-      <td className="py-2 align-middle w-[4.75rem] overflow-hidden">
-        <div className="flex items-center justify-center w-full min-h-[3.25rem] text-muted">
-          <span className="font-disp font-extrabold tracking-wide leading-none text-3xl">
-            {rowLabel}
-          </span>
-        </div>
-      </td>
-      <td className="py-2 pr-1.5 align-top">
-        <div className="font-disp font-semibold text-base tracking-tight">{deck.name}</div>
-        <div className="text-[11px] text-muted mt-0.5">{prog.bestStreak}/{total} moves · {label}</div>
-        <HeatGradientCrownBar value={prog.bestStreak} max={total} animation={animation} />
-      </td>
-      <td className="py-2 pl-2 align-middle w-[13rem]">
-        <div className="flex gap-1 items-center justify-end">
-          <button className="btn btn-primary" onClick={() => {
-            analytics.event({
-              action: 'deck_selected',
-              category: 'Training',
-              label: `${deck.id} - ${deck.name}`
-            })
-            onDeckClick(deck.id)
-          }}>Train</button>
-          <button className="btn" onClick={goReview}>Review</button>
-        </div>
-      </td>
-    </tr>
-  )
-}
 
 interface HomeScreenProps {
   progress: ProgressMap
