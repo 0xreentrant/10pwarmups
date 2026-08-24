@@ -21,11 +21,11 @@ import {
   resolveMoveNames,
   saveMoveNamesForDeck,
 } from "../../hooks/usePersistedTaggerMoveNames"
-import { precomputeDeckOptions } from "../../utils/deckUtils"
+import { nextDeckId, precomputeDeckOptions } from "../../utils/deckUtils"
 import { listVideoDeckIds, videoSrcForDeck } from "../../utils/deckVideo"
-import { BleedDusk2Overlay, DUSK2_BLEED_VARIANT } from "../cinema/dusk2"
 import { CinemaOverlay } from "../cinema/review"
 import MoveLabel from "../MoveLabel"
+import TrainingSessionView from "../training/TrainingSessionView"
 import { SELECT_NUDGE_SEC, taggerMachine } from "./taggerMachine"
 import {
   buildJsonText,
@@ -92,7 +92,6 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const [preview, previewSend] = useMachine(appMachine, {
     input: { decks: DECKS, precomputeDeckOptions },
   })
-  const previewSession = preview.context.session
 
   const [jsonDraft, setJsonDraft] = useState("")
   const [notesDraft, setNotesDraft] = useState("")
@@ -792,34 +791,33 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       {mode === "train" && (
         !deck || !timestampsReady ? (
           <p className="text-muted text-sm">Tag at least one move in Edit first.</p>
-        ) : previewSession?.locked ? (
-          <div className="flex flex-col items-start gap-2 py-8">
-            <p className="text-sm">Preview complete (not scored).</p>
-            <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={restartTrainPreview}>
-              Restart
-            </button>
-            <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={() => onModeChange("edit")}>
-              Back to Edit
-            </button>
-          </div>
-        ) : previewSession ? (
-          <PhonePreviewFrame>
-            <BleedDusk2Overlay
-              deck={deck}
-              session={previewSession}
-              videoSrc={videoSrc}
-              variant={DUSK2_BLEED_VARIANT}
-              timestamps={previewTimestamps}
-              onOptionClick={optionIndex => {
-                previewSend({ type: "OPTION_CLICK", optionIndex })
-              }}
-              onTapOut={() => previewSend({ type: "TAP_OUT" })}
-              onClose={() => onModeChange("edit")}
-              onReview={() => onModeChange("review")}
-              onRestart={restartTrainPreview}
-            />
-          </PhonePreviewFrame>
-        ) : null
+        ) : (
+          <TrainingSessionView
+            snap={preview}
+            send={previewSend}
+            deck={deck}
+            timestamps={previewTimestamps}
+            frameTraining={node => <PhonePreviewFrame>{node}</PhonePreviewFrame>}
+            onExit={() => onModeChange("edit")}
+            onSwitchToReview={() => onModeChange("review")}
+            onRestart={restartTrainPreview}
+            onTryAgain={restartTrainPreview}
+            onHome={() => {
+              previewSend({ type: "REQUEST_EXIT" })
+              onModeChange("edit")
+            }}
+            onNext={() => {
+              const nid = nextDeckId(deck.id)
+              if (nid && listVideoDeckIds().includes(nid)) {
+                onWarmupChange(nid)
+                return
+              }
+              previewSend({ type: "REQUEST_EXIT" })
+              onModeChange("edit")
+            }}
+            onStats={() => onModeChange("edit")}
+          />
+        )
       )}
 
       {mode === "review" && (

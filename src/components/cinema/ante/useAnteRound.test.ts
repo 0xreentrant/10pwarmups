@@ -120,4 +120,51 @@ describe("useAnteRound wrong-answer playback", () => {
     expect(hold).toHaveBeenCalledWith(0)
     expect(play).not.toHaveBeenCalled()
   })
+
+  it("defers locking the session until the last-move reveal finishes", () => {
+    const onOptionClick = vi.fn()
+    const session = makeSession()
+    session.moveSequence = [
+      { moveIndex: 0, correct: true },
+      { moveIndex: 1, correct: true },
+    ]
+    session.options = [
+      { text: "Wrong", correct: false },
+      { text: "Move C", correct: true },
+      { text: "Other", correct: false },
+    ]
+    const { result } = renderHook(() =>
+      useAnteRound({
+        deck,
+        session,
+        videoEl: fakeVideo(),
+        onOptionClick,
+        timestamps,
+        config: { buzzHoldMs: null, correctHoldMs: 300 },
+      }),
+    )
+
+    act(() => {
+      vi.advanceTimersByTime(0)
+    })
+
+    act(() => {
+      result.current.answer(1)
+    })
+
+    expect(onOptionClick).not.toHaveBeenCalled()
+    expect(result.current.drill.phase).toBe("correct")
+
+    const onEnd = play.mock.calls.at(-1)?.[1]?.onEnd as (() => void) | undefined
+    expect(onEnd).toBeTypeOf("function")
+    act(() => {
+      onEnd!()
+    })
+    act(() => {
+      vi.advanceTimersByTime(300)
+    })
+
+    expect(onOptionClick).toHaveBeenCalledWith(1)
+    expect(result.current.drill.phase).toBe("done")
+  })
 })

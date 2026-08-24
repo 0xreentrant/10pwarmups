@@ -1,6 +1,7 @@
 import { setup, assign } from "xstate"
 import { playableMoveIndices } from "./data/moveTimestamps"
 import type { Deck, MoveAnswer, ProgressMap, QuestionOption, Session } from "./types/domain"
+import { logTrainMode } from "./utils/trainModeLog"
 
 const STORAGE_KEY = "tp_progress"
 
@@ -138,6 +139,12 @@ const appMachineSetup = setup({
         d.moves.length,
         event.type === "START_PREVIEW" ? event.timestamps : undefined,
       )
+      logTrainMode("session start", {
+        event: event.type,
+        deckId: event.deckId,
+        preview: event.type === "START_PREVIEW",
+        moveCount: moveOrder.length,
+      })
       return {
         currentDeckId: event.deckId,
         preview: event.type === "START_PREVIEW",
@@ -163,11 +170,24 @@ const appMachineSetup = setup({
         preview: false,
       }
     }),
-    clearSession: assign({
-      currentDeckId: null,
-      session: null,
-      preview: false,
+    clearSession: assign(({ context, event }) => {
+      logTrainMode("exit", { event: event.type, deckId: context.currentDeckId })
+      return {
+        currentDeckId: null,
+        session: null,
+        preview: false,
+      }
     }),
+    logTrainEnter: ({ context, event }) => {
+      logTrainMode("enter training", {
+        event: event.type,
+        deckId: context.currentDeckId,
+        preview: context.preview,
+      })
+    },
+    logTrainLeave: ({ event }) => {
+      logTrainMode("leave training", { event: event.type })
+    },
     advanceSession: assign(({ context, event }) => {
       if (event.type !== "OPTION_CLICK") return {}
       const d = getDeck(context)
@@ -179,6 +199,12 @@ const appMachineSetup = setup({
       const newStreak = correct ? context.session.currentStreak + 1 : 0
       const newSeq = [...context.session.moveSequence, { moveIndex: deckMoveIdx, correct }]
       const nextSlot = moveIdx + 1
+      logTrainMode("advance", {
+        moveIdx: nextSlot,
+        deckMoveIdx,
+        correct,
+        streak: newStreak,
+      })
       return {
         session: {
           ...context.session,
@@ -191,6 +217,10 @@ const appMachineSetup = setup({
     }),
     tapOut: assign(({ context }) => {
       if (!context.session || context.session.locked) return {}
+      logTrainMode("tap-out", {
+        moveIdx: context.session.moveSequence.length,
+        previousStreak: context.session.currentStreak,
+      })
       return {
         session: {
           ...context.session,
@@ -224,6 +254,13 @@ const appMachineSetup = setup({
         finalAttempt: attempt,
         locked: true,
       }
+      logTrainMode("complete", {
+        deckId: d.id,
+        finalStreak: longestStreak,
+        wrongMoves,
+        duration,
+        preview: context.preview,
+      })
       if (context.preview) {
         return { session: lockedSession }
       }
@@ -309,6 +346,8 @@ export const appMachine = appMachineSetup.createMachine({
       },
     },
     training: {
+      entry: "logTrainEnter",
+      exit: "logTrainLeave",
       on: {
         OPTION_CLICK: [
           {

@@ -28,8 +28,16 @@ export async function clickOptionWithText(text: string) {
 }
 
 export async function answerDeckMoves(moves: string[]) {
-  for (const move of moves) {
-    await clickOptionWithText(move)
+  for (let i = 0; i < moves.length; i++) {
+    await clickOptionWithText(moves[i])
+    const isLast = i === moves.length - 1
+    if (isLast) {
+      await waitFor(() => {
+        expect(screen.getByRole("heading", { level: 2 }).textContent).toMatch(/Perfect|Complete/)
+      }, { timeout: 15000 })
+    } else {
+      await waitForLiveOptions()
+    }
   }
 }
 

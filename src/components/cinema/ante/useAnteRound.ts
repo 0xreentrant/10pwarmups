@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { getLongestStreak } from "../../../appMachine"
 import { isFiniteTimestamp } from "../../../data/moveTimestamps"
 import type { Deck, QuestionOption, Session } from "../../../types/domain"
+import { logTrainMode, publishTrain } from "../../../utils/trainModeLog"
 import { useMoveTimeline } from "../useMoveTimeline"
 import { useTimers } from "../quiz/quizMotion"
 import { revealSegment, useSegmentPlayer } from "../quiz/useSegmentPlayer"
@@ -110,10 +111,11 @@ export function useAnteRound({
   const sessionRef = useRef(session)
   const onOptionClickRef = useRef(onOptionClick)
   const onTapOutRef = useRef(onTapOut)
+  const pendingLastRef = useRef<number | null>(null)
   sessionRef.current = session
   onOptionClickRef.current = onOptionClick
   onTapOutRef.current = onTapOut
-  const [phase, setPhase] = useState<DrillPhase>("asking")
+  const [phase, setPhase] = useState<DrillPhase>(session.locked ? "done" : "asking")
   const [picked, setPicked] = useState<number | null>(null)
   const [frozen, setFrozen] = useState<FrozenAsk | null>(null)
   const [beat, setBeat] = useState(0)
@@ -123,6 +125,10 @@ export function useAnteRound({
   const [score, setScore] = useState(0)
   const [paid, setPaid] = useState<number | null>(null)
   const [marks, setMarks] = useState<Record<number, AnteMark>>({})
+  const prevPhaseRef = useRef<DrillPhase>("asking")
+  const prevLiveRef = useRef(false)
+  const prevReadyRef = useRef(false)
+  const loggedDoneRef = useRef(false)
   const timeline = useMoveTimeline(deck.id, deck.moves.length, videoEl, undefined, timestampOverrides)
   const { play, hold, cancel } = useSegmentPlayer(videoEl)
   const { after, clearAll } = useTimers()
@@ -154,6 +160,45 @@ export function useAnteRound({
   }
 
   useEffect(() => {
+    if (phase === prevPhaseRef.current) return
+    logTrainMode(`ante phase ${prevPhaseRef.current} → ${phase}`, {
+      moveIdx: drill.moveIdx,
+      picked,
+      beat,
+      locked: session.locked,
+    })
+    prevPhaseRef.current = phase
+  }, [phase, drill.moveIdx, picked, beat, session.locked])
+
+  useEffect(() => {
+    if (live === prevLiveRef.current && ready === prevReadyRef.current) return
+    logTrainMode("ante clock", {
+      live,
+      ready,
+      moveIdx: drill.moveIdx,
+      beat,
+      remaining: Math.round(remaining),
+    })
+    prevLiveRef.current = live
+    prevReadyRef.current = ready
+  }, [live, ready, drill.moveIdx, beat, remaining])
+
+  useEffect(() => {
+    if (!session.locked) {
+      loggedDoneRef.current = false
+      return
+    }
+    if (loggedDoneRef.current) return
+    loggedDoneRef.current = true
+    publishTrain({
+      type: "done",
+      moveIdx: session.moveSequence.length,
+      total,
+      streak: session.currentStreak,
+    })
+  }, [session.locked, session.moveSequence.length, session.currentStreak, total])
+
+  useEffect(() => {
     return () => {
       if (clockRef.current) window.clearTimeout(clockRef.current)
     }
@@ -182,13 +227,27 @@ export function useAnteRound({
       const snap = sessionRef.current
       const optsAtOpen = snap.options
       const slotAtOpen = snap.moveSequence.length
+      const correctOptionIndex = optsAtOpen.findIndex(o => o.correct)
       askedAtRef.current = performance.now()
       setRemaining(ANTE_CLOCK_MS)
       setPaid(null)
       setReady(true)
       setLive(true)
+      publishTrain({
+        type: "ask",
+        moveIdx: slotAtOpen,
+        beat,
+        correctOptionIndex,
+        options: optsAtOpen.map(o => o.text),
+        moveText: deck.moves[moveOrder[slotAtOpen]]?.text ?? "",
+      })
       clockRef.current = window.setTimeout(() => {
         clockRef.current = 0
+        logTrainMode("ante clock expired", {
+          slot: slotAtOpen,
+          deckMoveIdx: moveOrder[slotAtOpen],
+          beat,
+        })
         setLive(false)
         setMarks(m => ({ ...m, [slotAtOpen]: "clock" }))
         setFrozen({
@@ -232,6 +291,15 @@ export function useAnteRound({
       play(revealSegment(timeline, moveIdx), {
         rate: CORRECT_REVEAL_PLAYBACK_RATE,
         onEnd: () => after(holdMs, () => {
+          if (pendingLastRef.current != null) {
+            const optionIndex = pendingLastRef.current
+            pendingLastRef.current = null
+            logTrainMode("ante settle → done", { from: "correct", moveIdx, beat })
+            setPhase("done")
+            onOptionClickRef.current(optionIndex)
+            return
+          }
+          logTrainMode("ante settle → asking", { from: "correct", moveIdx, beat })
           setPhase("asking")
           setPicked(null)
           setFrozen(null)
@@ -240,6 +308,15 @@ export function useAnteRound({
       })
     } else {
       const settle = () => {
+        if (pendingLastRef.current != null) {
+          const optionIndex = pendingLastRef.current
+          pendingLastRef.current = null
+          logTrainMode("ante settle → done", { from: phase, moveIdx, beat, buzzed })
+          setPhase("done")
+          onOptionClickRef.current(optionIndex)
+          return
+        }
+        logTrainMode("ante settle → asking", { from: phase, moveIdx, beat, buzzed })
         setPhase("asking")
         setPicked(null)
         setFrozen(null)
@@ -282,6 +359,13 @@ export function useAnteRound({
     const deckMoveIdx = moveOrder[slot]
     const correct = !!opts[optionIndex]?.correct
     const won = anteStake(performance.now() - askedAtRef.current)
+    logTrainMode("ante answer", {
+      optionIndex,
+      correct,
+      won,
+      slot,
+      deckMoveIdx,
+    })
     setFrozen({ slot, deckMoveIdx, options: opts })
     setPhase(correct ? "correct" : "wrong")
     setPicked(optionIndex)
@@ -294,10 +378,16 @@ export function useAnteRound({
       setPaid(null)
       setMarks(m => ({ ...m, [slot]: "miss" }))
     }
+    // Last move: finish reveal (to clip end) before locking the session.
+    if (slot >= total - 1) {
+      pendingLastRef.current = optionIndex
+      return
+    }
     onOptionClick(optionIndex)
   }
 
   const next = () => {
+    logTrainMode("ante next", { moveIdx: drill.moveIdx, beat })
     clearAll()
     setPhase("asking")
     setPicked(null)
@@ -306,6 +396,7 @@ export function useAnteRound({
   }
 
   const restart = () => {
+    logTrainMode("ante restart", { deckId: deck.id })
     if (clockRef.current) window.clearTimeout(clockRef.current)
     clockRef.current = 0
     setLive(false)

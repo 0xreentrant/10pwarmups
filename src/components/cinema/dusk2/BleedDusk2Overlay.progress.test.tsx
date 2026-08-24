@@ -3,7 +3,7 @@ import { render } from "@testing-library/react"
 import BleedDusk2Overlay from "./BleedDusk2Overlay"
 import { DUSK2_BLEED_VARIANT } from "./bleedVariant"
 import { DECKS } from "../../../data/decks"
-import type { Session } from "../../../types/domain"
+import type { ProgressMap, Session } from "../../../types/domain"
 
 vi.mock("../ante/useAnteRound", () => ({
   ANTE_CLOCK_MS: 5000,
@@ -31,9 +31,12 @@ vi.mock("../ante/useAnteRound", () => ({
     stake: 1,
     remaining: 5000,
     answer: vi.fn(),
+    next: vi.fn(),
     card: [],
     score: 0,
     paid: null,
+    settled: null,
+    elapsed: 0,
     restart: vi.fn(),
   }),
 }))
@@ -41,24 +44,36 @@ vi.mock("../ante/useAnteRound", () => ({
 describe("BleedDusk2Overlay progress", () => {
   it("shows current move index only, not deck total", () => {
     const session: Session = {
-      deckId: "A2",
       moveSequence: [],
+      moveOrder: Array.from({ length: 20 }, (_, i) => i),
+      currentStreak: 0,
+      startTime: Date.now(),
+      pausedAt: null,
+      accumulatedPauseMs: 0,
+      allOptions: [],
+      options: [
+        { text: "Move A", correct: true, partner: "A" },
+        { text: "Move B", correct: false },
+        { text: "Move C", correct: false },
+        { text: "Move D", correct: false },
+      ],
       locked: false,
-      correctCount: 0,
-      wrongCount: 0,
-      tapOutCount: 0,
-      streak: 0,
-      bestStreak: 0,
     }
+    const progress: ProgressMap = {}
 
     const { container } = render(
       <BleedDusk2Overlay
         deck={DECKS.find(d => d.id === "A2") ?? DECKS[0]}
         session={session}
+        progress={progress}
         videoSrc={null}
         variant={DUSK2_BLEED_VARIANT}
         onOptionClick={vi.fn()}
         onClose={vi.fn()}
+        onNext={vi.fn()}
+        onHome={vi.fn()}
+        onTryAgain={vi.fn()}
+        onStats={vi.fn()}
       />,
     )
 

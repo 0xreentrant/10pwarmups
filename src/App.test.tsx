@@ -258,9 +258,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       }
 
       await waitFor(() => {
-        expect(screen.getByText('Final streak')).toBeInTheDocument();
-        const row = screen.getByText('Final streak').closest('tr');
-        expect(row).toHaveTextContent('3');
+        expect(screen.getByText(/streak 3 · best/i)).toBeInTheDocument()
       }, { timeout: 8000 });
 
       await waitFor(() => {
@@ -413,9 +411,9 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       await answerDeckMoves(A1_MOVES);
 
       await waitFor(() => {
-        // Should see result metrics like "Correct", "Final streak", etc.
-        const resultsElements = screen.queryAllByText(/Correct|Final streak|Best streak|Time/);
-        expect(resultsElements.length).toBeGreaterThan(0);
+        expect(screen.getByRole('heading', { level: 2 }).textContent).toMatch(/Perfect|Complete/)
+        expect(screen.getByText(/\d+\/\d+ correct/i)).toBeInTheDocument()
+        expect(screen.getByText(/streak \d+ · best/i)).toBeInTheDocument()
       }, { timeout: 8000 });
     });
   });

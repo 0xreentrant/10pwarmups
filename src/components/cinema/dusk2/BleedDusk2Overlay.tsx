@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react"
 import { usePersistedMediaVolume } from "../../../hooks/usePersistedMediaVolume"
-import type { Deck, Session } from "../../../types/domain"
+import type { Deck, ProgressMap, Session } from "../../../types/domain"
 import { AnteBaseStyles, AnteOptions, AnteVerdict } from "../ante/AnteBits"
 import { fadeLook } from "../ante/fadeLooks"
 import { SlapOverlay, TappedStyles, type TappedCtx } from "../ante/SlapOverlay"
 import { ANTE_CLOCK_MS, useAnteRound, type DrillPhase } from "../ante/useAnteRound"
 import type { BleedVariant } from "./bleedVariant"
+import Dusk2CompleteOverlay from "./Dusk2CompleteOverlay"
 
 const CORRECT_HOLD_MS = 300
 
@@ -29,6 +30,7 @@ const EARNED_CLARITY = 4
 interface OverlayProps {
   deck: Deck
   session: Session
+  progress: ProgressMap
   videoSrc: string | null
   variant: BleedVariant
   onOptionClick: (optionIndex: number) => void
@@ -36,6 +38,10 @@ interface OverlayProps {
   onClose: () => void
   onReview?: () => void
   onRestart?: () => void
+  onNext: () => void
+  onHome: () => void
+  onTryAgain: () => void
+  onStats: () => void
   /** Optional in-memory timestamps (e.g. tagger preview). */
   timestamps?: (number | null)[] | null
 }
@@ -44,6 +50,7 @@ interface OverlayProps {
 export default function BleedDusk2Overlay({
   deck,
   session,
+  progress,
   videoSrc,
   variant,
   onOptionClick,
@@ -51,11 +58,18 @@ export default function BleedDusk2Overlay({
   onClose,
   onReview,
   onRestart,
+  onNext,
+  onHome,
+  onTryAgain,
+  onStats,
   timestamps: timestampOverrides = null,
 }: OverlayProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streakRef = useRef(0)
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
+  const [showComplete, setShowComplete] = useState(
+    () => !!session.locked && !!session.finalAttempt,
+  )
 
   useEffect(() => {
     setVideoEl(videoSrc ? videoRef.current : null)
@@ -90,6 +104,18 @@ export default function BleedDusk2Overlay({
   }, [drill.phase, drill.streak])
 
   useEffect(() => {
+    if (session.locked && session.finalAttempt) setShowComplete(true)
+  }, [session.locked, session.finalAttempt])
+
+  useEffect(() => {
+    if (!showComplete || !videoEl) return
+    videoEl.pause()
+    if (Number.isFinite(videoEl.duration) && videoEl.duration > 0) {
+      videoEl.currentTime = videoEl.duration
+    }
+  }, [showComplete, videoEl])
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose()
     }
@@ -97,15 +123,15 @@ export default function BleedDusk2Overlay({
     return () => window.removeEventListener("keydown", onKey)
   }, [onClose])
 
-  // Session completion navigates away; avoid flashing ante settle UI.
-  if (session.locked || drill.phase === "done") return null
-
+  const finale = showComplete || drill.phase === "done" || session.locked
   const p = live ? 1 - remaining / ANTE_CLOCK_MS : 0
   const look = fadeLook("dissolve", p)
   const dissolveFull = fadeLook("dissolve", 1)
-  const buzzed = drill.phase === "wrong" && drill.picked === null
-  const sharp = drill.phase === "correct"
-  const videoFilter = bleedVideoFilter(drill.phase, drill.picked, ready, look, dissolveFull)
+  const buzzed = !finale && drill.phase === "wrong" && drill.picked === null
+  const sharp = finale || drill.phase === "correct"
+  const videoFilter = finale
+    ? "none"
+    : bleedVideoFilter(drill.phase, drill.picked, ready, look, dissolveFull)
   const videoOpacity = sharp
     ? 1
     : buzzed
@@ -122,24 +148,26 @@ export default function BleedDusk2Overlay({
       <BleedDusk2Styles />
       <TappedStyles />
 
-      <div className="bl-top-bar">
-        <div className="bl-top-left">
-          <span className="bl-progress">{drill.moveIdx + 1}</span>
-          {onReview && (
-            <button type="button" className="bl-review" onClick={onReview}>
-              Review
+      {!showComplete && (
+        <div className="bl-top-bar">
+          <div className="bl-top-left">
+            <span className="bl-progress">{drill.moveIdx + 1}</span>
+            {onReview && (
+              <button type="button" className="bl-review" onClick={onReview}>
+                Review
+              </button>
+            )}
+          </div>
+          <div className="bl-top-right">
+            <span className="bl-streak" aria-label={`Streak: ${drill.streak}`}>
+              {drill.streak} streak
+            </span>
+            <button type="button" className="bl-close" onClick={onClose} aria-label="Exit training">
+              ✕
             </button>
-          )}
+          </div>
         </div>
-        <div className="bl-top-right">
-          <span className="bl-streak" aria-label={`Streak: ${drill.streak}`}>
-            {drill.streak} streak
-          </span>
-          <button type="button" className="bl-close" onClick={onClose} aria-label="Exit training">
-            ✕
-          </button>
-        </div>
-      </div>
+      )}
 
       <div className={`bl-stage ${buzzed ? "bl-stage--slap-buzz" : ""}`}>
         {videoSrc ? (
@@ -156,13 +184,15 @@ export default function BleedDusk2Overlay({
           <div className="bl-video bl-video--empty" aria-hidden />
         )}
 
-        {sharp && <div className="bl2-wipe" key={`wipe-${drill.beat}`} />}
+        {drill.phase === "correct" && !showComplete && (
+          <div className="bl2-wipe" key={`wipe-${drill.beat}`} />
+        )}
 
         {(live || buzzed) && (
           <div className="bl-static" style={{ opacity: buzzed ? dissolveFull.veil : look.veil }} />
         )}
 
-        {sharp && (
+        {drill.phase === "correct" && !showComplete && (
           <div className="bl2-earned" key={`earned-${drill.beat}`}>
             <span className="bl2-earned-word">Sharp</span>
             <span className="bl2-earned-sub">+{EARNED_CLARITY} clarity</span>
@@ -172,7 +202,7 @@ export default function BleedDusk2Overlay({
         <div className="bl-scrim-top" />
         <div className="bl-scrim-bottom" />
 
-        {!buzzed && !sharp && <AnteVerdict round={round} buzzerWord="Tapped out!" />}
+        {!finale && !buzzed && !sharp && <AnteVerdict round={round} buzzerWord="Tapped out!" />}
 
         {live && (
           <div className="bl-ghost" aria-hidden>
@@ -180,13 +210,25 @@ export default function BleedDusk2Overlay({
             <span className="bl-stake" key={`stake-${stake}`}>×{stake}</span>
           </div>
         )}
-        {drill.phase === "asking" && !live && (
+        {drill.phase === "asking" && !live && !finale && (
           <span className="bl-wait">{videoSrc ? "tape rolling" : "get ready"}</span>
         )}
 
         {buzzed && <SlapOverlay key={`buzz-${drill.beat}`} {...ctx} />}
 
-        {!buzzed && (
+        {showComplete && session.finalAttempt && (
+          <Dusk2CompleteOverlay
+            deck={deck}
+            session={session}
+            progress={progress}
+            onNext={onNext}
+            onHome={onHome}
+            onTryAgain={onTryAgain}
+            onStats={onStats}
+          />
+        )}
+
+        {!finale && !buzzed && (
           <div className="bl-quiz">
             <span className={`bl-partner-tag bl-partner-tag--${drill.move.partner}`}>
               Person {drill.move.partner}
