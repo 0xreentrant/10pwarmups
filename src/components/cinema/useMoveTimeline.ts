@@ -13,7 +13,7 @@ export function useMoveTimeline(
   moveCount: number,
   videoEl: HTMLVideoElement | null,
   fallbackDurationSec = FALLBACK_TIMELINE_SEC,
-  /** When length matches moveCount, used instead of MOVE_TIMESTAMPS / equal slice. */
+  /** When length matches moveCount, used instead of MOVE_TIMESTAMPS. */
   timestampOverrides?: (number | null)[] | null,
 ): MoveTimeline | null {
   const [duration, setDuration] = useState<number | null>(() =>

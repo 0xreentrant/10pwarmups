@@ -212,9 +212,8 @@ export default function CinemaOverlay({
 
       {review && reviewEnded && (
         <div className="ct-play-again">
-          <button type="button" className="ct-play-again-btn" onClick={handlePlayAgain}>
+          <button type="button" className="ct-play-again-btn" aria-label="Play again" onClick={handlePlayAgain}>
             <span className="ct-play-again-icon" aria-hidden>↺</span>
-            <span className="ct-play-again-label">Play again</span>
           </button>
         </div>
       )}
@@ -633,22 +632,20 @@ function CinemaStyles() {
 
       .ct-play-again-btn {
         display: flex;
-        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 4px;
         width: 96px;
         height: 96px;
         border-radius: 50%;
+        border: none;
         background: rgba(0, 0, 0, 0.65);
-        border: 2px solid rgba(255, 255, 255, 0.45);
         color: #fff;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+        cursor: pointer;
       }
 
       .ct-play-again-btn:hover {
-        border-color: var(--color-accent);
-        background: rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.22);
       }
 
       .ct-play-again-btn:focus-visible {
@@ -657,17 +654,8 @@ function CinemaStyles() {
       }
 
       .ct-play-again-icon {
-        font-size: 2.15rem;
+        font-size: 3.25rem;
         line-height: 1;
-      }
-
-      .ct-play-again-label {
-        font-family: var(--font-family-disp);
-        font-weight: 800;
-        font-size: 0.74rem;
-        letter-spacing: 0.02em;
-        line-height: 0.95;
-        text-transform: uppercase;
       }
 
       @keyframes ct-play-again-in {

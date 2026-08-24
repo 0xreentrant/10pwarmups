@@ -6,12 +6,20 @@ import { CORRECT_REVEAL_PLAYBACK_RATE, useAnteRound } from "./useAnteRound"
 const play = vi.fn()
 const hold = vi.fn()
 const cancel = vi.fn()
+const togglePlayback = vi.fn(() => false)
 
 vi.mock("../quiz/useSegmentPlayer", async importOriginal => {
   const actual = await importOriginal<typeof import("../quiz/useSegmentPlayer")>()
   return {
     ...actual,
-    useSegmentPlayer: () => ({ play, hold, cancel }),
+    useSegmentPlayer: () => ({
+      play,
+      hold,
+      cancel,
+      togglePlayback,
+      segmentActive: false,
+      segmentPaused: false,
+    }),
   }
 })
 
@@ -60,6 +68,8 @@ describe("useAnteRound wrong-answer playback", () => {
     play.mockReset()
     hold.mockReset()
     cancel.mockReset()
+    togglePlayback.mockReset()
+    togglePlayback.mockReturnValue(false)
     vi.useFakeTimers()
   })
 
@@ -221,5 +231,34 @@ describe("useAnteRound wrong-answer playback", () => {
     })
 
     expect(onTapOut).toHaveBeenCalled()
+  })
+
+  it("toggles reveal playback during correct phase", () => {
+    const { result } = renderHook(() =>
+      useAnteRound({
+        deck,
+        session: makeSession(),
+        videoEl: fakeVideo(),
+        onOptionClick: vi.fn(),
+        timestamps,
+        config: { buzzHoldMs: null, correctHoldMs: 300 },
+      }),
+    )
+
+    act(() => {
+      vi.advanceTimersByTime(0)
+    })
+
+    act(() => {
+      result.current.answer(1)
+    })
+
+    expect(result.current.drill.phase).toBe("correct")
+
+    act(() => {
+      result.current.togglePause()
+    })
+
+    expect(togglePlayback).toHaveBeenCalled()
   })
 })

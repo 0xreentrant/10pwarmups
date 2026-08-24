@@ -8,14 +8,30 @@ import {
 } from "./moveTimestamps"
 
 describe("resolveMoveTimestamps", () => {
-  it("returns tagged A1 starts when move count matches and times fit", () => {
+  it("returns tagged A1 starts when move count matches", () => {
     expect(resolveMoveTimestamps("A1", 5, 50)).toEqual(MOVE_TIMESTAMPS.A1)
   })
 
-  it("falls back to equal slices when untagged, count mismatches, or tags overrun duration", () => {
-    expect(resolveMoveTimestamps("B1", 4, 20)).toEqual([0, 5, 10, 15])
-    expect(resolveMoveTimestamps("A1", 3, 30)).toEqual([0, 10, 20])
-    expect(resolveMoveTimestamps("A1", 5, 10)).toEqual([0, 2, 4, 6, 8])
+  it("returns nulls when the deck is untagged", () => {
+    expect(resolveMoveTimestamps("untagged", 5, 10)).toEqual([null, null, null, null, null])
+  })
+
+  it("keeps saved tags when deck count mismatches, padding or truncating", () => {
+    expect(resolveMoveTimestamps("B1", 4, 20)).toEqual(MOVE_TIMESTAMPS.B1.slice(0, 4))
+    expect(resolveMoveTimestamps("A1", 3, 30)).toEqual(MOVE_TIMESTAMPS.A1.slice(0, 3))
+    expect(resolveMoveTimestamps("H3", 16, 50)).toEqual([
+      ...MOVE_TIMESTAMPS.H3,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ])
+  })
+
+  it("does not synthesize equal slices when tags overrun duration", () => {
+    expect(resolveMoveTimestamps("A1", 5, 10)).toEqual(MOVE_TIMESTAMPS.A1)
   })
 })
 

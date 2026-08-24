@@ -75,6 +75,8 @@ export interface AnteRound {
   next: () => void
   restart: () => void
   togglePause: () => void
+  segmentActive: boolean
+  segmentPaused: boolean
 }
 
 interface FrozenAsk {
@@ -134,7 +136,7 @@ export function useAnteRound({
   const prevReadyRef = useRef(false)
   const loggedDoneRef = useRef(false)
   const timeline = useMoveTimeline(deck.id, deck.moves.length, videoEl, undefined, timestampOverrides)
-  const { play, hold, cancel } = useSegmentPlayer(videoEl)
+  const { play, hold, cancel, togglePlayback, segmentActive, segmentPaused } = useSegmentPlayer(videoEl)
   const { after, clearAll } = useTimers()
   paidRef.current = paid
   frozenRef.current = frozen
@@ -366,6 +368,10 @@ export function useAnteRound({
   }, [timeline, phase, beat, frozen?.deckMoveIdx, picked])
 
   const togglePause = () => {
+    if (phase === "correct" || phase === "wrong") {
+      togglePlayback()
+      return
+    }
     if (phase !== "asking" || !ready || session.locked) return
     if (live) {
       const rem = Math.max(0, ANTE_CLOCK_MS - (performance.now() - askedAtRef.current))
@@ -472,5 +478,7 @@ export function useAnteRound({
     next,
     restart,
     togglePause,
+    segmentActive,
+    segmentPaused,
   }
 }

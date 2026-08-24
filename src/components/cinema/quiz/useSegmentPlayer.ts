@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { isFiniteTimestamp, nextPlayableMoveIndex, prevPlayableMoveIndex } from "../../../data/moveTimestamps"
 import type { MoveTimeline } from "../useMoveTimeline"
 
@@ -32,6 +32,15 @@ const EMPTY_SEGMENT_SEC = 0.06
 
 export function useSegmentPlayer(videoEl: HTMLVideoElement | null) {
   const rafRef = useRef(0)
+  const activeRef = useRef<{ segment: Segment; options: PlayOptions } | null>(null)
+  const [segmentActive, setSegmentActive] = useState(false)
+  const [segmentPaused, setSegmentPaused] = useState(false)
+
+  const clearActive = useCallback(() => {
+    activeRef.current = null
+    setSegmentActive(false)
+    setSegmentPaused(false)
+  }, [])
 
   const cancel = useCallback(() => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current)
@@ -42,11 +51,12 @@ export function useSegmentPlayer(videoEl: HTMLVideoElement | null) {
 
   const hold = useCallback((time: number) => {
     cancel()
+    clearActive()
     if (!videoEl) return
     videoEl.pause()
     videoEl.playbackRate = 1
     videoEl.currentTime = time
-  }, [cancel, videoEl])
+  }, [cancel, clearActive, videoEl])
 
   const play = useCallback((segment: Segment, options: PlayOptions = {}) => {
     const { rate = 1, onEnd } = options
@@ -57,11 +67,16 @@ export function useSegmentPlayer(videoEl: HTMLVideoElement | null) {
     cancel()
 
     if (segment.to - segment.from < EMPTY_SEGMENT_SEC) {
+      clearActive()
       videoEl.pause()
       videoEl.currentTime = segment.to
       onEnd?.()
       return
     }
+
+    activeRef.current = { segment, options: { rate, onEnd } }
+    setSegmentActive(true)
+    setSegmentPaused(false)
 
     videoEl.playbackRate = rate
     videoEl.currentTime = segment.from
@@ -71,6 +86,7 @@ export function useSegmentPlayer(videoEl: HTMLVideoElement | null) {
         videoEl.pause()
         videoEl.playbackRate = 1
         rafRef.current = 0
+        clearActive()
         onEnd?.()
         return
       }
@@ -80,7 +96,21 @@ export function useSegmentPlayer(videoEl: HTMLVideoElement | null) {
     const started = videoEl.play()
     if (started && typeof started.catch === "function") started.catch(() => {})
     rafRef.current = requestAnimationFrame(watch)
-  }, [cancel, videoEl])
+  }, [cancel, clearActive, videoEl])
 
-  return { play, hold, cancel }
+  const togglePlayback = useCallback((): boolean => {
+    if (!videoEl || !activeRef.current) return false
+    const { segment, options } = activeRef.current
+    if (!videoEl.paused) {
+      cancel()
+      videoEl.pause()
+      setSegmentPaused(true)
+      return true
+    }
+    if (videoEl.currentTime >= segment.to) return false
+    play({ from: videoEl.currentTime, to: segment.to }, options)
+    return true
+  }, [cancel, play, videoEl])
+
+  return { play, hold, cancel, togglePlayback, segmentActive, segmentPaused }
 }

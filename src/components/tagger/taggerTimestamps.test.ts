@@ -9,14 +9,14 @@ import {
 } from "./taggerTimestamps"
 
 describe("taggerSeedTimestamps", () => {
-  it("returns stored tags when count matches and times fit", () => {
+  it("returns stored tags when count matches", () => {
     expect(taggerSeedTimestamps("A1", 5, 50)).toEqual(MOVE_TIMESTAMPS.A1)
   })
 
-  it("returns nulls instead of equal slices when untagged or invalid", () => {
-    expect(taggerSeedTimestamps("B1", 4, 20)).toEqual([null, null, null, null])
-    expect(taggerSeedTimestamps("A1", 3, 30)).toEqual([null, null, null])
-    expect(taggerSeedTimestamps("A1", 5, 10)).toEqual([null, null, null, null, null])
+  it("aligns stored tags when count mismatches instead of clearing them", () => {
+    expect(taggerSeedTimestamps("B1", 4, 20)).toEqual(MOVE_TIMESTAMPS.B1.slice(0, 4))
+    expect(taggerSeedTimestamps("A1", 3, 30)).toEqual(MOVE_TIMESTAMPS.A1.slice(0, 3))
+    expect(taggerSeedTimestamps("A1", 5, 10)).toEqual(MOVE_TIMESTAMPS.A1)
   })
 
   it("loads stored tags when duration is not known yet", () => {
@@ -41,6 +41,22 @@ describe("timeFromClientX", () => {
 })
 
 describe("parseTimestampsJson", () => {
+  it("parses player field on object timestamps", () => {
+    const text = JSON.stringify({
+      deckId: "x",
+      timestamps: [
+        { name: "A", player: "a", t: 1 },
+        { name: "B", player: "b", t: 2 },
+      ],
+    })
+    expect(parseTimestampsJson(text, 2)).toEqual({
+      ok: true,
+      timestamps: [1, 2],
+      names: ["A", "B"],
+      partners: ["A", "B"],
+    })
+  })
+
   it("parses object timestamps", () => {
     const text = JSON.stringify({
       deckId: "x",
@@ -135,14 +151,14 @@ describe("parseTimestampsJson", () => {
 })
 
 describe("buildJsonText", () => {
-  it("includes move names and null times in export", () => {
-    const json = buildJsonText("A1", [0, null, 2.5], ["First", "Second", "Third"])
+  it("includes move names, player, and null times in export", () => {
+    const json = buildJsonText("A1", [0, null, 2.5], ["First", "Second", "Third"], ["A", "B", "A"])
     const parsed = JSON.parse(json)
     expect(parsed.deckId).toBe("A1")
     expect(parsed.timestamps).toEqual([
-      { name: "First", t: 0 },
-      { name: "Second", t: null },
-      { name: "Third", t: 2.5 },
+      { name: "First", player: "a", t: 0 },
+      { name: "Second", player: "b", t: null },
+      { name: "Third", player: "a", t: 2.5 },
     ])
   })
 })

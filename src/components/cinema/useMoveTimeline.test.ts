@@ -13,14 +13,13 @@ function fakeVideo(duration: number): HTMLVideoElement {
 }
 
 describe("useMoveTimeline", () => {
-  it("spreads moves evenly when the deck has no tagged timestamps", () => {
+  it("returns nulls when the deck has no tagged timestamps", () => {
     const { result } = renderHook(() => useMoveTimeline("untagged", 5, fakeVideo(10)))
     const timeline = result.current!
 
-    expect(timeline.timestamps).toEqual([0, 2, 4, 6, 8])
-    expect(timeline.moveIndexAt(0)).toBe(0)
-    expect(timeline.moveIndexAt(5)).toBe(2)
-    expect(timeline.moveIndexAt(9.9)).toBe(4)
+    expect(timeline.timestamps).toEqual([null, null, null, null, null])
+    expect(timeline.moveIndexAt(0)).toBe(-1)
+    expect(timeline.moveIndexAt(5)).toBe(-1)
   })
 
   it("uses tagged timestamps for A1", () => {
@@ -45,7 +44,7 @@ describe("useMoveTimeline", () => {
   it("uses a fallback duration when no video element is present", () => {
     const { result } = renderHook(() => useMoveTimeline("untagged", 5, null, 30))
     expect(result.current!.duration).toBe(30)
-    expect(result.current!.timestamps).toEqual([0, 6, 12, 18, 24])
+    expect(result.current!.timestamps).toEqual([null, null, null, null, null])
   })
 
   it("uses latest start time when overrides are unsorted", () => {

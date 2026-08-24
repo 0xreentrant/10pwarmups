@@ -4,7 +4,14 @@ import { appMachine } from "../../appMachine"
 import { DECKS } from "../../data/decks"
 import { warmupNoteForDeck } from "../../data/warmupNotes"
 import { playableIndicesFromTimestamps } from "../../data/moveTimestamps"
+import type { Partner } from "../../types/domain"
 import { usePersistedMediaVolume } from "../../hooks/usePersistedMediaVolume"
+import {
+  MAX_PLAYBACK_SPEED,
+  MIN_PLAYBACK_SPEED,
+  PLAYBACK_SPEED_STEP,
+  usePersistedPlaybackSpeed,
+} from "../../hooks/usePersistedPlaybackSpeed"
 import {
   MAX_NUDGE_MS,
   MIN_NUDGE_MS,
@@ -83,6 +90,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     deckId,
     moveCount,
     moveNames,
+    movePartners,
     timestamps,
     duration,
     currentTime,
@@ -95,6 +103,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
 
   const [jsonDraft, setJsonDraft] = useState("")
   const [notesDraft, setNotesDraft] = useState("")
+  const [savedNoteByDeck, setSavedNoteByDeck] = useState<Record<string, string>>({})
   const [copied, setCopied] = useState(false)
   const [saved, setSaved] = useState<SavedTarget | null>(null)
   const [saving, setSaving] = useState<SavedTarget | null>(null)
@@ -103,14 +112,15 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const videoRef = useRef<HTMLVideoElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const settingsRef = useRef<HTMLDivElement>(null)
-  const nudgeDialogRef = useRef<HTMLDialogElement>(null)
   const moveNameDialogRef = useRef<HTMLDialogElement>(null)
   const [editVideoEl, setEditVideoEl] = useState<HTMLVideoElement | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [nudgeMs, setNudgeMs] = usePersistedNudgeMs()
-  const [nudgeDraft, setNudgeDraft] = useState(String(nudgeMs))
+  const [playbackSpeed, setPlaybackSpeed] = usePersistedPlaybackSpeed(editVideoEl)
   const [editingMoveIndex, setEditingMoveIndex] = useState<number | null>(null)
   const [moveNameDraft, setMoveNameDraft] = useState("")
+  const [movePartnerDraft, setMovePartnerDraft] = useState<Partner>("A")
+  const [hoveredMoveIndex, setHoveredMoveIndex] = useState<number | null>(null)
 
   const deck = DECKS.find(d => d.id === deckId)
   const defaultMoveNames = deck?.moves.map(m => m.text) ?? []
@@ -124,8 +134,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       ? moveIndexAtTime(timestamps, currentTime)
       : -1
   const previewTimestamps = timestampsReady ? timestamps : null
-  const onDiskJson = buildJsonText(deckId, timestamps, moveNames)
-  const savedNoteText = warmupNoteForDeck(deckId)
+  const onDiskJson = buildJsonText(deckId, timestamps, moveNames, movePartners)
+  const savedNoteText = savedNoteByDeck[deckId] ?? warmupNoteForDeck(deckId)
   const jsonUnsaved = jsonDraft !== onDiskJson
   const notesUnsaved = notesDraft !== savedNoteText
 
@@ -133,7 +143,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     const d = DECKS.find(x => x.id === warmup)
     const moves = d?.moves.length ?? 0
     const names = deckMoveNames(warmup, d?.moves.map(m => m.text) ?? [])
-    send({ type: "SET_DECK", deckId: warmup, moveCount: moves, moveNames: names })
+    const partners = d?.moves.map(m => m.partner) ?? []
+    send({ type: "SET_DECK", deckId: warmup, moveCount: moves, moveNames: names, movePartners: partners })
   }, [warmup, send])
 
   useEffect(() => {
@@ -167,15 +178,15 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   }, [deckId, onDiskJson])
 
   useEffect(() => {
-    setNotesDraft(resolveNoteDraft(deckId, warmupNoteForDeck(deckId)))
+    const onDisk = savedNoteByDeck[deckId] ?? warmupNoteForDeck(deckId)
+    setNotesDraft(resolveNoteDraft(deckId, onDisk))
   }, [deckId])
 
   useEffect(() => {
     if (!deckId) return
-    const saved = warmupNoteForDeck(deckId)
-    if (notesDraft === saved) clearNoteDraftForDeck(deckId)
+    if (notesDraft === savedNoteText) clearNoteDraftForDeck(deckId)
     else saveNoteDraftForDeck(deckId, notesDraft)
-  }, [deckId, notesDraft])
+  }, [deckId, notesDraft, savedNoteText])
 
   useEffect(() => {
     if (!deckId || moveCount <= 0 || timestamps.length === moveCount) return
@@ -368,7 +379,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
           return loaded || name
         })
       : undefined
-    send({ type: "LOAD", timestamps: result.timestamps, names })
+    send({ type: "LOAD", timestamps: result.timestamps, names, partners: result.partners })
   }
 
   function resetTimestamps() {
@@ -389,6 +400,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
         duration > 0 ? duration : Number.POSITIVE_INFINITY,
       ),
       moveNames: defaultMoveNames,
+      movePartners: deck?.moves.map(m => m.partner) ?? [],
     })
   }
 
@@ -413,6 +425,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     setSaving("note")
     void postTaggerApi("/api/tagger/save-note", { deckId, noteText: notesDraft })
       .then(() => {
+        setSavedNoteByDeck(prev => ({ ...prev, [deckId]: notesDraft }))
         clearNoteDraftForDeck(deckId)
         setSaved("note")
         window.setTimeout(() => setSaved(null), 1200)
@@ -435,6 +448,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   function openMoveNameEditor(index: number) {
     setEditingMoveIndex(index)
     setMoveNameDraft(moveNames[index] ?? deck?.moves[index]?.text ?? `Move ${index + 1}`)
+    setMovePartnerDraft(movePartners[index] ?? deck?.moves[index]?.partner ?? "A")
     moveNameDialogRef.current?.showModal()
   }
 
@@ -442,22 +456,9 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     if (editingMoveIndex === null) return
     const trimmed = moveNameDraft.trim()
     if (!trimmed) return
-    send({ type: "SET_MOVE_NAME", index: editingMoveIndex, name: trimmed })
+    send({ type: "SET_MOVE", index: editingMoveIndex, name: trimmed, partner: movePartnerDraft })
     moveNameDialogRef.current?.close()
     setEditingMoveIndex(null)
-  }
-
-  function openNudgeSettings() {
-    setNudgeDraft(String(nudgeMs))
-    setSettingsOpen(false)
-    nudgeDialogRef.current?.showModal()
-  }
-
-  function saveNudgeSettings() {
-    const n = Number(nudgeDraft)
-    if (!Number.isFinite(n)) return
-    setNudgeMs(n)
-    nudgeDialogRef.current?.close()
   }
 
   const playheadPct = duration > 0 ? (currentTime / duration) * 100 : 0
@@ -492,58 +493,53 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
             </svg>
           </button>
           {settingsOpen && (
-            <div className="absolute right-0 z-30 mt-1 min-w-44 border border-border bg-surface py-1 shadow-lg">
-              <button
-                type="button"
-                className="block w-full px-3 py-2 text-left text-[11px] uppercase tracking-wider text-muted hover:bg-border/40 hover:text-text"
-                onClick={openNudgeSettings}
-              >
-                Keyboard nudge
-              </button>
+            <div className="absolute right-0 z-30 mt-1 min-w-52 border border-border bg-surface py-1 shadow-lg">
+              <div className="border-b border-border px-3 py-2">
+                <label className="flex flex-col gap-2">
+                  <span className="text-muted text-[11px] uppercase tracking-wider">
+                    Playback speed
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={MIN_PLAYBACK_SPEED}
+                      max={MAX_PLAYBACK_SPEED}
+                      step={PLAYBACK_SPEED_STEP}
+                      value={playbackSpeed}
+                      onChange={e => setPlaybackSpeed(Number(e.target.value))}
+                      className="min-w-0 flex-1"
+                    />
+                    <span className="w-10 shrink-0 text-right text-xs tabular-nums text-text">
+                      {playbackSpeed.toFixed(2)}×
+                    </span>
+                  </div>
+                </label>
+              </div>
+              <div className="px-3 py-2">
+                <label className="flex flex-col gap-2">
+                  <span className="text-muted text-[11px] uppercase tracking-wider">
+                    Keyboard nudge
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="range"
+                      min={MIN_NUDGE_MS}
+                      max={MAX_NUDGE_MS}
+                      step={50}
+                      value={nudgeMs}
+                      onChange={e => setNudgeMs(Number(e.target.value))}
+                      className="min-w-0 flex-1"
+                    />
+                    <span className="w-12 shrink-0 text-right text-xs tabular-nums text-text">
+                      {nudgeMs}ms
+                    </span>
+                  </div>
+                </label>
+              </div>
             </div>
           )}
         </div>
       </div>
-
-      <dialog
-        ref={nudgeDialogRef}
-        className="fixed top-1/2 left-1/2 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 border border-border bg-surface p-4 text-text backdrop:bg-black/60"
-      >
-        <form
-          method="dialog"
-          className="flex flex-col gap-3"
-          onSubmit={e => {
-            e.preventDefault()
-            saveNudgeSettings()
-          }}
-        >
-          <p className="text-muted text-[11px] uppercase tracking-wider">Keyboard nudge</p>
-          <label className="flex flex-col gap-1">
-            <span className="text-muted text-[11px] uppercase tracking-wider">Amount (ms)</span>
-            <input
-              type="number"
-              min={MIN_NUDGE_MS}
-              max={MAX_NUDGE_MS}
-              step={1}
-              value={nudgeDraft}
-              onChange={e => setNudgeDraft(e.target.value)}
-              className="border border-border bg-black px-2 py-1.5 text-sm tabular-nums"
-            />
-          </label>
-          <div className="flex justify-end gap-3">
-            <button
-              type="button"
-              className="text-muted text-[11px] uppercase tracking-wider"
-              onClick={() => nudgeDialogRef.current?.close()}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="text-[11px] uppercase tracking-wider text-text">
-              Save
-            </button>
-          </div>
-        </form>
-      </dialog>
 
       <dialog
         ref={moveNameDialogRef}
@@ -558,7 +554,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
           }}
         >
           <p className="text-muted text-[11px] uppercase tracking-wider">
-            Edit move {editingMoveIndex !== null ? editingMoveIndex + 1 : ""} name
+            Edit move {editingMoveIndex !== null ? editingMoveIndex + 1 : ""}
           </p>
           <label className="flex flex-col gap-1">
             <span className="text-muted text-[11px] uppercase tracking-wider">Name</span>
@@ -569,6 +565,27 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
               className="border border-border bg-black px-2 py-1.5 text-sm"
             />
           </label>
+          <fieldset className="flex flex-col gap-1 border-0 p-0">
+            <legend className="text-muted text-[11px] uppercase tracking-wider">Player</legend>
+            <div className="flex gap-2">
+              {(["A", "B"] as const).map(p => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`flex-1 border px-2 py-1.5 text-sm ${
+                    movePartnerDraft === p
+                      ? p === "A"
+                        ? "border-partner-a text-partner-a"
+                        : "border-partner-b text-partner-b"
+                      : "border-border text-muted"
+                  }`}
+                  onClick={() => setMovePartnerDraft(p)}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </fieldset>
           <div className="flex justify-end gap-3">
             <button
               type="button"
@@ -653,7 +670,14 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
                     onClick={() => selectMove(i)}
                   >
                     <span className="min-w-5 text-muted">{i + 1}</span>
-                    <MoveLabel move={{ ...move, text: moveNames[i] ?? move.text }} />
+                    <MoveLabel
+                      move={{ ...move, text: moveNames[i] ?? move.text, partner: movePartners[i] ?? move.partner }}
+                      className={
+                        i === hoveredMoveIndex
+                          ? "rounded-sm bg-white/15 px-0.5 -mx-0.5"
+                          : undefined
+                      }
+                    />
                     <span className="ml-auto text-muted tabular-nums">
                       {isFiniteTimestamp(timestamps[i]) ? `${timestamps[i]!.toFixed(2)}s` : "-"}
                     </span>
@@ -711,6 +735,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
                       : "border-text bg-surface"
                   } ${active ? "outline outline-2 outline-offset-1 outline-accent" : ""}`}
                   style={{ left: `${pct}%` }}
+                  onPointerEnter={() => setHoveredMoveIndex(i)}
+                  onPointerLeave={() => setHoveredMoveIndex(null)}
                   onPointerDown={e => startMarkerDrag(i, e)}
                 />
               )

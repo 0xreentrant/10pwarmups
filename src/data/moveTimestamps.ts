@@ -134,26 +134,69 @@ export const MOVE_TIMESTAMPS: Record<string, (number | null)[]> = {
     42.462317,
     51.000839000000006,
   ]
+,
+  B3: [
+    null,
+    null,
+    null,
+    null,
+    0,
+    1.0573459424275609,
+    2.0865495974140837,
+    3.8233307652038415,
+    5.104498,
+    7.3732180000000005,
+    10.373205,
+    14.949208,
+    null,
+    21.158569,
+    25.646955000000002,
+    27.425172,
+    null,
+    31.494374,
+    34.034949000000005,
+    36.948066999999995,
+    38.162622000000006,
+  ]
+,
+  H3: [
+    0,
+    0.6792283545584733,
+    1.5528908986076122,
+    2.0959784259895096,
+    3.690528,
+    4.690528,
+    7.490527999999999,
+    8.690520000000001,
+    17.207979187920564,
+    null,
+    23.205554490311947,
+    26.534917158174885,
+    28.576454,
+    29.904761,
+    32.018495,
+    34.999062,
+  ]
 }
 
-/** Tagged starts when length matches and times fit the clip; else equal slices. */
+function alignTaggedTimestamps(
+  tagged: readonly (number | null)[] | undefined,
+  moveCount: number,
+): (number | null)[] {
+  if (moveCount <= 0) return []
+  if (!tagged?.length) return Array.from({ length: moveCount }, () => null)
+  const out = tagged.slice(0, moveCount)
+  while (out.length < moveCount) out.push(null)
+  return out
+}
+
+/** Saved tags by move index; pad with null when deck grew, truncate when it shrank. */
 export function resolveMoveTimestamps(
   deckId: string,
   moveCount: number,
-  duration: number,
+  _duration: number,
 ): (number | null)[] {
-  const tagged = MOVE_TIMESTAMPS[deckId]
-  // ponytail: skip tags that overrun the clip (jsdom mock duration is 10s).
-  if (
-    tagged &&
-    tagged.length === moveCount &&
-    tagged.every(t => !isFiniteTimestamp(t) || t <= duration)
-  ) {
-    return tagged
-  }
-  if (moveCount <= 0 || duration <= 0) return []
-  const step = duration / moveCount
-  return Array.from({ length: moveCount }, (_, i) => i * step)
+  return alignTaggedTimestamps(MOVE_TIMESTAMPS[deckId], moveCount)
 }
 
 export function playableIndicesFromTimestamps(
@@ -170,8 +213,8 @@ export function playableMoveIndices(
   moveCount: number,
   timestamps?: readonly (number | null)[],
 ): number[] {
-  const tagged = timestamps ?? MOVE_TIMESTAMPS[deckId]
-  if (tagged?.length === moveCount) {
+  const tagged = timestamps ?? alignTaggedTimestamps(MOVE_TIMESTAMPS[deckId], moveCount)
+  if (tagged.length === moveCount) {
     const playable = playableIndicesFromTimestamps(tagged)
     if (playable.length > 0 && playable.length < moveCount) return playable
   }

@@ -97,7 +97,7 @@ export default function BleedDusk2Overlay({
       correctHoldMs: CORRECT_HOLD_MS,
     },
   })
-  const { drill, live, paused, ready, stake, remaining, togglePause } = round
+  const { drill, live, paused, ready, stake, remaining, togglePause, segmentActive, segmentPaused } = round
 
   useEffect(() => {
     if (drill.phase === "asking") streakRef.current = drill.streak
@@ -126,6 +126,8 @@ export default function BleedDusk2Overlay({
   const finale = showComplete || drill.phase === "done" || session.locked
   const clockOpen = live || paused
   const canPauseClock = !finale && drill.phase === "asking" && ready && clockOpen
+  const canPauseSegment = !finale && (drill.phase === "correct" || drill.phase === "wrong") && segmentActive
+  const canTapVideo = canPauseClock || canPauseSegment
   const p = clockOpen ? 1 - remaining / ANTE_CLOCK_MS : 0
   const look = fadeLook("dissolve", p)
   const dissolveFull = fadeLook("dissolve", 1)
@@ -173,15 +175,34 @@ export default function BleedDusk2Overlay({
             ref={videoRef}
             src={videoSrc}
             className={`bl-video ${sharp ? "bl2-video--sharp" : ""}`}
-            style={{ filter: videoFilter, opacity: videoOpacity, cursor: canPauseClock ? "pointer" : undefined }}
+            style={{ filter: videoFilter, opacity: videoOpacity, cursor: canTapVideo ? "pointer" : undefined }}
             muted
             playsInline
             preload="auto"
-            onClick={canPauseClock ? togglePause : undefined}
-            aria-label={canPauseClock ? (paused ? "Resume timer" : "Pause timer") : undefined}
+            onClick={canTapVideo ? togglePause : undefined}
+            aria-label={
+              canPauseClock
+                ? paused
+                  ? "Resume timer"
+                  : "Pause timer"
+                : canPauseSegment
+                  ? segmentPaused
+                    ? "Resume playback"
+                    : "Pause playback"
+                  : undefined
+            }
           />
         ) : (
           <div className="bl-video bl-video--empty" aria-hidden />
+        )}
+
+        {canPauseSegment && (
+          <button
+            type="button"
+            className="bl-tap-pause"
+            aria-label={segmentPaused ? "Resume playback" : "Pause playback"}
+            onClick={togglePause}
+          />
         )}
 
         {drill.phase === "correct" && !showComplete && (
@@ -279,6 +300,17 @@ function BleedDusk2Styles() {
 
       .bl-video--empty {
         background: #0a0a0c;
+      }
+
+      .bl-tap-pause {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border: none;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        cursor: pointer;
       }
 
       .bl-static {
