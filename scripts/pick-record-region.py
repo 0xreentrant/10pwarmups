@@ -15,6 +15,7 @@ import shutil
 import subprocess
 import sys
 import tkinter as tk
+from pathlib import Path
 from tkinter import messagebox
 
 from PIL import ImageGrab, ImageTk
@@ -350,7 +351,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--output",
-        default="recordings/capture.mp4",
+        default=str(Path.home() / "Downloads" / "capture.mp4"),
         help="output path for generated ffmpeg command",
     )
     parser.add_argument(

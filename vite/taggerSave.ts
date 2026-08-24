@@ -115,10 +115,12 @@ export function saveTaggerJson(jsonText: string): { deckId: string } {
   )
   fs.writeFileSync(tsPath, tsContent, "utf8")
 
-  if (result.names) {
+  if (result.names || result.partners) {
     const decksPath = path.join(root, "src/data/decks.ts")
-    const movesBlock = result.names
-      .map((name, i) => formatMoveLine(name, deck.moves[i]?.partner ?? "A"))
+    const names = result.names ?? deck.moves.map(m => m.text)
+    const partners = result.partners ?? deck.moves.map(m => m.partner)
+    const movesBlock = names
+      .map((name, i) => formatMoveLine(name, partners[i] ?? "A"))
       .join("\n")
     const decksContent = replaceDeckMoves(fs.readFileSync(decksPath, "utf8"), deckId, movesBlock)
     fs.writeFileSync(decksPath, decksContent, "utf8")

@@ -39,7 +39,7 @@ python3 scripts/record-screen-region.py --duration 75
 Optional output path:
 
 ```bash
-python3 scripts/record-screen-region.py --duration 75 --output recordings/my-capture.mp4
+python3 scripts/record-screen-region.py --duration 75 --output ~/Downloads/my-capture.mp4
 ```
 
 Set `block_until_ms` to at least `(duration_seconds + 90) * 1000`.
@@ -47,7 +47,7 @@ Set `block_until_ms` to at least `(duration_seconds + 90) * 1000`.
 4. **Verify** the file exists and is non-empty:
 
 ```bash
-ffprobe -hide_banner -show_entries format=duration,size -show_entries stream=width,height -of default=noprint_wrappers=1 recordings/<file>.mp4
+ffprobe -hide_banner -show_entries format=duration,size -show_entries stream=width,height -of default=noprint_wrappers=1 ~/Downloads/<file>.mp4
 ```
 
 5. **Report** the output path, dimensions, and duration.
@@ -62,7 +62,7 @@ ffprobe -hide_banner -show_entries format=duration,size -show_entries stream=wid
 ## Requirements
 
 - Linux/X11 (`DISPLAY` set), `ffmpeg`, Python 3, `tkinter`, `Pillow`
-- Output defaults to `recordings/capture-YYYYMMDD-HHMMSS.mp4`
+- Output defaults to `~/Downloads/capture-YYYYMMDD-HHMMSS.mp4`
 - H.264 needs even width/height; the picker rounds down automatically
 
 ## Failures
@@ -80,4 +80,4 @@ ffprobe -hide_banner -show_entries format=duration,size -show_entries stream=wid
 python3 scripts/pick-record-region.py --backend screenshot
 ```
 
-Add `--record --duration 75 --output recordings/capture.mp4` to record immediately after selection.
+Add `--record --duration 75 --output ~/Downloads/capture.mp4` to record immediately after selection.

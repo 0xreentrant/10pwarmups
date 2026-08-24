@@ -11,7 +11,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PICKER = REPO_ROOT / "scripts" / "pick-record-region.py"
-RECORDINGS = REPO_ROOT / "recordings"
+DOWNLOADS = Path.home() / "Downloads"
 
 
 def parse_duration(raw: str) -> float:
@@ -36,9 +36,9 @@ def prompt_duration() -> float:
 
 
 def default_output() -> Path:
-    RECORDINGS.mkdir(parents=True, exist_ok=True)
+    DOWNLOADS.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    return RECORDINGS / f"capture-{stamp}.mp4"
+    return DOWNLOADS / f"capture-{stamp}.mp4"
 
 
 def main() -> int:

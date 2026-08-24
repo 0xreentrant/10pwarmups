@@ -1,4 +1,5 @@
 import { assign, setup } from "xstate"
+import type { Partner } from "../../types/domain"
 
 const SEEK_HOLD_EPS = 0.08
 /** Past move start so video undershoot still lands in this move's segment. */
@@ -9,6 +10,8 @@ export interface TaggerContext {
   moveCount: number
   /** Display/export names per move index (editable in tagger). */
   moveNames: string[]
+  /** Person A/B per move index (editable in tagger). */
+  movePartners: Partner[]
   /** Start time per move index - null = missing / not placed yet. */
   timestamps: (number | null)[]
   duration: number
@@ -23,7 +26,7 @@ export interface TaggerContext {
 }
 
 export type TaggerEvent =
-  | { type: "SET_DECK"; deckId: string; moveCount: number; moveNames: string[] }
+  | { type: "SET_DECK"; deckId: string; moveCount: number; moveNames: string[]; movePartners: Partner[] }
   | { type: "SEED"; duration: number; timestamps: (number | null)[] }
   | { type: "TIME"; time: number }
   | { type: "SCRUB"; time: number }
@@ -31,10 +34,10 @@ export type TaggerEvent =
   | { type: "DRAG_START"; index: number; time: number }
   | { type: "DRAG"; time: number }
   | { type: "DRAG_END" }
-  | { type: "LOAD"; timestamps: (number | null)[]; names?: string[] }
-  | { type: "RESET"; timestamps: (number | null)[]; moveNames: string[] }
+  | { type: "LOAD"; timestamps: (number | null)[]; names?: string[]; partners?: Partner[] }
+  | { type: "RESET"; timestamps: (number | null)[]; moveNames: string[]; movePartners: Partner[] }
   | { type: "DELETE_SELECTED" }
-  | { type: "SET_MOVE_NAME"; index: number; name: string }
+  | { type: "SET_MOVE"; index: number; name: string; partner: Partner }
 
 function clampTime(time: number, duration: number): number {
   if (duration <= 0) return 0
@@ -58,6 +61,7 @@ const taggerSetup = setup({
         deckId: event.deckId,
         moveCount: event.moveCount,
         moveNames: event.moveNames.slice(0, event.moveCount),
+        movePartners: event.movePartners.slice(0, event.moveCount),
         timestamps: [],
         duration: 0,
         currentTime: 0,
@@ -153,11 +157,14 @@ const taggerSetup = setup({
     load: assign(({ context, event }) => {
       if (event.type !== "LOAD") return {}
       if (event.timestamps.length !== context.moveCount) return {}
-      const updates: Pick<TaggerContext, "timestamps" | "moveNames"> = {
+      const updates: Partial<Pick<TaggerContext, "timestamps" | "moveNames" | "movePartners">> = {
         timestamps: event.timestamps,
       }
       if (event.names?.length === context.moveCount) {
         updates.moveNames = event.names
+      }
+      if (event.partners?.length === context.moveCount) {
+        updates.movePartners = event.partners
       }
       return updates
     }),
@@ -165,9 +172,11 @@ const taggerSetup = setup({
       if (event.type !== "RESET") return {}
       if (event.timestamps.length !== context.moveCount) return {}
       if (event.moveNames.length !== context.moveCount) return {}
+      if (event.movePartners.length !== context.moveCount) return {}
       return {
         timestamps: event.timestamps,
         moveNames: event.moveNames,
+        movePartners: event.movePartners,
         selectedIndex: null,
       }
     }),
@@ -180,15 +189,18 @@ const taggerSetup = setup({
       next[idx] = null
       return { timestamps: next }
     }),
-    setMoveName: assign(({ context, event }) => {
-      if (event.type !== "SET_MOVE_NAME") return {}
+    setMove: assign(({ context, event }) => {
+      if (event.type !== "SET_MOVE") return {}
       if (event.index < 0 || event.index >= context.moveCount) return {}
       const trimmed = event.name.trim()
       if (!trimmed) return {}
-      const next = context.moveNames.slice()
-      while (next.length < context.moveCount) next.push(`Move ${next.length + 1}`)
-      next[event.index] = trimmed
-      return { moveNames: next }
+      const nextNames = context.moveNames.slice()
+      while (nextNames.length < context.moveCount) nextNames.push(`Move ${nextNames.length + 1}`)
+      nextNames[event.index] = trimmed
+      const nextPartners = context.movePartners.slice()
+      while (nextPartners.length < context.moveCount) nextPartners.push("A")
+      nextPartners[event.index] = event.partner
+      return { moveNames: nextNames, movePartners: nextPartners }
     }),
   },
 })
@@ -200,6 +212,7 @@ export const taggerMachine = taggerSetup.createMachine({
     deckId: "",
     moveCount: 0,
     moveNames: [],
+    movePartners: [],
     timestamps: [],
     duration: 0,
     currentTime: 0,
@@ -218,7 +231,7 @@ export const taggerMachine = taggerSetup.createMachine({
         LOAD: { actions: "load" },
         RESET: { actions: "reset" },
         DELETE_SELECTED: { actions: "deleteSelected" },
-        SET_MOVE_NAME: { actions: "setMoveName" },
+        SET_MOVE: { actions: "setMove" },
         DRAG_START: { target: "dragging", actions: "dragStart" },
       },
     },
