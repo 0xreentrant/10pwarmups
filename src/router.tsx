@@ -6,6 +6,7 @@ import {
   createRouter,
   redirect,
   useRouter,
+  useRouterState,
 } from "@tanstack/react-router"
 import { useSelector } from "@xstate/react"
 import HomeScreen from "./components/HomeScreen"
@@ -285,6 +286,8 @@ declare module "@tanstack/react-router" {
 
 function RootLayout() {
   const routerInstance = useRouter()
+  const pathname = useRouterState({ select: s => s.location.pathname })
+  const onBetaTest = pathname.startsWith("/beta-test")
   const { open: whatsNewOpen, dismiss: dismissWhatsNew } = useWhatsNew()
 
   useEffect(() => {
@@ -326,7 +329,7 @@ function RootLayout() {
       <div className="mb-4 text-muted">
         (c) 0xreentrant 2026 · <a href="updates.html" className="text-muted no-underline">Latest Updates</a>
       </div>
-      <WhatsNewPopover open={whatsNewOpen} onDismiss={dismissWhatsNew} />
+      <WhatsNewPopover open={whatsNewOpen && !onBetaTest} onDismiss={dismissWhatsNew} />
     </div>
   )
 }

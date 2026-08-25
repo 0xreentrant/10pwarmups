@@ -44,4 +44,10 @@ describe("What's New popover", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     expect(localStorage.getItem(WHATS_NEW_STORAGE_KEY)).toBe(APP_RELEASE_VERSION)
   })
+
+  it("does not show on beta-test pages and leaves release unseen", async () => {
+    await renderWithRouter("/beta-test/B3")
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    expect(localStorage.getItem(WHATS_NEW_STORAGE_KEY)).toBeNull()
+  })
 })
