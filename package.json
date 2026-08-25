@@ -7,7 +7,7 @@
     "dev:tailscale": "node scripts/tailscale-dev.mjs",
     "tailscale:serve": "node scripts/tailscale-serve.mjs",
     "tailscale:reset": "tailscale serve reset",
-    "build": "tsc -b --noEmit && vite build",
+    "build": "tsc -b --noEmit && vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",

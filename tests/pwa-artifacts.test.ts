@@ -54,6 +54,12 @@ describe("PWA build artifacts", () => {
     expect(html).toContain("registerSW.js")
   })
 
+  // GitHub Pages serves 404.html for missing paths; copy of index.html boots the SPA.
+  it("includes GitHub Pages SPA fallback 404.html", () => {
+    expect(fs.existsSync(distPath("404.html"))).toBe(true)
+    expect(readDist("404.html")).toBe(readDist("index.html"))
+  })
+
   it("generates service worker with precache for critical assets", () => {
     expect(fs.existsSync(distPath("sw.js"))).toBe(true)
     const urls = extractPrecacheUrls(readDist("sw.js"))
