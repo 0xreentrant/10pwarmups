@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, type PointerEvent } from "react"
 import MoveLabel from "../../MoveLabel"
 import MoveList from "../../MoveList"
 import { usePersistedMediaVolume } from "../../../hooks/usePersistedMediaVolume"
@@ -170,6 +170,17 @@ export default function CinemaOverlay({
     if (!timeline) return
     seekToIndex(clampNextPlayable(timeline.timestamps, currentIndex))
   }
+  const flashNavPress = (e: PointerEvent<HTMLButtonElement>) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    const el = e.currentTarget
+    const rect = el.getBoundingClientRect()
+    const ripple = document.createElement("span")
+    ripple.className = "ct-ripple"
+    ripple.style.setProperty("--tap-x", `${e.clientX - rect.left}px`)
+    ripple.style.setProperty("--tap-y", `${e.clientY - rect.top}px`)
+    ripple.addEventListener("animationend", () => ripple.remove(), { once: true })
+    el.appendChild(ripple)
+  }
 
   return (
     <div className="ct-overlay">
@@ -182,6 +193,7 @@ export default function CinemaOverlay({
           src={videoSrc}
           className="ct-video"
           autoPlay={!tapDemo}
+          preload="auto"
           playsInline
           onSeeked={handleSeeked}
           onTimeUpdate={e => handleTimeUpdate(e.currentTarget.currentTime)}
@@ -221,9 +233,21 @@ export default function CinemaOverlay({
 
       {!reviewEnded && !showTapDemo && (
         <div className="ct-tapzones">
-          <button type="button" className="ct-tapzone" aria-label="Previous move" onClick={seekPrev} />
+          <button
+            type="button"
+            className="ct-tapzone ct-tapzone--nav"
+            aria-label="Previous move"
+            onPointerDown={flashNavPress}
+            onClick={seekPrev}
+          />
           <button type="button" className="ct-tapzone" aria-label="Play or pause" onClick={togglePlay} />
-          <button type="button" className="ct-tapzone" aria-label="Next move" onClick={seekNext} />
+          <button
+            type="button"
+            className="ct-tapzone ct-tapzone--nav"
+            aria-label="Next move"
+            onPointerDown={flashNavPress}
+            onClick={seekNext}
+          />
         </div>
       )}
 
@@ -558,10 +582,45 @@ function CinemaStyles() {
       }
 
       .ct-tapzone {
-        flex: 1;
         height: 100%;
         background: transparent;
         border: none;
+      }
+
+      .ct-tapzone:nth-child(1),
+      .ct-tapzone:nth-child(3) {
+        flex: 0 0 27.5%;
+      }
+
+      .ct-tapzone:nth-child(2) {
+        flex: 0 0 45%;
+      }
+
+      .ct-tapzone--nav {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .ct-ripple {
+        position: absolute;
+        left: var(--tap-x, 50%);
+        top: var(--tap-y, 50%);
+        width: 96px;
+        height: 96px;
+        margin: -48px 0 0 -48px;
+        border-radius: 50%;
+        pointer-events: none;
+        opacity: 0;
+        transform: scale(0.25);
+        background:
+          radial-gradient(circle, rgba(0, 0, 0, 0.35) 0%, transparent 55%),
+          radial-gradient(circle, transparent 48%, rgba(255, 255, 255, 0.35) 52%, transparent 58%);
+        animation: ct-tap-dimple 480ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      @keyframes ct-tap-dimple {
+        0% { opacity: 0.95; transform: scale(0.25); }
+        100% { opacity: 0; transform: scale(2.6); }
       }
 
       .ct-caption {
@@ -689,6 +748,7 @@ function CinemaStyles() {
       @media (prefers-reduced-motion: reduce) {
         .ct-drawer { animation: none; }
         .ct-play-again { animation: none; }
+        .ct-ripple { animation: none; opacity: 0; }
       }
     `}</style>
   )

@@ -155,17 +155,17 @@ function ReviewTapDemoStyles() {
 
       .ct-tap-demo-zone--left {
         left: 0;
-        width: 50%;
+        width: 27.5%;
       }
 
       .ct-tap-demo-zone--center {
-        left: 33.333%;
-        width: 33.333%;
+        left: 27.5%;
+        width: 45%;
       }
 
       .ct-tap-demo-zone--right {
         right: 0;
-        width: 50%;
+        width: 27.5%;
       }
 
       .ct-tap-demo-finger {
@@ -180,7 +180,7 @@ function ReviewTapDemoStyles() {
       }
 
       .ct-tap-demo-finger--left {
-        left: 25%;
+        left: 13.75%;
         top: 42%;
         transform: translate(-50%, -50%);
       }
@@ -192,7 +192,7 @@ function ReviewTapDemoStyles() {
       }
 
       .ct-tap-demo-finger--right {
-        left: 75%;
+        left: 86.25%;
         top: 42%;
         transform: translate(-50%, -50%);
       }
