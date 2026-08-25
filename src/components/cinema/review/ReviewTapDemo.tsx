@@ -2,40 +2,68 @@ import { useEffect, useState } from "react"
 
 const STEP_MS = 1200
 
+const INTRO = {
+  stamp: "New review",
+  body: "Watch the full warmup in order. Tap the sides to jump moves, center to pause.",
+}
+
 const STEPS = [
   { zone: "left" as const, label: "prev move" },
   { zone: "center" as const, label: "pause vid" },
   { zone: "right" as const, label: "next move" },
 ]
 
+type Phase = "intro" | "zones"
+
 interface ReviewTapDemoProps {
   onComplete: () => void
 }
 
 export default function ReviewTapDemo({ onComplete }: ReviewTapDemoProps) {
+  const [phase, setPhase] = useState<Phase>("intro")
   const [stepIndex, setStepIndex] = useState(0)
 
   useEffect(() => {
+    if (phase !== "zones") return
     if (stepIndex >= STEPS.length) {
       onComplete()
       return
     }
     const timer = window.setTimeout(() => setStepIndex(i => i + 1), STEP_MS)
     return () => window.clearTimeout(timer)
-  }, [stepIndex, onComplete])
+  }, [phase, stepIndex, onComplete])
 
-  if (stepIndex >= STEPS.length) return null
+  if (phase === "zones" && stepIndex >= STEPS.length) return null
 
   const step = STEPS[stepIndex]
 
   return (
-    <div className="ct-tap-demo" aria-hidden>
+    <div
+      className="ct-tap-demo"
+      aria-hidden={phase !== "intro"}
+    >
       <ReviewTapDemoStyles />
-      <div className={`ct-tap-demo-zone ct-tap-demo-zone--${step.zone}`} />
-      <div className={`ct-tap-demo-finger ct-tap-demo-finger--${step.zone}`}>
-        <FingerIcon />
-        <span className="ct-tap-demo-label">{step.label}</span>
-      </div>
+      {phase === "intro" ? (
+        <div className="ct-tap-demo-intro" role="dialog" aria-label="New review mode">
+          <span className="ct-tap-demo-stamp">{INTRO.stamp}</span>
+          <p className="ct-tap-demo-intro-body">{INTRO.body}</p>
+          <button
+            type="button"
+            className="ct-tap-demo-ok"
+            onClick={() => setPhase("zones")}
+          >
+            OK
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className={`ct-tap-demo-zone ct-tap-demo-zone--${step.zone}`} />
+          <div className={`ct-tap-demo-finger ct-tap-demo-finger--${step.zone}`}>
+            <FingerIcon />
+            <span className="ct-tap-demo-label">{step.label}</span>
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -59,6 +87,61 @@ function ReviewTapDemoStyles() {
         inset: 0;
         z-index: 40;
         pointer-events: auto;
+      }
+
+      .ct-tap-demo-intro {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 16px;
+        padding: 24px 20px;
+        text-align: center;
+        background: rgba(4, 4, 6, 0.82);
+        animation: ct-tap-demo-zone-in 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      .ct-tap-demo-stamp {
+        font-family: var(--font-family-disp);
+        font-weight: 800;
+        font-size: clamp(2.4rem, 10vw, 3rem);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #fff;
+        border: 3px solid #fff;
+        padding: 8px 16px;
+        transform: rotate(-3deg);
+        animation: ct-tap-demo-stamp-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      .ct-tap-demo-intro-body {
+        margin: 0;
+        max-width: 34ch;
+        font-family: var(--font-family-body);
+        font-size: 16px;
+        line-height: 1.45;
+        color: rgba(232, 232, 232, 0.92);
+      }
+
+      .ct-tap-demo-ok {
+        margin-top: 4px;
+        font-family: var(--font-family-disp);
+        font-weight: 800;
+        font-size: 1rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--color-text-on-accent);
+        background: var(--color-accent);
+        border: 1px solid var(--color-accent);
+        padding: 12px 32px;
+        line-height: 1;
+      }
+
+      .ct-tap-demo-ok:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 3px;
       }
 
       .ct-tap-demo-zone {
@@ -115,23 +198,31 @@ function ReviewTapDemoStyles() {
       }
 
       .ct-tap-demo-finger-icon {
-        width: 44px;
-        height: 44px;
+        width: 52px;
+        height: 52px;
       }
 
       .ct-tap-demo-label {
         font-family: var(--font-family-disp);
         font-weight: 800;
-        font-size: 0.68rem;
+        font-size: 0.9rem;
         letter-spacing: 0.08em;
         text-transform: uppercase;
         color: rgba(255, 255, 255, 0.92);
         white-space: nowrap;
+        background: rgba(0, 0, 0, 0.55);
+        padding: 5px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
       }
 
       @keyframes ct-tap-demo-zone-in {
         from { opacity: 0; }
         to { opacity: 1; }
+      }
+
+      @keyframes ct-tap-demo-stamp-in {
+        from { opacity: 0; transform: translateY(8px) rotate(-3deg); }
+        to { opacity: 1; transform: rotate(-3deg); }
       }
 
       @keyframes ct-tap-demo-tap {
@@ -140,7 +231,9 @@ function ReviewTapDemoStyles() {
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .ct-tap-demo-zone { animation: none; }
+        .ct-tap-demo-zone,
+        .ct-tap-demo-intro,
+        .ct-tap-demo-stamp { animation: none; }
         .ct-tap-demo-finger { animation: none; }
       }
     `}</style>

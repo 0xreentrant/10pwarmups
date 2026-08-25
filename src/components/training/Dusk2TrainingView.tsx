@@ -9,6 +9,8 @@ interface Dusk2TrainingViewProps {
   deck: Deck
   session: Session
   progress: ProgressMap
+  /** Beta-only zones walkthrough before the clock opens. */
+  tapDemo?: boolean
   onOptionClick: (optionIndex: number) => void
   onTapOut?: () => void
   onBack: () => void
@@ -26,6 +28,7 @@ export default function Dusk2TrainingView({
   deck,
   session,
   progress,
+  tapDemo = false,
   onOptionClick,
   onTapOut,
   onBack,
@@ -64,6 +67,7 @@ export default function Dusk2TrainingView({
         progress={progress}
         videoSrc={videoSrc}
         variant={DUSK2_BLEED_VARIANT}
+        tapDemo={tapDemo}
         timestamps={timestamps}
         onOptionClick={onOptionClick}
         onTapOut={onTapOut}

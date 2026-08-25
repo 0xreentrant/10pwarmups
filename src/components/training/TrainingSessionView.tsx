@@ -10,6 +10,8 @@ export interface TrainingSessionViewProps {
   snap: AppSnap
   send: (event: AppEvent) => void
   deck: Deck
+  /** Beta-only zones walkthrough before the clock opens. */
+  tapDemo?: boolean
   /** In-memory timestamps (tagger preview); omitted for production decks. */
   timestamps?: (number | null)[] | null
   /** Wrap the live drill in a phone frame (tagger). */
@@ -28,6 +30,7 @@ export default function TrainingSessionView({
   snap,
   send,
   deck,
+  tapDemo = false,
   timestamps = null,
   frameTraining,
   onExit,
@@ -50,6 +53,7 @@ export default function TrainingSessionView({
       deck={deck}
       session={session}
       progress={progress}
+      tapDemo={tapDemo}
       timestamps={timestamps}
       onOptionClick={optionIndex => send({ type: "OPTION_CLICK", optionIndex })}
       onTapOut={() => send({ type: "TAP_OUT" })}

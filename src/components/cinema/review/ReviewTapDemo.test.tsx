@@ -1,4 +1,4 @@
-import { render, act } from "@testing-library/react"
+import { render, act, fireEvent, screen } from "@testing-library/react"
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest"
 import ReviewTapDemo from "./ReviewTapDemo"
 
@@ -11,10 +11,19 @@ describe("ReviewTapDemo", () => {
     vi.useRealTimers()
   })
 
-  it("walks left, center, right then completes", () => {
+  it("waits for OK on intro then walks left, center, right", () => {
     const onComplete = vi.fn()
     render(<ReviewTapDemo onComplete={onComplete} />)
 
+    expect(document.querySelector(".ct-tap-demo-intro")).toBeTruthy()
+    expect(document.querySelector(".ct-tap-demo-stamp")?.textContent).toBe("New review")
+    expect(document.querySelector(".ct-tap-demo-zone")).toBeNull()
+
+    act(() => { vi.advanceTimersByTime(5000) })
+    expect(document.querySelector(".ct-tap-demo-intro")).toBeTruthy()
+
+    fireEvent.click(screen.getByRole("button", { name: "OK" }))
+    expect(document.querySelector(".ct-tap-demo-intro")).toBeNull()
     expect(document.querySelector(".ct-tap-demo-zone--left")).toBeTruthy()
     expect(document.querySelector(".ct-tap-demo-label")?.textContent).toBe("prev move")
 

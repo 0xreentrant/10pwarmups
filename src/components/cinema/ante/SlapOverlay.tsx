@@ -24,7 +24,7 @@ export function SlapOverlay(ctx: TappedCtx) {
       <p className="tp-note">best run {drill.best} · streak {ctx.prevStreak}</p>
       <div className="tp-actions">
         <button type="button" className="tp-action" onClick={ctx.round.next}>
-          Slap in - keep rolling
+          Slap in - continue
         </button>
         <button type="button" className="tp-action tp-action--ghost" onClick={ctx.onHome}>
           ← Home

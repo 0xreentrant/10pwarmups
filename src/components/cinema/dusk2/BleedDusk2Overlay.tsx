@@ -7,6 +7,7 @@ import { SlapOverlay, TappedStyles, type TappedCtx } from "../ante/SlapOverlay"
 import { ANTE_CLOCK_MS, useAnteRound, type DrillPhase } from "../ante/useAnteRound"
 import type { BleedVariant } from "./bleedVariant"
 import Dusk2CompleteOverlay from "./Dusk2CompleteOverlay"
+import TrainingZonesDemo from "./TrainingZonesDemo"
 
 const CORRECT_HOLD_MS = 300
 
@@ -33,6 +34,8 @@ interface OverlayProps {
   progress: ProgressMap
   videoSrc: string | null
   variant: BleedVariant
+  /** Beta-only zones walkthrough before the clock opens. */
+  tapDemo?: boolean
   onOptionClick: (optionIndex: number) => void
   onTapOut?: () => void
   onClose: () => void
@@ -53,6 +56,7 @@ export default function BleedDusk2Overlay({
   progress,
   videoSrc,
   variant,
+  tapDemo = false,
   onOptionClick,
   onTapOut,
   onClose,
@@ -67,6 +71,8 @@ export default function BleedDusk2Overlay({
   const videoRef = useRef<HTMLVideoElement>(null)
   const streakRef = useRef(0)
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
+  const [demoComplete, setDemoComplete] = useState(!tapDemo)
+  const showTapDemo = tapDemo && !demoComplete
   const [showComplete, setShowComplete] = useState(
     () => !!session.locked && !!session.finalAttempt,
   )
@@ -74,6 +80,10 @@ export default function BleedDusk2Overlay({
   useEffect(() => {
     setVideoEl(videoSrc ? videoRef.current : null)
   }, [videoSrc])
+
+  useEffect(() => {
+    setDemoComplete(!tapDemo)
+  }, [tapDemo, videoSrc, deck.id])
 
   // Autoplay needs mute; still restore volume level without writing mute back.
   usePersistedMediaVolume(videoEl, { forceMuted: true })
@@ -92,6 +102,7 @@ export default function BleedDusk2Overlay({
     onTapOut,
     onRestart,
     timestamps: timestampOverrides,
+    holdAsk: showTapDemo,
     config: {
       buzzHoldMs: null,
       correctHoldMs: CORRECT_HOLD_MS,
@@ -117,11 +128,11 @@ export default function BleedDusk2Overlay({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose()
+      if (e.key === "Escape" && !showTapDemo) onClose()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [onClose])
+  }, [onClose, showTapDemo])
 
   const finale = showComplete || drill.phase === "done" || session.locked
   const clockOpen = live || paused
@@ -152,7 +163,7 @@ export default function BleedDusk2Overlay({
       <BleedDusk2Styles />
       <TappedStyles />
 
-      {!showComplete && (
+      {!showComplete && !showTapDemo && (
         <div className="bl-top-bar">
           <div className="bl-top-left">
             {onReview && (
@@ -179,7 +190,7 @@ export default function BleedDusk2Overlay({
             muted
             playsInline
             preload="auto"
-            onClick={canTapVideo ? togglePause : undefined}
+            onClick={canTapVideo && !showTapDemo ? togglePause : undefined}
             aria-label={
               canPauseClock
                 ? paused
@@ -196,7 +207,7 @@ export default function BleedDusk2Overlay({
           <div className="bl-video bl-video--empty" aria-hidden />
         )}
 
-        {canPauseSegment && (
+        {canPauseSegment && !showTapDemo && (
           <button
             type="button"
             className="bl-tap-pause"
@@ -225,13 +236,13 @@ export default function BleedDusk2Overlay({
 
         {!finale && !buzzed && !sharp && <AnteVerdict round={round} buzzerWord="Tapped out!" />}
 
-        {clockOpen && (
+        {(clockOpen || showTapDemo) && (
           <div className="bl-ghost" aria-hidden>
-            <span className="bl-seconds">{seconds}</span>
-            <span className="bl-stake" key={`stake-${stake}`}>×{stake}</span>
+            <span className="bl-seconds">{showTapDemo && !clockOpen ? "6.0" : seconds}</span>
+            <span className="bl-stake" key={`stake-${stake}`}>×{showTapDemo && !clockOpen ? 4 : stake}</span>
           </div>
         )}
-        {drill.phase === "asking" && !clockOpen && !finale && (
+        {drill.phase === "asking" && !clockOpen && !finale && !showTapDemo && (
           <span className="bl-wait">{videoSrc ? "tape rolling" : "get ready"}</span>
         )}
 
@@ -262,6 +273,8 @@ export default function BleedDusk2Overlay({
             </div>
           </div>
         )}
+
+        {showTapDemo && <TrainingZonesDemo onComplete={() => setDemoComplete(true)} />}
       </div>
     </div>
   )

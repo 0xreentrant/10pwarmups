@@ -532,6 +532,7 @@ function BetaTestTrainingRoute() {
       snap={snap}
       send={appActor.send}
       deck={deck}
+      tapDemo
       {...handlers}
       onRestart={() => {
         appActor.send({ type: "START_DECK", deckId: warmup })

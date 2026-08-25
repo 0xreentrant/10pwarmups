@@ -381,6 +381,7 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/beta-test/B3/train")
     })
     expect(document.querySelector(".bl-overlay")).toBeTruthy()
+    expect(document.querySelector(".bl-train-demo")).toBeTruthy()
   })
 
   it("navigates to cinematic review from beta test landing", async () => {
@@ -392,6 +393,7 @@ describe("routing", () => {
     })
     expect(document.querySelector(".ct-overlay")).toBeTruthy()
     expect(document.querySelector(".ct-tap-demo")).toBeTruthy()
+    expect(document.querySelector(".ct-tap-demo-intro")).toBeTruthy()
   })
 
   it("confirms before switching from cinematic training to review", async () => {

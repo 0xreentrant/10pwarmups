@@ -95,6 +95,8 @@ export interface UseAnteRoundArgs {
   config?: AnteRoundConfig
   /** Optional in-memory timestamps (e.g. tagger preview). */
   timestamps?: (number | null)[] | null
+  /** Hold first frame and keep the clock closed (e.g. pre-round demo). */
+  holdAsk?: boolean
 }
 
 export function useAnteRound({
@@ -106,6 +108,7 @@ export function useAnteRound({
   onRestart,
   config = {},
   timestamps: timestampOverrides = null,
+  holdAsk = false,
 }: UseAnteRoundArgs): AnteRound {
   const { buzzHoldMs = 1600, buzzReplay = false, correctHoldMs } = config
   const clockRef = useRef(0)
@@ -259,6 +262,20 @@ export function useAnteRound({
     setPaid(null)
     setRemaining(ANTE_CLOCK_MS)
 
+    const t = timeline.timestamps[deckMoveIdx]
+    hold(isFiniteTimestamp(t) ? t : 0)
+
+    if (holdAsk) {
+      setReady(false)
+      setLive(false)
+      setPaused(false)
+      return () => {
+        if (clockRef.current) window.clearTimeout(clockRef.current)
+        clockRef.current = 0
+        cancel()
+      }
+    }
+
     const openClock = () => {
       const snap = sessionRef.current
       const optsAtOpen = snap.options
@@ -281,8 +298,6 @@ export function useAnteRound({
       scheduleClock(ANTE_CLOCK_MS)
     }
 
-    const t = timeline.timestamps[deckMoveIdx]
-    hold(isFiniteTimestamp(t) ? t : 0)
     openClock()
 
     return () => {
@@ -291,7 +306,7 @@ export function useAnteRound({
       cancel()
     }
     // beat re-opens the ask after settle; session length is the ask index while asking
-  }, [timeline, phase, beat, session.locked, session.moveSequence.length, total])
+  }, [timeline, phase, beat, session.locked, session.moveSequence.length, total, holdAsk])
 
   useEffect(() => {
     if (!timeline) return

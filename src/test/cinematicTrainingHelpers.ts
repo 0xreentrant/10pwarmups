@@ -6,12 +6,19 @@ export function getCinematicOptionButtons() {
   return buttons
 }
 
+/** Dismiss the beta train intro (OK) if present; zone beats then auto-advance. */
+export async function dismissTrainingDemoIntro() {
+  const ok = await screen.findByRole("button", { name: "OK" }, { timeout: 5000 }).catch(() => null)
+  if (ok) fireEvent.click(ok)
+}
+
 export async function waitForCinematicOptions() {
+  await dismissTrainingDemoIntro()
   await waitFor(() => {
     expect(document.querySelector(".bl-ghost")).toBeTruthy()
     const buttons = getCinematicOptionButtons()
     expect(buttons.some(b => !b.disabled)).toBe(true)
-  }, { timeout: 5000 })
+  }, { timeout: 15000 })
   return getCinematicOptionButtons()
 }
 
@@ -21,7 +28,7 @@ export async function clickCinematicOptionWithText(text: string) {
     expect(document.querySelector(".bl-ghost")).toBeTruthy()
     btn = getCinematicOptionButtons().find(b => !b.disabled && b.textContent?.includes(text))
     expect(btn).toBeTruthy()
-  }, { timeout: 5000 })
+  }, { timeout: 12000 })
   fireEvent.click(btn!)
 }
 
