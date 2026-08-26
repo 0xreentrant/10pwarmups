@@ -34,6 +34,7 @@ import { CinemaOverlay } from "../cinema/review"
 import MoveLabel from "../MoveLabel"
 import TrainingSessionView from "../training/TrainingSessionView"
 import { commitJsonHistory, redoJsonHistory, undoJsonHistory } from "./jsonHistory"
+import { taggerKeyDownAction, taggerKeyTarget, taggerKeyUpShouldSuppress } from "./taggerKeyboard"
 import { SELECT_NUDGE_SEC, taggerMachine } from "./taggerMachine"
 import {
   buildJsonText,
@@ -350,101 +351,70 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   }
 
   function handleTaggerKeyDown(e: KeyboardEvent | ReactKeyboardEvent) {
-    const isJsonEditor =
-      e.target instanceof HTMLTextAreaElement && e.target === jsonTextareaRef.current
-    const isNonJsonTyping = () => {
-      const el = e.target
-      if (el instanceof HTMLTextAreaElement && el === jsonTextareaRef.current) return false
-      return (
-        el instanceof HTMLElement &&
-        (el.tagName === "TEXTAREA" || el.tagName === "INPUT" || el.isContentEditable)
-      )
-    }
-    const isUndo =
-      (e.ctrlKey || e.metaKey) &&
-      !e.shiftKey &&
-      (e.code === "KeyZ" || e.key === "z" || e.key === "Z")
-    const isRedo =
-      (e.ctrlKey || e.metaKey) &&
-      (e.code === "KeyY" ||
-        e.key === "y" ||
-        e.key === "Y" ||
-        ((e.code === "KeyZ" || e.key === "z" || e.key === "Z") && e.shiftKey))
+    const target = taggerKeyTarget(e.target, jsonTextareaRef.current)
+    const action = taggerKeyDownAction({
+      target,
+      code: e.code,
+      key: e.key,
+      ctrlKey: e.ctrlKey,
+      metaKey: e.metaKey,
+      shiftKey: e.shiftKey,
+      nudgeSec: nudgeMs / 1000,
+      jsonPastLength: jsonPastRef.current.length,
+      jsonFutureLength: jsonFutureRef.current.length,
+    })
 
-    if (isUndo) {
-      if (isJsonEditor && jsonPastRef.current.length === 0) return
+    if (action.type === "ignore") return
+
+    if (action.type === "undo") {
       e.preventDefault()
       e.stopPropagation()
       if ("stopImmediatePropagation" in e) e.stopImmediatePropagation()
       undoJson()
       return
     }
-    if (isRedo) {
-      if (isJsonEditor && jsonFutureRef.current.length === 0) return
+    if (action.type === "redo") {
       e.preventDefault()
       e.stopPropagation()
       if ("stopImmediatePropagation" in e) e.stopImmediatePropagation()
       redoJson()
       return
     }
-    if (isJsonEditor) return
-    if (isNonJsonTyping()) return
 
     const video = videoRef.current
     if (!video) return
 
-    const nudgeSec = nudgeMs / 1000
-    const arrowDelta =
-      e.code === "ArrowLeft" || e.key === "ArrowLeft"
-        ? -nudgeSec
-        : e.code === "ArrowRight" || e.key === "ArrowRight"
-          ? nudgeSec
-          : null
-
-    if (arrowDelta !== null) {
+    if (action.type === "scrub") {
       e.preventDefault()
       e.stopPropagation()
       const dur = Number.isFinite(video.duration) ? video.duration : duration
-      const t = Math.min(dur, Math.max(0, video.currentTime + arrowDelta))
+      const t = Math.min(dur, Math.max(0, video.currentTime + action.deltaSec))
       send({ type: "SCRUB", time: t })
       video.currentTime = t
       return
     }
 
-    if (e.code === "Delete" || e.key === "Delete") {
-      if (isJsonEditor) return
+    if (action.type === "delete-marker") {
       e.preventDefault()
       e.stopPropagation()
       deleteSelectedMarker()
       return
     }
 
-    const isSpace = e.code === "Space" || e.key === " "
-    if (!isSpace) return
-    e.preventDefault()
-    e.stopPropagation()
-    if (video.paused) void video.play().catch(() => {})
-    else video.pause()
+    if (action.type === "toggle-playback") {
+      e.preventDefault()
+      e.stopPropagation()
+      if (video.paused) void video.play().catch(() => {})
+      else video.pause()
+    }
   }
 
   useEffect(() => {
     if (mode !== "edit") return
     const onKeyDown = (e: KeyboardEvent) => handleTaggerKeyDown(e)
     const onKeyUp = (e: KeyboardEvent) => {
-      const el = e.target
-      if (
-        el instanceof HTMLElement &&
-        (el.tagName === "TEXTAREA" || el.tagName === "INPUT" || el.isContentEditable)
-      ) {
-        return
-      }
-      const isSpace = e.code === "Space" || e.key === " "
-      const isArrow =
-        e.code === "ArrowLeft" ||
-        e.code === "ArrowRight" ||
-        e.key === "ArrowLeft" ||
-        e.key === "ArrowRight"
-      if (!isSpace && !isArrow) return
+      const target = taggerKeyTarget(e.target, jsonTextareaRef.current)
+      if (!taggerKeyUpShouldSuppress(target, e.code, e.key)) return
       e.preventDefault()
       e.stopPropagation()
     }
