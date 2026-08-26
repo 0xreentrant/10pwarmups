@@ -9,7 +9,7 @@ import {
   clickOptionWithText,
   startFirstDeck,
 } from "./test/trainingHelpers"
-import { startBetaFirstDeck } from "./test/cinematicTrainingHelpers"
+import { startBetaFirstDeck, dismissBetaProgressIntro } from "./test/cinematicTrainingHelpers"
 
 const A1_MOVES = DECKS.find(d => d.id === "A1")!.moves.map(m => m.text)
 
@@ -360,6 +360,7 @@ describe("routing", () => {
     await renderWithRouter("/beta-test/B3")
 
     expect(screen.getByText("Beta")).toBeInTheDocument()
+    expect(document.querySelector(".bt-progress-intro")).toBeTruthy()
     expect(screen.getByText("V2 Warmups")).toBeInTheDocument()
     expect(screen.getByText("Trainer")).toBeInTheDocument()
     expect(screen.getByText("Stalk")).toBeInTheDocument()
@@ -376,6 +377,7 @@ describe("routing", () => {
   it("navigates to cinematic training from beta test landing", async () => {
     const { router } = await renderWithRouter("/beta-test/B3")
 
+    await dismissBetaProgressIntro()
     fireEvent.click(screen.getByText("Train"))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/beta-test/B3/train")
@@ -387,6 +389,7 @@ describe("routing", () => {
   it("navigates to cinematic review from beta test landing", async () => {
     const { router } = await renderWithRouter("/beta-test/B3")
 
+    await dismissBetaProgressIntro()
     fireEvent.click(screen.getByText("Review"))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/beta-test/B3/review")

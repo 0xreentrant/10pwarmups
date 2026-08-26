@@ -6,10 +6,16 @@ export function getCinematicOptionButtons() {
   return buttons
 }
 
+/** Dismiss the beta landing progress intro if present. */
+export async function dismissBetaProgressIntro() {
+  if (!document.querySelector(".bt-progress-intro")) return
+  fireEvent.click(await screen.findByRole("button", { name: "OK" }))
+}
+
 /** Dismiss the beta train intro (OK) if present; zone beats then auto-advance. */
 export async function dismissTrainingDemoIntro() {
   const ok = await screen.findByRole("button", { name: "OK" }, { timeout: 5000 }).catch(() => null)
-  if (ok) fireEvent.click(ok)
+  if (ok && document.querySelector(".bl-train-demo-intro")) fireEvent.click(ok)
 }
 
 export async function waitForCinematicOptions() {
@@ -47,6 +53,7 @@ export async function answerCinematicDeckMoves(moves: string[]) {
 }
 
 export async function startBetaFirstDeck() {
+  await dismissBetaProgressIntro()
   const trainButtons = await screen.findAllByText("Train")
   fireEvent.click(trainButtons[0])
   await waitForCinematicOptions()
