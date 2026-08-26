@@ -1,5 +1,5 @@
 import { useMachine } from "@xstate/react"
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from "react"
+import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react"
 import { appMachine } from "../../appMachine"
 import { DECKS } from "../../data/decks"
 import { warmupNoteForDeck } from "../../data/warmupNotes"
@@ -33,6 +33,7 @@ import { listVideoDeckIds, videoSrcForDeck } from "../../utils/deckVideo"
 import { CinemaOverlay } from "../cinema/review"
 import MoveLabel from "../MoveLabel"
 import TrainingSessionView from "../training/TrainingSessionView"
+import { commitJsonHistory, redoJsonHistory, undoJsonHistory } from "./jsonHistory"
 import { SELECT_NUDGE_SEC, taggerMachine } from "./taggerMachine"
 import {
   buildJsonText,
@@ -121,6 +122,15 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const [moveNameDraft, setMoveNameDraft] = useState("")
   const [movePartnerDraft, setMovePartnerDraft] = useState<Partner>("A")
   const [hoveredMoveIndex, setHoveredMoveIndex] = useState<number | null>(null)
+  const [jsonPast, setJsonPast] = useState<string[]>([])
+  const [jsonFuture, setJsonFuture] = useState<string[]>([])
+
+  const appliedJsonRef = useRef("")
+  const jsonPastRef = useRef<string[]>([])
+  const jsonFutureRef = useRef<string[]>([])
+  const skipHistoryCommitRef = useRef(false)
+  const jsonTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
 
   const deck = DECKS.find(d => d.id === deckId)
   const defaultMoveNames = deck?.moves.map(m => m.text) ?? []
@@ -174,6 +184,41 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   }, [deckId])
 
   useEffect(() => {
+    setJsonPast([])
+    setJsonFuture([])
+    jsonPastRef.current = []
+    jsonFutureRef.current = []
+    skipHistoryCommitRef.current = true
+  }, [deckId])
+
+  function syncJsonHistory(past: string[], future: string[]) {
+    jsonPastRef.current = past
+    jsonFutureRef.current = future
+    setJsonPast(past)
+    setJsonFuture(future)
+  }
+
+  function commitDocumentJson(nextJson: string) {
+    if (skipHistoryCommitRef.current) {
+      appliedJsonRef.current = nextJson
+      return
+    }
+    const prevJson = appliedJsonRef.current
+    if (prevJson !== nextJson) {
+      const committed = commitJsonHistory(jsonPastRef.current, prevJson, nextJson)
+      if (committed) syncJsonHistory(committed.past, committed.future)
+      appliedJsonRef.current = nextJson
+    }
+  }
+
+  useEffect(() => {
+    if (skipHistoryCommitRef.current) {
+      appliedJsonRef.current = onDiskJson
+      skipHistoryCommitRef.current = false
+      setJsonDraft(onDiskJson)
+      return
+    }
+    commitDocumentJson(onDiskJson)
     setJsonDraft(onDiskJson)
   }, [deckId, onDiskJson])
 
@@ -251,56 +296,157 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     }
   }, [tagger.value, duration, send])
 
-  useEffect(() => {
-    if (mode !== "edit") return
-    const isTyping = (e: KeyboardEvent) => {
+  function applyJsonToMachine(jsonText: string): boolean {
+    const refNames =
+      moveNames.length === moveCount ? moveNames : defaultMoveNames
+    const result = parseTimestampsJson(jsonText, moveCount, refNames)
+    if (!result.ok) {
+      setLoadError(result.error)
+      return false
+    }
+    setLoadError(null)
+    const names = result.names
+      ? defaultMoveNames.map((name, i) => {
+          const loaded = result.names![i]?.trim()
+          return loaded || name
+        })
+      : undefined
+    send({ type: "LOAD", timestamps: result.timestamps, names, partners: result.partners })
+    return true
+  }
+
+  function undoJson() {
+    const result = undoJsonHistory(
+      jsonPastRef.current,
+      jsonFutureRef.current,
+      appliedJsonRef.current,
+    )
+    if (!result) return
+    syncJsonHistory(result.past, result.future)
+    skipHistoryCommitRef.current = true
+    if (!applyJsonToMachine(result.current)) {
+      skipHistoryCommitRef.current = false
+      return
+    }
+    appliedJsonRef.current = result.current
+    setJsonDraft(result.current)
+  }
+
+  function redoJson() {
+    const result = redoJsonHistory(
+      jsonPastRef.current,
+      jsonFutureRef.current,
+      appliedJsonRef.current,
+    )
+    if (!result) return
+    syncJsonHistory(result.past, result.future)
+    skipHistoryCommitRef.current = true
+    if (!applyJsonToMachine(result.current)) {
+      skipHistoryCommitRef.current = false
+      return
+    }
+    appliedJsonRef.current = result.current
+    setJsonDraft(result.current)
+  }
+
+  function handleTaggerKeyDown(e: KeyboardEvent | ReactKeyboardEvent) {
+    const isJsonEditor =
+      e.target instanceof HTMLTextAreaElement && e.target === jsonTextareaRef.current
+    const isNonJsonTyping = () => {
       const el = e.target
+      if (el instanceof HTMLTextAreaElement && el === jsonTextareaRef.current) return false
       return (
         el instanceof HTMLElement &&
         (el.tagName === "TEXTAREA" || el.tagName === "INPUT" || el.isContentEditable)
       )
     }
-    const isSpace = (e: KeyboardEvent) => e.code === "Space" || e.key === " "
+    const isUndo =
+      (e.ctrlKey || e.metaKey) &&
+      !e.shiftKey &&
+      (e.code === "KeyZ" || e.key === "z" || e.key === "Z")
+    const isRedo =
+      (e.ctrlKey || e.metaKey) &&
+      (e.code === "KeyY" ||
+        e.key === "y" ||
+        e.key === "Y" ||
+        ((e.code === "KeyZ" || e.key === "z" || e.key === "Z") && e.shiftKey))
+
+    if (isUndo) {
+      if (isJsonEditor && jsonPastRef.current.length === 0) return
+      e.preventDefault()
+      e.stopPropagation()
+      if ("stopImmediatePropagation" in e) e.stopImmediatePropagation()
+      undoJson()
+      return
+    }
+    if (isRedo) {
+      if (isJsonEditor && jsonFutureRef.current.length === 0) return
+      e.preventDefault()
+      e.stopPropagation()
+      if ("stopImmediatePropagation" in e) e.stopImmediatePropagation()
+      redoJson()
+      return
+    }
+    if (isJsonEditor) return
+    if (isNonJsonTyping()) return
+
+    const video = videoRef.current
+    if (!video) return
+
     const nudgeSec = nudgeMs / 1000
-    const arrowDelta = (e: KeyboardEvent): number | null => {
-      if (e.code === "ArrowLeft" || e.key === "ArrowLeft") return -nudgeSec
-      if (e.code === "ArrowRight" || e.key === "ArrowRight") return nudgeSec
-      return null
-    }
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (isTyping(e)) return
-      const video = videoRef.current
-      if (!video) return
+    const arrowDelta =
+      e.code === "ArrowLeft" || e.key === "ArrowLeft"
+        ? -nudgeSec
+        : e.code === "ArrowRight" || e.key === "ArrowRight"
+          ? nudgeSec
+          : null
 
-      const delta = arrowDelta(e)
-      if (delta !== null) {
-        e.preventDefault()
-        e.stopImmediatePropagation()
-        const dur = Number.isFinite(video.duration) ? video.duration : duration
-        const t = Math.min(dur, Math.max(0, video.currentTime + delta))
-        send({ type: "SCRUB", time: t })
-        video.currentTime = t
-        return
-      }
-
-      if (e.code === "Delete" || e.key === "Delete") {
-        e.preventDefault()
-        e.stopImmediatePropagation()
-        deleteSelectedMarker()
-        return
-      }
-
-      if (!isSpace(e)) return
+    if (arrowDelta !== null) {
       e.preventDefault()
-      e.stopImmediatePropagation()
-      if (video.paused) void video.play().catch(() => {})
-      else video.pause()
+      e.stopPropagation()
+      const dur = Number.isFinite(video.duration) ? video.duration : duration
+      const t = Math.min(dur, Math.max(0, video.currentTime + arrowDelta))
+      send({ type: "SCRUB", time: t })
+      video.currentTime = t
+      return
     }
+
+    if (e.code === "Delete" || e.key === "Delete") {
+      if (isJsonEditor) return
+      e.preventDefault()
+      e.stopPropagation()
+      deleteSelectedMarker()
+      return
+    }
+
+    const isSpace = e.code === "Space" || e.key === " "
+    if (!isSpace) return
+    e.preventDefault()
+    e.stopPropagation()
+    if (video.paused) void video.play().catch(() => {})
+    else video.pause()
+  }
+
+  useEffect(() => {
+    if (mode !== "edit") return
+    const onKeyDown = (e: KeyboardEvent) => handleTaggerKeyDown(e)
     const onKeyUp = (e: KeyboardEvent) => {
-      if (isTyping(e)) return
-      if (!isSpace(e) && arrowDelta(e) === null) return
+      const el = e.target
+      if (
+        el instanceof HTMLElement &&
+        (el.tagName === "TEXTAREA" || el.tagName === "INPUT" || el.isContentEditable)
+      ) {
+        return
+      }
+      const isSpace = e.code === "Space" || e.key === " "
+      const isArrow =
+        e.code === "ArrowLeft" ||
+        e.code === "ArrowRight" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight"
+      if (!isSpace && !isArrow) return
       e.preventDefault()
-      e.stopImmediatePropagation()
+      e.stopPropagation()
     }
     window.addEventListener("keydown", onKeyDown, true)
     window.addEventListener("keyup", onKeyUp, true)
@@ -313,7 +459,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       video?.removeEventListener("keydown", onKeyDown, true)
       video?.removeEventListener("keyup", onKeyUp, true)
     }
-  }, [mode, videoSrc, deckId, duration, send, nudgeMs, selectedIndex, timestamps])
+  }, [mode, videoSrc, deckId, duration, send, nudgeMs, selectedIndex, timestamps, moveCount, moveNames, defaultMoveNames])
 
   function deleteSelectedMarker() {
     if (selectedIndex === null) return
@@ -365,21 +511,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   }
 
   function loadJson() {
-    const refNames =
-      moveNames.length === moveCount ? moveNames : defaultMoveNames
-    const result = parseTimestampsJson(jsonDraft, moveCount, refNames)
-    if (!result.ok) {
-      setLoadError(result.error)
-      return
-    }
-    setLoadError(null)
-    const names = result.names
-      ? defaultMoveNames.map((name, i) => {
-          const loaded = result.names![i]?.trim()
-          return loaded || name
-        })
-      : undefined
-    send({ type: "LOAD", timestamps: result.timestamps, names, partners: result.partners })
+    if (!applyJsonToMachine(jsonDraft)) return
   }
 
   function resetTimestamps() {
@@ -464,7 +596,20 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const playheadPct = duration > 0 ? (currentTime / duration) * 100 : 0
 
   return (
-    <div className="relative left-1/2 w-[80vw] max-w-[80vw] -translate-x-1/2 py-4">
+    <div
+      ref={rootRef}
+      tabIndex={-1}
+      onKeyDown={e => {
+        if (mode === "edit") handleTaggerKeyDown(e)
+      }}
+      onPointerDown={e => {
+        const t = e.target
+        if (!(t instanceof HTMLElement)) return
+        if (t.closest("textarea, input, button, select, dialog, a, [role=\"button\"]")) return
+        rootRef.current?.focus({ preventScroll: true })
+      }}
+      className="relative left-1/2 w-[80vw] max-w-[80vw] -translate-x-1/2 py-4 outline-none"
+    >
       <div className="relative mb-3 flex items-start justify-between gap-3">
         <h1 className="text-xl">Video Tagger</h1>
         <div ref={settingsRef} className="relative shrink-0">
@@ -757,6 +902,22 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
               {copied ? " - copied" : jsonUnsaved ? " - unsaved" : saved === "json" ? " - saved" : ""}
             </p>
             <div className="flex items-baseline gap-3">
+              <button
+                type="button"
+                className="text-muted text-[11px] uppercase tracking-wider disabled:opacity-50"
+                onClick={undoJson}
+                disabled={jsonPast.length === 0}
+              >
+                Undo
+              </button>
+              <button
+                type="button"
+                className="text-muted text-[11px] uppercase tracking-wider disabled:opacity-50"
+                onClick={redoJson}
+                disabled={jsonFuture.length === 0}
+              >
+                Redo
+              </button>
               <button type="button" className="text-muted text-[11px] uppercase tracking-wider" onClick={copyJson}>
                 Copy
               </button>
@@ -781,6 +942,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
             </div>
           </div>
           <textarea
+            ref={jsonTextareaRef}
+            onKeyDown={e => handleTaggerKeyDown(e)}
             className="min-h-48 w-full resize-y border border-border bg-surface p-3 font-mono text-[11px] leading-relaxed"
             value={jsonDraft}
             onChange={e => {
