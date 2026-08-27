@@ -1,0 +1,24 @@
+# Spec: South Bay craft restyle
+
+## Goal
+Apply 10th Planet South Bay website craft to openthesystem.app while keeping existing palette hexes.
+
+## Keep
+- Colors: bg #0f0f0f, surface #1a1a1a, text #e8e8e8, muted #666, accent #c0392b, partner A/B
+- Fonts: Barlow Condensed + IBM Plex Mono (no new font packages)
+- Sharp edges, table deck list, fieldset grouping, flame/streak motifs
+
+## Change
+1. Tokens: accent-ink (dark on accent), accent-deep (hard-shadow), optional muted-soft for hierarchy
+2. Primary CTAs: hard offset box-shadow (4-6px solid accent-deep), ink-on-accent, tracked uppercase
+3. Accent discipline: field (primary fill), line (active/selection underlines, thin rules), text (rare punch/status)
+4. Home: display hierarchy + accent punch line; mono micro labels; series headers as mono labels; sharper scroll-top
+5. Ghost secondary: steel muted → text on hover (underline arrow optional)
+6. Tag-pill utility for status chips if used
+7. prefers-reduced-motion for any new motion
+8. DESIGN.md: South Bay craft addendum
+
+## Out of scope
+- Marketing marquees / vertical wallpaper type
+- New script webfont
+- Cinema/dusk overlay redesign (leave unless broken by shared CSS)
