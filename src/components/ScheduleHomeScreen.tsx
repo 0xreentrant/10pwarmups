@@ -10,6 +10,7 @@ import { SERIES } from "../data/decks"
 import { formatWeekGroupsSummary, getScheduleState, type SeriesId } from "../data/warmupSchedule"
 import type { ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
+import { seriesLetterForScheduleDemo } from "../utils/deckTimestamps"
 
 const SCROLL_TOP_BTN = [
   "fixed z-50 bottom-6 w-11 h-11 rounded-full border-0 bg-surface shadow-[0_4px_16px_rgba(0,0,0,0.4)]",
@@ -51,6 +52,7 @@ export default function ScheduleHomeScreen({
   const canRunDemo = view === "week" && !!seriesLetter
   const introOpen = onboarding.introOpen
   const showDemo = onboarding.showDemo && canRunDemo
+  const demoSeriesLetter = showDemo ? seriesLetterForScheduleDemo(seriesLetter) : seriesLetter
   const dimmed = introOpen || showDemo
 
   useEffect(() => {
@@ -100,13 +102,13 @@ export default function ScheduleHomeScreen({
           />
           <SeriesIndexNav
             todayGroup={schedule.featuredGroup}
-            activeLetter={seriesLetter}
+            activeLetter={demoSeriesLetter}
             onSeriesSelect={onSeriesSelect}
             onAllSelect={onAllSelect}
           />
-          {seriesLetter && (
+          {demoSeriesLetter && (
             <SeriesDeckSection
-              letter={seriesLetter}
+              letter={demoSeriesLetter}
               progress={progress}
               onDeckClick={onDeckClick}
               onReviewClick={onReviewClick}

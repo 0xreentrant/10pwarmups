@@ -30,4 +30,20 @@ describe("BetaScheduleDemo", () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(50) })
     expect(onComplete).toHaveBeenCalledOnce()
   })
+
+  it("skips missing review/train zones instead of stalling", async () => {
+    vi.useFakeTimers()
+    document.body.innerHTML = `<div data-beta-demo="tracker"></div>`
+    Object.defineProperty(HTMLElement.prototype, "getBoundingClientRect", {
+      configurable: true,
+      value: () => ({ top: 10, left: 10, width: 100, height: 40 }),
+    })
+
+    const onComplete = vi.fn()
+    render(<BetaScheduleDemo mode="series" onComplete={onComplete} />)
+
+    expect(document.querySelector(".bt-sched-demo-label")?.textContent).toBe("schedule")
+    await act(async () => { await vi.advanceTimersByTimeAsync(50) })
+    expect(onComplete).toHaveBeenCalledOnce()
+  })
 })

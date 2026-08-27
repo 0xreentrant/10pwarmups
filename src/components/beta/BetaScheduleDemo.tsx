@@ -31,6 +31,10 @@ function zoneSelector(zone: DemoZone): string {
   return `[data-beta-demo="${zone}"]`
 }
 
+function zoneExists(zone: DemoZone): boolean {
+  return !!document.querySelector(zoneSelector(zone))
+}
+
 function readZoneRect(zone: DemoZone): ZoneRect | null {
   const el = document.querySelector(zoneSelector(zone))
   if (!el) return null
@@ -49,9 +53,16 @@ export default function BetaScheduleDemo({ mode, onComplete }: BetaScheduleDemoP
       onComplete()
       return
     }
+
+    // Empty series (no Review/Train rows) - skip rather than freeze on a blank finger.
+    if (!zoneExists(steps[stepIndex].zone)) {
+      setStepIndex(i => i + 1)
+      return
+    }
+
     const timer = window.setTimeout(() => setStepIndex(i => i + 1), STEP_MS)
     return () => window.clearTimeout(timer)
-  }, [stepIndex, steps.length, onComplete])
+  }, [stepIndex, steps, onComplete])
 
   useEffect(() => {
     if (stepIndex >= steps.length) return
