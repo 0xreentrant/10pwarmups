@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS } from "../data/decks"
 import { deckLabel, formatRelativeDate } from "../utils/deckUtils"
 import type { Deck, DeckProgress, ProgressMap } from "../types/domain"
@@ -126,9 +127,20 @@ interface ProgressScreenProps {
   progress: ProgressMap
   onBack: () => void
   onDeckSelect: (deckId: string | null) => void
+  onReset: () => void
+  resetConfirm: boolean
+  onCancelReset: () => void
 }
 
-export default function ProgressScreen({ deckId, progress, onBack, onDeckSelect }: ProgressScreenProps) {
+export default function ProgressScreen({
+  deckId,
+  progress,
+  onBack,
+  onDeckSelect,
+  onReset,
+  resetConfirm,
+  onCancelReset,
+}: ProgressScreenProps) {
   const deck = deckId ? DECKS.find(d => d.id === deckId) : null
   const prog = deck ? progress[deck.id] : null
 
@@ -157,6 +169,22 @@ export default function ProgressScreen({ deckId, progress, onBack, onDeckSelect 
 
       {!deck && <AllDecksOverview progress={progress} onDeckSelect={onDeckSelect} />}
       {deck && prog && <DeckProgress deck={deck} prog={prog} />}
+
+      <hr className="mt-6" />
+      <div className="flex gap-2 mt-3 flex-wrap">
+        <button
+          type="button"
+          className="btn"
+          onClick={() => { if (!resetConfirm) onReset() }}
+        >
+          Reset all
+        </button>
+      </div>
+      <ResetConfirmPopover
+        open={resetConfirm}
+        onConfirm={onReset}
+        onCancel={onCancelReset}
+      />
     </div>
   )
 }

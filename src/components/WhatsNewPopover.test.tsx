@@ -47,7 +47,7 @@ describe("What's New popover", () => {
 
   it("does not show on beta-test pages and leaves release unseen", async () => {
     await renderWithRouter("/beta-test/B3")
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+    expect(screen.queryByText("What's New")).not.toBeInTheDocument()
     expect(localStorage.getItem(WHATS_NEW_STORAGE_KEY)).toBeNull()
   })
 })

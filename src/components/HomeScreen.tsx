@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import DeckRow from "./DeckRow"
-import ResetConfirmPopover from "./ResetConfirmPopover"
 import { DECKS, SERIES } from "../data/decks"
 import type { ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
@@ -23,12 +22,9 @@ interface HomeScreenProps {
   onDeckClick: (deckId: string) => void
   onReviewClick: (deckId: string) => void
   onStats: () => void
-  onReset: () => void
-  resetConfirm: boolean
-  onCancelReset: () => void
 }
 
-export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, onReviewClick, onStats, onReset, resetConfirm, onCancelReset }: HomeScreenProps) {
+export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, onReviewClick, onStats }: HomeScreenProps) {
   const [showScrollTop, setShowScrollTop] = useState(false)
 
   useEffect(() => {
@@ -103,16 +99,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
       <hr />
       <div className="flex gap-2 mt-3 flex-wrap">
         <button className="btn" onClick={onStats}>Stats</button>
-        <button
-          className="btn"
-          onClick={() => { if (!resetConfirm) onReset() }}
-        >Reset all</button>
       </div>
-      <ResetConfirmPopover
-        open={resetConfirm}
-        onConfirm={onReset}
-        onCancel={onCancelReset}
-      />
       <button
         type="button"
         aria-label="Scroll to top"

@@ -337,7 +337,6 @@ function RootLayout() {
 function HomeRoute() {
   const routerInstance = useRouter()
   const progress = useSelector(appActor, s => s.context.progress)
-  const resetConfirm = useSelector(appActor, s => s.context.resetConfirm)
   const scrollToSectionId = routerInstance.state.location.hash || undefined
 
   return (
@@ -353,9 +352,6 @@ function HomeRoute() {
         routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
       }}
       onStats={() => routerInstance.navigate({ to: "/progress" })}
-      onReset={() => appActor.send({ type: "RESET" })}
-      resetConfirm={resetConfirm}
-      onCancelReset={() => appActor.send({ type: "CANCEL_RESET" })}
     />
   )
 }
@@ -584,15 +580,19 @@ function BetaTestCompletedRoute() {
 function AllProgressRoute() {
   const routerInstance = useRouter()
   const progress = useSelector(appActor, s => s.context.progress)
+  const resetConfirm = useSelector(appActor, s => s.context.resetConfirm)
 
   return (
     <ProgressScreen
       deckId={null}
       progress={progress}
+      resetConfirm={resetConfirm}
       onBack={() => routerInstance.history.back()}
       onDeckSelect={id => {
         if (id) routerInstance.navigate({ to: "/$deckId", params: { deckId: id } })
       }}
+      onReset={() => appActor.send({ type: "RESET" })}
+      onCancelReset={() => appActor.send({ type: "CANCEL_RESET" })}
     />
   )
 }
@@ -625,16 +625,20 @@ function DeckProgressRoute() {
   const routerInstance = useRouter()
   const { deckId } = deckRoute.useParams()
   const progress = useSelector(appActor, s => s.context.progress)
+  const resetConfirm = useSelector(appActor, s => s.context.resetConfirm)
 
   return (
     <ProgressScreen
       deckId={deckId}
       progress={progress}
+      resetConfirm={resetConfirm}
       onBack={() => routerInstance.history.back()}
       onDeckSelect={id => {
         if (id) routerInstance.navigate({ to: "/$deckId", params: { deckId: id } })
         else routerInstance.navigate({ to: "/progress" })
       }}
+      onReset={() => appActor.send({ type: "RESET" })}
+      onCancelReset={() => appActor.send({ type: "CANCEL_RESET" })}
     />
   )
 }
