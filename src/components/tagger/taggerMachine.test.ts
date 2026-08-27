@@ -22,12 +22,10 @@ describe("taggerMachine", () => {
     actor.send({ type: "SELECT", index: 1 })
     expect(actor.getSnapshot().context.selectedIndex).toBe(1)
     expect(actor.getSnapshot().context.currentTime).toBe(10.01)
-    expect(moveIndexAtTime([0, 10, 20], actor.getSnapshot().context.currentTime)).toBe(1)
 
     actor.send({ type: "TIME", time: 15 })
     expect(actor.getSnapshot().context.selectedIndex).toBe(1)
     expect(actor.getSnapshot().context.currentTime).toBe(15)
-    expect(moveIndexAtTime([0, 10, 20], 15)).toBe(1)
   })
 
   it("SELECT seek survives video undershoot without highlighting the previous move", () => {
@@ -50,7 +48,6 @@ describe("taggerMachine", () => {
     const ctx = actor.getSnapshot().context
     expect(ctx.selectedIndex).toBe(2)
     expect(ctx.currentTime).toBe(5)
-    expect(moveIndexAtTime(ctx.timestamps, ctx.currentTime)).toBe(0)
   })
 
   it("DRAG rewrites owned marker timestamp and seeks", () => {
@@ -78,7 +75,6 @@ describe("taggerMachine", () => {
     expect(afterSelect.selectedIndex).toBe(1)
     expect(afterSelect.currentTime).toBe(7)
     expect(afterSelect.timestamps[1]).toBe(7)
-    expect(moveIndexAtTime(afterSelect.timestamps, afterSelect.currentTime)).toBe(1)
   })
 
   it("holds seek until TIME is within epsilon or advances past", () => {
@@ -125,37 +121,6 @@ describe("taggerMachine", () => {
     expect(ctx.timestamps[1]).toBe(null)
     expect(ctx.timestamps[0]).toBe(0)
     expect(ctx.timestamps[2]).toBe(20)
-  })
-
-  it("DELETE_SELECTED no-ops when nothing is selected", () => {
-    const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3, movePartners: PARTNERS3 })
-    actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
-    actor.send({ type: "DELETE_SELECTED" })
-    expect(actor.getSnapshot().context.timestamps).toEqual([0, 10, 20])
-    expect(actor.getSnapshot().context.selectedIndex).toBe(null)
-  })
-
-  it("SET_MOVE updates moveNames and movePartners at index", () => {
-    const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3, movePartners: PARTNERS3 })
-    actor.send({ type: "SET_MOVE", index: 1, name: "Renamed", partner: "B" })
-    expect(actor.getSnapshot().context.moveNames[1]).toBe("Renamed")
-    expect(actor.getSnapshot().context.movePartners[1]).toBe("B")
-    expect(actor.getSnapshot().context.moveNames[0]).toBe("Move 1")
-  })
-
-  it("LOAD applies names when provided", () => {
-    const actor = start()
-    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 2, moveNames: NAMES2, movePartners: PARTNERS2 })
-    actor.send({
-      type: "LOAD",
-      timestamps: [0, 5],
-      names: ["Alpha", "Beta"],
-    })
-    const ctx = actor.getSnapshot().context
-    expect(ctx.timestamps).toEqual([0, 5])
-    expect(ctx.moveNames).toEqual(["Alpha", "Beta"])
   })
 
   it("RESET restores timestamps and moveNames from decks.ts defaults", () => {

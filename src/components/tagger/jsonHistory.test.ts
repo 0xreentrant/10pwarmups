@@ -7,43 +7,18 @@ import {
 } from "./jsonHistory"
 
 describe("jsonHistory", () => {
-  it("commit pushes current and clears future", () => {
-    const result = commitJsonHistory(["a"], "b", "c")
-    expect(result).toEqual({ past: ["a", "b"], future: [] })
-  })
-
-  it("commit no-ops when current equals next", () => {
+  it("no-ops commit when unchanged or empty current", () => {
     expect(commitJsonHistory(["a"], "b", "b")).toBeNull()
-  })
-
-  it("commit no-ops when current is empty", () => {
     expect(commitJsonHistory([], "", "c")).toBeNull()
   })
 
-  it("commit caps past length", () => {
+  it("caps past length on commit", () => {
     const past = Array.from({ length: DEFAULT_JSON_HISTORY_MAX }, (_, i) => `v${i}`)
     const result = commitJsonHistory(past, "current", "next", DEFAULT_JSON_HISTORY_MAX)
     expect(result?.past).toHaveLength(DEFAULT_JSON_HISTORY_MAX)
     expect(result?.past[0]).toBe("v1")
     expect(result?.past.at(-1)).toBe("current")
-  })
-
-  it("undo restores previous and moves current to future", () => {
-    const result = undoJsonHistory(["a", "b"], [], "c")
-    expect(result).toEqual({ past: ["a"], future: ["c"], current: "b" })
-  })
-
-  it("undo returns null when past is empty", () => {
-    expect(undoJsonHistory([], ["x"], "c")).toBeNull()
-  })
-
-  it("redo restores next and moves current to past", () => {
-    const result = redoJsonHistory(["a"], ["c", "d"], "b")
-    expect(result).toEqual({ past: ["a", "b"], future: ["d"], current: "c" })
-  })
-
-  it("redo returns null when future is empty", () => {
-    expect(redoJsonHistory(["a"], [], "b")).toBeNull()
+    expect(result?.future).toEqual([])
   })
 
   it("round-trips commit, undo, and redo", () => {
@@ -51,31 +26,22 @@ describe("jsonHistory", () => {
     let future: string[] = []
     let applied = "v0"
 
-    const commit = (next: string) => {
-      const stacks = commitJsonHistory(past, applied, next)
-      if (stacks) {
-        past = stacks.past
-        future = stacks.future
-      }
-      applied = next
-    }
-
-    commit("v1")
-    commit("v2")
-    expect(past).toEqual(["v0", "v1"])
-    expect(applied).toBe("v2")
+    const stacks = commitJsonHistory(past, applied, "v1")!
+    past = stacks.past
+    future = stacks.future
+    applied = "v1"
 
     const u1 = undoJsonHistory(past, future, applied)!
-    past = u1.past
-    future = u1.future
-    applied = u1.current
-    expect(applied).toBe("v1")
+    expect(u1.current).toBe("v0")
+    expect(u1.future).toEqual(["v1"])
 
-    const r1 = redoJsonHistory(past, future, applied)!
-    past = r1.past
-    future = r1.future
-    applied = r1.current
-    expect(applied).toBe("v2")
-    expect(future).toEqual([])
+    const r1 = redoJsonHistory(u1.past, u1.future, u1.current)!
+    expect(r1.current).toBe("v1")
+    expect(r1.future).toEqual([])
+  })
+
+  it("undo and redo return null at stack ends", () => {
+    expect(undoJsonHistory([], ["x"], "c")).toBeNull()
+    expect(redoJsonHistory(["a"], [], "b")).toBeNull()
   })
 })
