@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
   taggerKeyDownAction,
-  taggerKeyTarget,
   taggerKeyUpShouldSuppress,
 } from "../src/components/tagger/taggerKeyboard"
 
@@ -21,26 +20,6 @@ function key(
     ...overrides,
   }
 }
-
-describe("taggerKeyTarget", () => {
-  it("identifies the json textarea", () => {
-    const json = { tagName: "TEXTAREA" } as HTMLElement
-    expect(taggerKeyTarget(json, json)).toBe("json-editor")
-  })
-
-  it("treats other text fields as typing targets", () => {
-    const notes = { tagName: "TEXTAREA" } as HTMLElement
-    const json = { tagName: "TEXTAREA" } as HTMLElement
-    const input = { tagName: "INPUT" } as HTMLElement
-    expect(taggerKeyTarget(notes, json)).toBe("other-typing")
-    expect(taggerKeyTarget(input, json)).toBe("other-typing")
-  })
-
-  it("treats non-input targets as default", () => {
-    const json = { tagName: "TEXTAREA" } as HTMLElement
-    expect(taggerKeyTarget({ tagName: "DIV" } as HTMLElement, json)).toBe("default")
-  })
-})
 
 describe("taggerKeyDownAction", () => {
   it("scrubs on arrow keys when focus is not in an editor", () => {

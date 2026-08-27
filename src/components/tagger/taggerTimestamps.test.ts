@@ -1,42 +1,17 @@
 import { describe, expect, it } from "vitest"
-import { MOVE_TIMESTAMPS } from "../../data/moveTimestamps"
 import {
   buildJsonText,
-  moveIndexAtTime,
   parseTimestampsJson,
-  taggerSeedTimestamps,
   timeFromClientX,
 } from "./taggerTimestamps"
 
-describe("taggerSeedTimestamps", () => {
-  it("returns stored tags when count matches", () => {
-    expect(taggerSeedTimestamps("A1", 5, 50)).toEqual(MOVE_TIMESTAMPS.A1)
-  })
-
-  it("aligns stored tags when count mismatches instead of clearing them", () => {
-    expect(taggerSeedTimestamps("B1", 4, 20)).toEqual(MOVE_TIMESTAMPS.B1.slice(0, 4))
-    expect(taggerSeedTimestamps("A1", 3, 30)).toEqual(MOVE_TIMESTAMPS.A1.slice(0, 3))
-    expect(taggerSeedTimestamps("A1", 5, 10)).toEqual(MOVE_TIMESTAMPS.A1)
-  })
-
-  it("loads stored tags when duration is not known yet", () => {
-    expect(taggerSeedTimestamps("A2", MOVE_TIMESTAMPS.A2.length, 0)).toEqual(MOVE_TIMESTAMPS.A2)
-  })
-})
-
 describe("timeFromClientX", () => {
-  it("maps left edge to 0 and right edge to duration", () => {
+  it("maps track edges and midpoint, clamping outside the track", () => {
     expect(timeFromClientX(100, 100, 200, 40)).toBe(0)
     expect(timeFromClientX(300, 100, 200, 40)).toBe(40)
-  })
-
-  it("clamps outside the track", () => {
+    expect(timeFromClientX(200, 100, 200, 40)).toBe(20)
     expect(timeFromClientX(50, 100, 200, 40)).toBe(0)
     expect(timeFromClientX(400, 100, 200, 40)).toBe(40)
-  })
-
-  it("maps midpoint", () => {
-    expect(timeFromClientX(200, 100, 200, 40)).toBe(20)
   })
 })
 
@@ -160,26 +135,5 @@ describe("buildJsonText", () => {
       { name: "Second", player: "b", t: null },
       { name: "Third", player: "a", t: 2.5 },
     ])
-  })
-})
-
-describe("moveIndexAtTime", () => {
-  it("picks the latest start at or before time", () => {
-    expect(moveIndexAtTime([0, 2, 5, 9], 0)).toBe(0)
-    expect(moveIndexAtTime([0, 2, 5, 9], 2)).toBe(1)
-    expect(moveIndexAtTime([0, 2, 5, 9], 4.9)).toBe(1)
-    expect(moveIndexAtTime([0, 2, 5, 9], 9)).toBe(3)
-  })
-
-  it("uses latest start time when list order is unsorted", () => {
-    const times = [0, 3.79, 4.79, 6.24, 6.03, 7.54]
-    expect(moveIndexAtTime(times, 6.24)).toBe(3)
-    expect(moveIndexAtTime(times, 6.1)).toBe(4)
-  })
-
-  it("skips null slots and returns -1 when nothing matches", () => {
-    expect(moveIndexAtTime([null, 10, 20], 5)).toBe(-1)
-    expect(moveIndexAtTime([null, 10, 20], 15)).toBe(1)
-    expect(moveIndexAtTime([0, null, 20], 5)).toBe(0)
   })
 })

@@ -12,12 +12,12 @@ describe("fadeLook", () => {
     }
   })
 
-  it("is heavily faded at p=1", () => {
-    expect(fadeLook("dusk", 1).filter).toContain("brightness(0.050")
+  it("is effectively invisible at p=1", () => {
     expect(fadeLook("dissolve", 1).videoOpacity).toBeLessThan(0.05)
+    expect(fadeLook("dusk", 1).filter).toMatch(/brightness\(/)
   })
 
-  it("clamps out-of-range progress", () => {
+  it("clamps out-of-range progress to the 0-1 endpoints", () => {
     expect(fadeLook("dissolve", 2).videoOpacity).toBe(fadeLook("dissolve", 1).videoOpacity)
     expect(fadeLook("dusk", -1)).toEqual(fadeLook("dusk", 0))
   })

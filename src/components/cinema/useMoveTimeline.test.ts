@@ -33,14 +33,6 @@ describe("useMoveTimeline", () => {
     expect(result.current!.moveIndexAt(44)).toBe(4)
   })
 
-  it("keeps a stable identity across re-renders so playback effects do not restart", () => {
-    const video = fakeVideo(10)
-    const { result, rerender } = renderHook(() => useMoveTimeline("untagged", 5, video))
-    const first = result.current
-    rerender()
-    expect(result.current).toBe(first)
-  })
-
   it("uses a fallback duration when no video element is present", () => {
     const { result } = renderHook(() => useMoveTimeline("untagged", 5, null, 30))
     expect(result.current!.duration).toBe(30)

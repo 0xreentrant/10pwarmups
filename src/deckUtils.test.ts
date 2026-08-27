@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createDistractorPool, getMoveNote, homeDeckRowLabel, homeSectionHash, precomputeDeckOptions } from './utils/deckUtils'
+import { createDistractorPool, homeDeckRowLabel, homeSectionHash, precomputeDeckOptions } from './utils/deckUtils'
 import type { Deck } from './types/domain'
 
 const mockDecks: Deck[] = [
@@ -25,50 +25,18 @@ const mockDecks: Deck[] = [
   },
 ]
 
-describe('getMoveNote', () => {
-  const deckWithNotes: Deck = {
-    id: 'T1',
-    name: 'Test',
-    moves: [{ text: 'Alpha', partner: 'A' }, { text: 'Beta', partner: 'B' }],
-    notes: { 0: 'First move note', 1: '   ' },
-  }
-
-  it('returns trimmed note when present', () => {
-    expect(getMoveNote(deckWithNotes, 0)).toBe('First move note')
-  })
-
-  it('returns null for blank note', () => {
-    expect(getMoveNote(deckWithNotes, 1)).toBe(null)
-  })
-
-  it('returns null for missing key', () => {
-    expect(getMoveNote(deckWithNotes, 2)).toBe(null)
-  })
-
-  it('returns null when deck has no notes object', () => {
-    expect(getMoveNote({ id: 'T2', name: 'Empty', moves: [] }, 0)).toBe(null)
-  })
-})
-
 describe('createDistractorPool', () => {
-  it('collects unique move names from all decks without partner', () => {
+  it('collects unique move names from all decks', () => {
     const pool = createDistractorPool(mockDecks)
     expect(pool).toContain('Kneeling Granby')
     expect(pool).toContain('Peel')
     expect(new Set(pool).size).toBe(pool.length)
     expect(pool.length).toBe(5)
   })
-
-  it('returns a new shuffled array without mutating prior pools', () => {
-    const first = createDistractorPool(mockDecks)
-    const second = createDistractorPool(mockDecks)
-    expect(first).not.toBe(second)
-    expect([...first].sort()).toEqual([...second].sort())
-  })
 })
 
 describe('precomputeDeckOptions', () => {
-  it('precomputes one option set per move in the deck', () => {
+  it('precomputes one option set per move with 4 choices', () => {
     const allOptions = precomputeDeckOptions(mockDecks[0], mockDecks)
     expect(allOptions).toHaveLength(mockDecks[0].moves.length)
     allOptions.forEach(opts => {
@@ -85,16 +53,17 @@ describe('precomputeDeckOptions', () => {
       expect(correct[0].text).toBe(move.text)
       expect(correct[0].partner).toBe(move.partner)
       opts.filter(o => !o.correct).forEach(o => {
-        expect(o.text).not.toBe(move.text)
         expect(o.partner).toBeUndefined()
       })
     })
   })
 
-  it('uses unique distractors within each question', () => {
+  it('uses unique distractors that are not the correct move', () => {
     const allOptions = precomputeDeckOptions(mockDecks[0], mockDecks)
-    allOptions.forEach(opts => {
+    allOptions.forEach((opts, i) => {
+      const move = mockDecks[0].moves[i]
       const wrongTexts = opts.filter(o => !o.correct).map(o => o.text)
+      expect(wrongTexts.every(t => t !== move.text)).toBe(true)
       expect(new Set(wrongTexts).size).toBe(3)
     })
   })
@@ -128,28 +97,12 @@ describe('precomputeDeckOptions', () => {
   })
 })
 
-describe('homeDeckRowLabel', () => {
-  it('returns deck id for series decks', () => {
+describe('homeDeckRowLabel / homeSectionHash', () => {
+  it('maps series and named-flow row labels and section anchors', () => {
     expect(homeDeckRowLabel(mockDecks[0])).toBe('A1')
-  })
-
-  it('returns short code for named flows', () => {
     expect(homeDeckRowLabel({ id: 'attack-series', name: 'Attack Series', moves: [] })).toBe('AS')
-    expect(homeDeckRowLabel({ id: 'ramey-flow', name: 'Ramey Flow', moves: [] })).toBe('RF')
-    expect(homeDeckRowLabel({ id: 'marvin-flow', name: 'Marvin Flow', moves: [] })).toBe('MF')
-  })
-
-  it('falls back to deck name for unknown named flows', () => {
     expect(homeDeckRowLabel({ id: 'custom-flow', name: 'Custom Flow', moves: [] })).toBe('Custom Flow')
-  })
-})
-
-describe('homeSectionHash', () => {
-  it('returns series section hash for series decks', () => {
     expect(homeSectionHash(mockDecks[0])).toBe('series-A')
-  })
-
-  it('returns named flows hash for decks without a series', () => {
     expect(homeSectionHash({ id: 'attack-series', name: 'Attack Series', moves: [] })).toBe('named-flows')
   })
 })

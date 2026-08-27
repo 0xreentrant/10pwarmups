@@ -1,0 +1,58 @@
+---
+description: When to write modular unit tests vs behavioral / integration tests
+globs: "**/*.{test,spec}.{ts,tsx}"
+alwaysApply: false
+---
+
+# Modular API tests vs implementation mirrors
+
+Prefer asserting what the user, browser, or persisted data observes. Unit-test a module only when it exposes a **stable contract** multiple callers rely on.
+
+## Rule of thumb
+
+| Module shape | Unit-test? |
+|---|---|
+| Pure function with invariants callers depend on | Yes - property / contract tests |
+| One-liner composing already-tested primitives | No |
+| localStorage load / clamp / save trio | Yes - one shared pattern, not a file per key |
+| CSS class names or exact filter / style strings | No (or semantic assertions only) |
+| Onboarding demo timer choreography | No |
+| Already covered by an integration test at the boundary | Drop the unit test; keep the integration test |
+
+## Keep as modular API guarantees
+
+- Domain invariants (`precomputeDeckOptions`: 4 options, one correct, unique distractors)
+- I/O boundaries (`parseTimestampsJson`, `buildJsonText`, scrubber coordinate math)
+- Persistence clamps and round-trips (invalid → default, min/max, step rounding)
+- Selection / draft invariants (never empty, dedupe, ordering)
+- Timing / stake schedules that affect playback (`anteStake`)
+- Routing param parsers at URL boundaries
+- Undo stacks: a few contract tests if the module is reusable; otherwise integration only
+
+Prefer **properties** over brittle literals:
+
+```ts
+// BAD - locks implementation strings
+expect(fadeLook("dusk", 1).filter).toBe("brightness(0.050) saturate(0.450)")
+
+// GOOD - asserts the contract
+expect(fadeLook("dissolve", 1).videoOpacity).toBeLessThan(0.05)
+```
+
+## Do not unit-test
+
+- Re-exports and thin wrappers over tested helpers
+- Trivial getters (`trim` / null coalescing)
+- Constant equality (`RATE === 1`)
+- CSS class / gradient string maps
+- Demo overlays that only advance class names on timers
+- Machine setters / no-op guards already implied by happy-path tests
+- Acceptance suites that re-read `getAppSnapshot()` or duplicate `routing` / `appMachine` coverage
+
+## Layering
+
+1. **Unit** - pure contracts at module boundaries (few, stable)
+2. **Integration** - machines, hooks, and screens asserting visible or persisted outcomes
+3. **Acceptance** - short happy paths not covered above (home smoke, full deck completion, reset confirm)
+
+If a change only renames internals and a test fails, the test was testing implementation - delete or rewrite it against the contract.
