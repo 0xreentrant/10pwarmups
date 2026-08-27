@@ -104,6 +104,27 @@ async function clickOptionWithText(page, text) {
   if (!clicked) throw new Error(`No option button found for "${text}"`)
 }
 
+/** Skip intro overlays so schedule Train rows are clickable offline. */
+async function skipHomeOverlays(page) {
+  await page.evaluate(() => {
+    localStorage.setItem("tp_schedule_onboarding_seen", "2026-08-26T00:00:00.000Z")
+    localStorage.setItem("tp_whats_new_seen", "2026-07-24T18:00:00.000Z")
+  })
+}
+
+async function clickTrainForDeck(page, deckId) {
+  await page.evaluate(id => {
+    const row = Array.from(document.querySelectorAll("tr")).find(tr => {
+      const label = tr.querySelector("td span")
+      return label?.textContent?.trim() === id
+    })
+    if (!row) throw new Error(`${id} row not found`)
+    const btn = Array.from(row.querySelectorAll("button")).find(b => b.textContent === "Train")
+    if (!btn) throw new Error(`Train button not found for ${id}`)
+    btn.click()
+  }, deckId)
+}
+
 async function runOfflineE2E() {
   const port = await getFreePort()
   const baseUrl = `http://127.0.0.1:${port}/`
@@ -119,6 +140,9 @@ async function runOfflineE2E() {
 
     await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 })
     await waitForServiceWorker(page)
+    await skipHomeOverlays(page)
+    await page.goto(`${baseUrl}series/A/`, { waitUntil: "domcontentloaded", timeout: 60000 })
+    await waitForServiceWorker(page)
     await page.reload({ waitUntil: "domcontentloaded" })
     await waitForServiceWorker(page)
 
@@ -126,11 +150,7 @@ async function runOfflineE2E() {
     await page.reload({ waitUntil: "domcontentloaded" })
     await page.waitForFunction(() => document.body.textContent.includes("10th Planet"), { timeout: 15000 })
 
-    await page.evaluate(() => {
-      const btn = Array.from(document.querySelectorAll("button")).find(b => b.textContent === "Train")
-      if (!btn) throw new Error("Train button not found")
-      btn.click()
-    })
+    await clickTrainForDeck(page, "A1")
 
     await page.waitForSelector("button.option-btn")
     for (const move of A1_MOVES) {
