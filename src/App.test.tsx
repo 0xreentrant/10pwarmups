@@ -2,7 +2,6 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
 import { DECKS } from './data/decks';
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from './data/whatsNew';
-import { markScheduleOnboardingSeen } from './utils/scheduleOnboardingStorage';
 import { restartAppActor, getAppSnapshot } from './appActor';
 import { renderWithRouter } from './test/renderWithRouter';
 import {
@@ -24,7 +23,6 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
   beforeEach(() => {
     localStorage.clear();
     localStorage.setItem(WHATS_NEW_STORAGE_KEY, APP_RELEASE_VERSION);
-    markScheduleOnboardingSeen();
     restartAppActor();
   });
 
