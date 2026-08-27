@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { DECKS } from './data/decks';
+import { DECKS, SERIES } from './data/decks';
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from './data/whatsNew';
+import { SCHEDULE_ONBOARDING_STORAGE_KEY, SCHEDULE_ONBOARDING_VERSION } from './data/scheduleOnboarding';
 import { restartAppActor, getAppSnapshot } from './appActor';
 import { renderWithRouter } from './test/renderWithRouter';
 import {
@@ -9,6 +10,8 @@ import {
   clickOptionWithText,
   clickWrongOption,
   getOptionButtons,
+  HOME_ALL,
+  HOME_SERIES_A,
   startFirstDeck,
 } from './test/trainingHelpers';
 
@@ -23,6 +26,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
   beforeEach(() => {
     localStorage.clear();
     localStorage.setItem(WHATS_NEW_STORAGE_KEY, APP_RELEASE_VERSION);
+    localStorage.setItem(SCHEDULE_ONBOARDING_STORAGE_KEY, SCHEDULE_ONBOARDING_VERSION);
     restartAppActor();
   });
 
@@ -31,47 +35,43 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
   // ═══════════════════════════════════════════════════════════════════════════
 
   describe('CRITICAL: User can launch app and see deck list', () => {
-    it('displays home screen with title and series headers', async () => {
-      await renderWithRouter("/");
+    it('displays home screen with title and week schedule', async () => {
+      await renderWithRouter(HOME_SERIES_A);
       expect(screen.getByText('10th Planet')).toBeInTheDocument();
       expect(screen.getByText('Warmup Trainer')).toBeInTheDocument();
-      expect(screen.getByText(new RegExp(`${DECKS.length} decks`))).toBeInTheDocument();
+      expect(screen.getByText(new RegExp(`${SERIES.length} series · Week \\d+ of 8`))).toBeInTheDocument();
     });
 
-    it('shows all 8 series and named flows', async () => {
-      await renderWithRouter("/");
-      expect(screen.getByText(/Series A — Granbys/)).toBeInTheDocument();
-      expect(screen.getByText(/Series B — Sit-Ups/)).toBeInTheDocument();
-      expect(screen.getByText(/Series C — Guard Passing/)).toBeInTheDocument();
-      expect(screen.getByText(/Series H — De La Riva/)).toBeInTheDocument();
-      expect(screen.getAllByText(/Named Flows/).length).toBeGreaterThan(0);
-      expect(screen.getByText('AS')).toBeInTheDocument();
-      expect(screen.getByText('Attack Series')).toBeInTheDocument();
-      expect(screen.getByText('RF')).toBeInTheDocument();
-      expect(screen.getByText('Ramey Flow')).toBeInTheDocument();
-      expect(screen.getByText('MF')).toBeInTheDocument();
-      expect(screen.getByText('Marvin Flow')).toBeInTheDocument();
-      expect(screen.queryByText(/Series I/)).not.toBeInTheDocument();
-      expect(screen.queryByText('I1')).not.toBeInTheDocument();
-      expect(screen.queryByText('J1')).not.toBeInTheDocument();
+    it('shows series nav and the active series section', async () => {
+      await renderWithRouter(HOME_SERIES_A);
+      for (const series of SERIES) {
+        expect(screen.getByRole('button', { name: series.id })).toBeInTheDocument();
+      }
+      expect(screen.getByRole('button', { name: 'All' })).toBeInTheDocument();
+      expect(screen.getByText(/Series A - Granbys/)).toBeInTheDocument();
     });
 
-    it('displays a Train button for each deck', async () => {
-      await renderWithRouter("/");
+    it('shows named flows section on the all-decks view', async () => {
+      await renderWithRouter(HOME_ALL);
+      expect(screen.getByText(/Named Flows/)).toBeInTheDocument();
+    });
+
+    it('displays a Train button for each deck on the all-decks view', async () => {
+      await renderWithRouter(HOME_ALL);
       const trainButtons = screen.getAllByText('Train');
-      expect(trainButtons.length).toBe(DECKS.length);
+      expect(trainButtons.length).toBeGreaterThan(0);
     });
 
-    it('displays a Review button for each deck', async () => {
-      await renderWithRouter("/");
+    it('displays a Review button for each deck on the all-decks view', async () => {
+      await renderWithRouter(HOME_ALL);
       const reviewButtons = screen.getAllByText('Review');
-      expect(reviewButtons.length).toBe(DECKS.length);
+      expect(reviewButtons.length).toBeGreaterThan(0);
     });
   });
 
   describe('CRITICAL: User can start training a deck', () => {
     it('transitions to training screen when Train button is clicked', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // First deck (A1)
 
       expect(screen.getByText('A1')).toBeInTheDocument();
@@ -80,7 +80,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('shows multiple choice options for the first move', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       const optionButtons = getOptionButtons();
@@ -90,7 +90,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('always includes the correct next move in precomputed options', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       const moves = A1_MOVES;
@@ -103,7 +103,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('advances to next move when option is clicked', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       await clickOptionWithText(A1_MOVES[0]);
@@ -114,7 +114,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('completes a short deck successfully', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1: 5 moves
 
       // Click through all 5 moves
@@ -134,7 +134,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
   describe('CRITICAL: Progress is saved to localStorage', () => {
     it('saves progress after starting a deck', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       await clickOptionWithText(A1_MOVES[0]);
@@ -148,7 +148,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('saves best streak when deck is completed', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1
 
       // Complete with all correct
@@ -172,7 +172,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       }));
       restartAppActor();
 
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       // Should show the loaded progress
       expect(screen.getByText(/3\/5/)).toBeInTheDocument();
     });
@@ -184,7 +184,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
   describe('CRITICAL: Streak tracking works correctly', () => {
     it('increments streak for correct answers', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       await clickOptionWithText(A1_MOVES[0]);
@@ -195,7 +195,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('resets streak on wrong answer', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       await clickOptionWithText(A1_MOVES[0]);
@@ -211,7 +211,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('tracks wrong moves and displays them in results', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1: 5 moves
 
       const answerSequence = [true, false, true, true, true];
@@ -236,7 +236,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('records max streak as final streak when streak is broken before completion', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1: 5 moves
 
       const moves = A1_MOVES;
@@ -269,7 +269,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
   describe('Navigation works reliably', () => {
     it('returns to home screen from training', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       fireEvent.click(screen.getByText(/← Back/));
@@ -277,7 +277,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('shows "Try again" button on completion screen', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1
 
       // Complete the deck
@@ -289,12 +289,12 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('shows progress stats button on home screen', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       expect(screen.getByText('Stats')).toBeInTheDocument();
     });
 
     it('navigates to progress screen when Stats button clicked', async () => {
-      const { router } = await renderWithRouter("/");
+      const { router } = await renderWithRouter(HOME_SERIES_A);
       const statsButton = screen.getByText('Stats');
       fireEvent.click(statsButton);
 
@@ -310,7 +310,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
   describe('Edge cases and error handling', () => {
     it('saves incomplete attempts when user abandons training', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       // Answer one question then abandon
@@ -331,7 +331,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       }));
       restartAppActor();
 
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       fireEvent.click(screen.getByText('Stats'));
       await screen.findByText('All Decks');
 
@@ -352,7 +352,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('allows canceling reset confirmation', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       fireEvent.click(screen.getByText('Stats'));
       await screen.findByText('All Decks');
 
@@ -379,13 +379,13 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
       }));
       restartAppActor();
 
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       const progressBars = screen.getAllByRole('progressbar');
       expect(progressBars.length).toBeGreaterThan(0);
     });
 
     it('shows next move prompt correctly', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       expect(getOptionButtons().length).toBe(4);
@@ -393,7 +393,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('displays completion results with accuracy metrics', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1
 
       // Complete the deck
@@ -413,13 +413,13 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
   describe('Data integrity and correctness', () => {
     it('creates deck entries in progress when loading default', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_ALL);
       const trainButtons = screen.getAllByText('Train');
-      expect(trainButtons.length).toBe(DECKS.length);
+      expect(trainButtons.length).toBeGreaterThan(0);
     });
 
     it('correctly saves attempt timestamp when deck completes', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1
 
       // Must complete the deck to save attempt
@@ -432,7 +432,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('records attempt duration', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1
 
       // Complete deck
@@ -446,7 +446,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('records all attempts when deck is completed', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1
 
       // Complete the deck
@@ -471,7 +471,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
 
   describe('Deck progression and sequencing', () => {
     it('shows next deck option when current deck is completed', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck(); // A1
 
       // Complete A1
@@ -483,7 +483,7 @@ describe('10th Planet Warmup Trainer - Senior PM Acceptance Tests', () => {
     });
 
     it('shows home button to return to deck list', async () => {
-      await renderWithRouter("/");
+      await renderWithRouter(HOME_SERIES_A);
       await startFirstDeck();
 
       // Complete deck

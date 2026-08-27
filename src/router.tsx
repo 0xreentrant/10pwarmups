@@ -9,7 +9,7 @@ import {
   useRouterState,
 } from "@tanstack/react-router"
 import { useSelector } from "@xstate/react"
-import HomeScreen from "./components/HomeScreen"
+import ScheduleHomeScreen from "./components/ScheduleHomeScreen"
 import BetaTestScreen from "./components/BetaTestScreen"
 import CompletionScreen from "./components/CompletionScreen"
 import ProgressScreen from "./components/ProgressScreen"
@@ -21,9 +21,11 @@ import WhatsNewPopover from "./components/WhatsNewPopover"
 import { appActor, getAppSnapshot } from "./appActor"
 import { hasRestorableCompletion } from "./appMachine"
 import { DECKS } from "./data/decks"
+import type { SeriesId } from "./data/warmupSchedule"
 import { useWhatsNew } from "./hooks/useWhatsNew"
 import { consumePopNavigation, trackRouterHistoryActions } from "./navigationHistory"
-import { homeSectionHash, nextDeckId } from "./utils/deckUtils"
+import { nextDeckId } from "./utils/deckUtils"
+import { defaultWeekSeriesLetter, homePathForDeck, homePathForDeckId, isSeriesLetter } from "./utils/seriesRoute"
 import { listVideoDeckIds } from "./utils/deckVideo"
 
 const TAGGER_MODES: readonly TaggerTab[] = ["edit", "train", "review"]
@@ -55,7 +57,30 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
+  beforeLoad: () => {
+    const letter = defaultWeekSeriesLetter()
+    if (letter) {
+      throw redirect({ to: "/series/$letter", params: { letter } })
+    }
+  },
   component: HomeRoute,
+})
+
+const seriesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/series/$letter",
+  beforeLoad: ({ params }) => {
+    if (!isSeriesLetter(params.letter)) {
+      throw redirect({ to: "/" })
+    }
+  },
+  component: SeriesHomeRoute,
+})
+
+const allDecksRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/all",
+  component: AllDecksHomeRoute,
 })
 
 const allProgressRoute = createRoute({
@@ -254,6 +279,8 @@ const completedRoute = createRoute({
 
 export const routeTree = rootRoute.addChildren([
   indexRoute,
+  seriesRoute,
+  allDecksRoute,
   allProgressRoute,
   betaTestRoute.addChildren([
     betaTestIndexRoute,
@@ -334,24 +361,70 @@ function RootLayout() {
   )
 }
 
-function HomeRoute() {
+function useScheduleHomeHandlers() {
   const routerInstance = useRouter()
   const progress = useSelector(appActor, s => s.context.progress)
-  const scrollToSectionId = routerInstance.state.location.hash || undefined
+
+  return {
+    progress,
+    scrollToSectionId: routerInstance.state.location.hash || undefined,
+    onDeckClick: (deckId: string) => {
+      appActor.send({ type: "START_DECK", deckId })
+      routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
+    },
+    onReviewClick: (deckId: string) => {
+      appActor.send({ type: "START_REVIEW", deckId })
+      routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
+    },
+    onStats: () => routerInstance.navigate({ to: "/progress" }),
+    onSeriesSelect: (letter: string) => {
+      routerInstance.navigate({ to: "/series/$letter", params: { letter } })
+    },
+    onAllSelect: () => routerInstance.navigate({ to: "/all" }),
+    onWeekSchedule: () => {
+      const letter = defaultWeekSeriesLetter()
+      if (letter) {
+        routerInstance.navigate({ to: "/series/$letter", params: { letter } })
+      } else {
+        routerInstance.navigate({ to: "/" })
+      }
+    },
+  }
+}
+
+function HomeRoute() {
+  const handlers = useScheduleHomeHandlers()
 
   return (
-    <HomeScreen
-      scrollToSectionId={scrollToSectionId}
-      progress={progress}
-      onDeckClick={deckId => {
-        appActor.send({ type: "START_DECK", deckId })
-        routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
-      }}
-      onReviewClick={deckId => {
-        appActor.send({ type: "START_REVIEW", deckId })
-        routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
-      }}
-      onStats={() => routerInstance.navigate({ to: "/progress" })}
+    <ScheduleHomeScreen
+      view="week"
+      seriesLetter={null}
+      {...handlers}
+    />
+  )
+}
+
+function SeriesHomeRoute() {
+  const { letter } = seriesRoute.useParams()
+  const handlers = useScheduleHomeHandlers()
+
+  return (
+    <ScheduleHomeScreen
+      view="week"
+      seriesLetter={letter as SeriesId}
+      {...handlers}
+    />
+  )
+}
+
+function AllDecksHomeRoute() {
+  const handlers = useScheduleHomeHandlers()
+
+  return (
+    <ScheduleHomeScreen
+      view="all"
+      seriesLetter={null}
+      {...handlers}
     />
   )
 }
@@ -436,7 +509,7 @@ function TrainingRoute() {
       onOptionClick={optionIndex => appActor.send({ type: "OPTION_CLICK", optionIndex })}
       onBack={() => {
         appActor.send({ type: "REQUEST_EXIT" })
-        routerInstance.navigate({ to: "/" })
+        routerInstance.navigate(homePathForDeckId(deckId))
       }}
       onSwitchToReview={() => {
         appActor.send({ type: "START_REVIEW", deckId })
@@ -460,7 +533,7 @@ function ReviewRoute() {
       onOptionClick={() => {}}
       onBack={() => {
         appActor.send({ type: "REQUEST_EXIT" })
-        routerInstance.navigate({ to: "/" })
+        routerInstance.navigate(homePathForDeckId(deckId))
       }}
       onSwitchToReview={() => {}}
       onSwitchToTrain={() => {
@@ -490,12 +563,12 @@ function CompletedRoute() {
           routerInstance.navigate({ to: "/$deckId/training", params: { deckId: nid } })
         } else {
           appActor.send({ type: "GO_HOME" })
-          routerInstance.navigate({ to: "/" })
+          routerInstance.navigate(homePathForDeckId(deck.id))
         }
       }}
       onHome={() => {
         appActor.send({ type: "GO_HOME" })
-        routerInstance.navigate({ to: "/", hash: homeSectionHash(deck), hashScrollIntoView: false })
+        routerInstance.navigate(homePathForDeck(deck))
       }}
       onTryAgain={() => {
         appActor.send({ type: "START_DECK", deckId: deck.id })

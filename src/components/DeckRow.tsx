@@ -8,9 +8,18 @@ interface DeckRowProps {
   progress: ProgressMap
   onDeckClick: (deckId: string) => void
   onReviewClick: (deckId: string) => void
+  demoReview?: boolean
+  demoTrain?: boolean
 }
 
-export default function DeckRow({ deck, progress, onDeckClick, onReviewClick }: DeckRowProps) {
+export default function DeckRow({
+  deck,
+  progress,
+  onDeckClick,
+  onReviewClick,
+  demoReview = false,
+  demoTrain = false,
+}: DeckRowProps) {
   const prog = progress[deck.id] || { bestStreak: 0, attempts: [] }
   const total = deck.moves.length
   const label = prog.attempts.length === 0
@@ -49,7 +58,7 @@ export default function DeckRow({ deck, progress, onDeckClick, onReviewClick }: 
       </td>
       <td className="py-2 pl-2 align-middle w-[13rem]">
         <div className="flex gap-1 items-center justify-end">
-          <button className="btn" onClick={goReview}>Review</button>
+          <button className="btn" onClick={goReview} data-beta-demo={demoReview ? "review" : undefined}>Review</button>
           <button className="btn btn-primary" onClick={() => {
             analytics.event({
               action: 'deck_selected',
@@ -57,7 +66,7 @@ export default function DeckRow({ deck, progress, onDeckClick, onReviewClick }: 
               label: `${deck.id} - ${deck.name}`
             })
             onDeckClick(deck.id)
-          }}>Train</button>
+          }} data-beta-demo={demoTrain ? "train" : undefined}>Train</button>
         </div>
       </td>
     </tr>

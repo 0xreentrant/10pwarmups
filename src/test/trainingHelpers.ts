@@ -1,4 +1,20 @@
 import { screen, fireEvent, waitFor } from "@testing-library/react"
+import {
+  SCHEDULE_ONBOARDING_STORAGE_KEY,
+  SCHEDULE_ONBOARDING_VERSION,
+} from "../data/scheduleOnboarding"
+
+export const HOME_SERIES_A = "/series/A"
+export const HOME_ALL = "/all"
+
+export function markScheduleOnboardingSeenInTests() {
+  localStorage.setItem(SCHEDULE_ONBOARDING_STORAGE_KEY, SCHEDULE_ONBOARDING_VERSION)
+}
+
+export async function dismissScheduleOnboarding() {
+  if (!document.querySelector(".bt-progress-intro")) return
+  fireEvent.click(await screen.findByRole("button", { name: "OK" }))
+}
 
 export function getOptionButtons() {
   const legend = screen.getByText(/What's next/)
@@ -28,6 +44,7 @@ export async function answerDeckMoves(moves: string[], delay = 100) {
 }
 
 export async function startFirstDeck() {
+  await dismissScheduleOnboarding()
   const trainButtons = await screen.findAllByText("Train")
   fireEvent.click(trainButtons[0])
   await screen.findByText(/What's next/)

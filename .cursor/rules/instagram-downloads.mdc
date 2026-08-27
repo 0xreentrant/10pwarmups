@@ -1,0 +1,20 @@
+---
+description: Download Instagram videos to ~/Downloads/10pwarmups with yt-dlp
+alwaysApply: true
+---
+
+# Instagram Video Downloads
+
+When asked to download an Instagram reel, post, or video:
+
+1. Ensure the directory exists: `~/Downloads/10pwarmups`
+2. Download with yt-dlp:
+
+```bash
+mkdir -p ~/Downloads/10pwarmups
+yt-dlp -o "~/Downloads/10pwarmups/%(title)s [%(id)s].%(ext)s" "<instagram-url>"
+```
+
+- Use the full Instagram URL the user provides (reel, post, or story).
+- Do not rename or move files unless the user asks.
+- Report the final file path after download completes.

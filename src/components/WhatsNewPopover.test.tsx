@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest"
 import { screen, fireEvent, within } from "@testing-library/react"
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from "../data/whatsNew"
+import { SCHEDULE_ONBOARDING_STORAGE_KEY, SCHEDULE_ONBOARDING_VERSION } from "../data/scheduleOnboarding"
 import { restartAppActor } from "../appActor"
 import { renderWithRouter } from "../test/renderWithRouter"
 
 describe("What's New popover", () => {
   beforeEach(() => {
     localStorage.clear()
+    localStorage.setItem(SCHEDULE_ONBOARDING_STORAGE_KEY, SCHEDULE_ONBOARDING_VERSION)
     restartAppActor()
   })
 

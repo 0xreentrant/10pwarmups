@@ -1,0 +1,36 @@
+** I need help transcribing this one
+- transcribed from public/videos/F3.mp4 audio (whisper tiny, 2026-08-26)
+- on-screen text overlays: F3 title card, then "Butterflies" (~8s); no per-move caption card like @10thplanetnetwork
+- raw narration:
+  F3 butterflies, two-on-one butterfly sweep.
+  Response to hip bump mount escape, tilt towards lockdown,
+  homie control, body pyramid, failed shuck,
+  rubber guard / mission control, zombie,
+  gogo clinch, omoplata, figure-four (carny), slow the roll (hazelette),
+  baby's arm, wrist lock (jiu claw), omoplata finish,
+  rewind ice pick DA sweep and pass, crotch ripper,
+  calf cranks, valley twister toe hold finish.
+- moves from video (player A/B in parentheses):
+Sit Up Guard (B)
+2 on 1 Sweep (B)
+Mount (B)
+Hip Bump Mount Escape (A)
+Butterfly Double Unders (B)
+Lockdown Double Underhooks (B)
+Homie Control (B)
+Body Pyramid (B)
+Failed Shuck (B)
+Mission Control (B)
+Zombie (B)
+Gogo Clinch (B)
+Omoplata (B)
+Carny (B)
+Slow the Roll (B)
+Baby's Arm (B)
+Wrist Lock (B)
+Attack Mode (B)
+Ninja Roll (B)
+Crotch Ripper (B)
+3 Calf Cranks (B)
+Valley Twister (B)
+- moves omitted vs old deck: Combat Base, New Jersey, Fire & Flip, duplicate Carny
