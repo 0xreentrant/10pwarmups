@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import BetaProgressIntro from "./BetaProgressIntro"
 import BetaScheduleDemo from "./beta/BetaScheduleDemo"
 import AllDeckSections from "./schedule/AllDeckSections"
@@ -7,7 +7,13 @@ import SeriesIndexNav from "./schedule/SeriesIndexNav"
 import WarmupScheduleTracker from "./schedule/WarmupScheduleTracker"
 import { useScheduleOnboarding } from "../hooks/useScheduleOnboarding"
 import { SERIES } from "../data/decks"
-import { formatWeekGroupsSummary, getScheduleState, type SeriesId } from "../data/warmupSchedule"
+import {
+  formatWeekGroupsSummary,
+  getScheduleState,
+  getWeekNumber,
+  ROTATION_WEEKS,
+  type SeriesId,
+} from "../data/warmupSchedule"
 import type { ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
 import { seriesLetterForScheduleDemo } from "../utils/deckTimestamps"
@@ -46,8 +52,11 @@ export default function ScheduleHomeScreen({
   onStats,
 }: ScheduleHomeScreenProps) {
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const [viewWeek, setViewWeek] = useState(() => getWeekNumber(new Date()))
+  const [weekMenuOpen, setWeekMenuOpen] = useState(false)
+  const weekMenuRef = useRef<HTMLDivElement>(null)
   const onboarding = useScheduleOnboarding()
-  const schedule = getScheduleState()
+  const schedule = getScheduleState(new Date(), viewWeek)
   const weekSummary = formatWeekGroupsSummary(schedule.weekDays)
   const canRunDemo = view === "week" && !!seriesLetter
   const introOpen = onboarding.introOpen
@@ -77,6 +86,24 @@ export default function ScheduleHomeScreen({
     return () => window.removeEventListener("scroll", updateScrollTopVisibility)
   }, [])
 
+  useEffect(() => {
+    if (!weekMenuOpen) return
+    const onPointerDown = (event: MouseEvent) => {
+      if (!weekMenuRef.current?.contains(event.target as Node)) {
+        setWeekMenuOpen(false)
+      }
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setWeekMenuOpen(false)
+    }
+    document.addEventListener("mousedown", onPointerDown)
+    document.addEventListener("keydown", onKeyDown)
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown)
+      document.removeEventListener("keydown", onKeyDown)
+    }
+  }, [weekMenuOpen])
+
   return (
     <div className="pt-7 pb-12">
       {introOpen && <BetaProgressIntro onComplete={onboarding.completeIntro} />}
@@ -88,9 +115,61 @@ export default function ScheduleHomeScreen({
         <h1 className="mb-1">10th Planet</h1>
       <h1 className="mb-1.5 text-accent">Warmup Trainer</h1>
       <p className="text-[11px] text-muted mt-0.5 mb-5 tracking-wide">openthesystem.app</p>
-      <p className="text-[11px] text-muted mt-0.5 mb-8 tracking-widest uppercase">
-        {SERIES.length} series · Week {schedule.weekNumber} of 8
-      </p>
+      <div ref={weekMenuRef} className="relative mb-8">
+        <button
+          type="button"
+          className="text-[11px] text-muted mt-0.5 tracking-widest uppercase bg-transparent border-0 p-0 cursor-pointer hover:text-accent"
+          aria-expanded={weekMenuOpen}
+          aria-haspopup="listbox"
+          aria-label={`Week ${schedule.weekNumber} of 8, choose week`}
+          onClick={() => setWeekMenuOpen(open => !open)}
+        >
+          {SERIES.length} series · Week {schedule.weekNumber} of 8
+          <span aria-hidden className="ml-1">▾</span>
+        </button>
+        {weekMenuOpen && (
+          <ul
+            role="listbox"
+            aria-label="Schedule week"
+            className="absolute z-20 left-0 mt-2 min-w-[220px] border border-border bg-surface py-1 shadow-[0_8px_24px_rgba(0,0,0,0.35)]"
+          >
+            {ROTATION_WEEKS.map(week => {
+              const summary = formatWeekGroupsSummary(getScheduleState(new Date(), week).weekDays)
+              const selected = week === viewWeek
+              return (
+                <li key={week} role="presentation">
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={selected}
+                    className={[
+                      "w-full text-left px-3 py-2 border-0 bg-transparent cursor-pointer",
+                      "text-[11px] tracking-wide uppercase group",
+                      selected ? "text-accent" : "text-muted hover:text-accent",
+                    ].join(" ")}
+                    onClick={() => {
+                      setViewWeek(week)
+                      setWeekMenuOpen(false)
+                    }}
+                  >
+                    <span
+                      className={[
+                        "font-disp font-bold tracking-widest",
+                        selected ? "text-accent" : "text-text group-hover:text-accent",
+                      ].join(" ")}
+                    >
+                      Week {week}
+                    </span>
+                    <span className={selected ? "text-accent" : "text-muted group-hover:text-accent"}>
+                      {" "}· {summary}
+                    </span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
 
       {view === "week" ? (
         <>

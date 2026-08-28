@@ -57,8 +57,9 @@ export function formatWeekGroupsSummary(weekDays: WeekdaySlot[]): string {
     .join(" · ")
 }
 
-export function getScheduleState(date = new Date()): ScheduleState {
-  const weekNumber = getWeekNumber(date)
+export const ROTATION_WEEKS = [1, 2, 3, 4, 5, 6, 7, 8] as const
+
+export function getScheduleState(date = new Date(), weekNumber = getWeekNumber(date)): ScheduleState {
   const weekGroups = SCHEDULE[weekNumber]
   const dayIndex = date.getDay()
   const isTrainingDay = dayIndex >= 1 && dayIndex <= 4

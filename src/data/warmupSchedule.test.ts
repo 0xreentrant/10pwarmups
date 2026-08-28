@@ -28,4 +28,13 @@ describe("warmupSchedule", () => {
     const state = getScheduleState(new Date(2026, 7, 28))
     expect(formatWeekGroupsSummary(state.weekDays)).toBe("Mon H · Tue G · Wed F · Thu E")
   })
+
+  it("overrides weekNumber while keeping the calendar weekday", () => {
+    const wed = new Date(2026, 7, 26)
+    expect(getWeekNumber(wed)).toBe(6)
+    const week1 = getScheduleState(wed, 1)
+    expect(week1.weekNumber).toBe(1)
+    expect(week1.featuredGroup).toBe("C")
+    expect(formatWeekGroupsSummary(week1.weekDays)).toBe("Mon A · Tue B · Wed C · Thu D")
+  })
 })
