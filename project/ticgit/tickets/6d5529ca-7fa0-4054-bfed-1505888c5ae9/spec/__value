@@ -1,0 +1,11 @@
+## Goal
+Clicking the schedule home week label opens a week picker; choosing a week updates the schedule viewer for that session only.
+
+## Approach
+1. Export week groups lookup / allow `getScheduleState(date, weekNumber?)` so UI can override week while keeping today/day-of-week from `date`.
+2. In `ScheduleHomeScreen`, hold `viewWeek` in React state defaulting to calendar week; derive `schedule` from override.
+3. Replace the static `<p>` with a button + absolute menu listing weeks 1–8 (label + Mon–Thu groups). Close on select / outside click / Escape.
+4. Unit-test week override on `getScheduleState`; keep home smoke text assertion compatible (button text still matches).
+
+## Non-goals
+URL/localStorage persistence; changing series routing.

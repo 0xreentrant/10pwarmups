@@ -1,0 +1,1 @@
+Make the "N SERIES · WEEK X OF 8" label open a dropdown to preview any week 1–8 in the rotation. Selection is session-only (resets to calendar week on refresh) and updates WarmupScheduleTracker.
