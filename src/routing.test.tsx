@@ -8,7 +8,9 @@ import { renderWithRouter } from "./test/renderWithRouter"
 import {
   answerDeckMoves,
   clickOptionWithText,
+  dismissScheduleOnboarding,
   startFirstDeck,
+  HOME_ALL,
   HOME_SERIES_A,
 } from "./test/trainingHelpers"
 import { defaultWeekSeriesLetter } from "./utils/seriesRoute"
@@ -130,6 +132,36 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/series/A")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
       expect(screen.queryByText(/Leave this test/i)).not.toBeInTheDocument()
+    })
+  })
+
+  it("in-screen back from /all training returns to /all", async () => {
+    const { router } = await renderWithRouter(HOME_ALL)
+    await dismissScheduleOnboarding()
+    const trainButtons = await screen.findAllByText("Train")
+    fireEvent.click(trainButtons[0])
+    await screen.findByText(/What's next/)
+
+    fireEvent.click(screen.getByText(/← Back/))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/all")
+      expect(screen.getByText("10th Planet")).toBeInTheDocument()
+    })
+  })
+
+  it("in-screen back from /all review returns to /all", async () => {
+    const { router } = await renderWithRouter(HOME_ALL)
+    await dismissScheduleOnboarding()
+    const reviewButtons = await screen.findAllByText("Review")
+    fireEvent.click(reviewButtons[0])
+    await waitFor(() => {
+      expect(router.state.location.pathname).toMatch(/\/review$/)
+    })
+
+    fireEvent.click(screen.getByText(/← Back/))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/all")
+      expect(screen.getByText("10th Planet")).toBeInTheDocument()
     })
   })
 
