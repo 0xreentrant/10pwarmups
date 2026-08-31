@@ -1,0 +1,1 @@
+In the tagger Video select, mark every video deck with zero tagged move timestamps (reuse deckHasTaggedMoves). Label suffix " · untagged" plus accent color on those options.

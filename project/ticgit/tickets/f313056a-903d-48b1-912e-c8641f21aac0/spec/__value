@@ -1,0 +1,10 @@
+## Goal
+Highlight Video dropdown options in TaggerView for decks with zero finite move timestamps.
+
+## Change
+- Import deckHasTaggedMoves from utils/deckTimestamps
+- In VIDEO_IDS map: untagged = !deckHasTaggedMoves(id, d?.moves.length ?? 0)
+- Untagged options: append " · untagged" and style color var(--color-accent)
+
+## Out of scope
+Custom dropdown, live in-session timestamp updates in the list
