@@ -70,6 +70,19 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2,woff}"],
         navigateFallback: "index.html",
+        // Warmup mp4s are large; cache on first play so train/review works offline after a visit.
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith("/videos/") && url.pathname.endsWith(".mp4"),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "warmup-videos",
+              expiration: {
+                maxEntries: 40,
+              },
+            },
+          },
+        ],
       },
     }),
   ],

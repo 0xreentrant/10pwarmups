@@ -93,10 +93,18 @@ async function setOffline(page, offline) {
   })
 }
 
+async function waitForDusk2Options(page) {
+  await page.waitForFunction(() => {
+    if (!document.querySelector(".bl-ghost")) return false
+    return Array.from(document.querySelectorAll(".bl-deck .ao-option")).some(b => !b.disabled)
+  }, { timeout: 45000 })
+}
+
 async function clickOptionWithText(page, text) {
+  await waitForDusk2Options(page)
   const clicked = await page.evaluate(target => {
-    const btn = Array.from(document.querySelectorAll("button.option-btn"))
-      .find(b => b.textContent.includes(target))
+    const btn = Array.from(document.querySelectorAll(".bl-deck .ao-option"))
+      .find(b => !b.disabled && b.textContent.includes(target))
     if (!btn) return false
     btn.click()
     return true
@@ -152,13 +160,12 @@ async function runOfflineE2E() {
 
     await clickTrainForDeck(page, "A1")
 
-    await page.waitForSelector("button.option-btn")
+    await page.waitForSelector(".bl-overlay", { timeout: 15000 })
     for (const move of A1_MOVES) {
       await clickOptionWithText(page, move)
-      await new Promise(r => setTimeout(r, 50))
     }
 
-    await page.waitForFunction(() => /Perfect|Complete|Try Again/.test(document.body.textContent), { timeout: 15000 })
+    await page.waitForFunction(() => /Perfect|Complete|Try Again/.test(document.body.textContent), { timeout: 60000 })
 
     const progress = await page.evaluate(() => localStorage.getItem("tp_progress"))
     if (!progress) throw new Error("Progress not saved to localStorage")

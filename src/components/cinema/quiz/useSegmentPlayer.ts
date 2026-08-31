@@ -74,6 +74,13 @@ export function useSegmentPlayer(videoEl: HTMLVideoElement | null) {
       return
     }
 
+    // Offline / broken src: advance without waiting on a tape that never moves.
+    if (videoEl.error || videoEl.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+      clearActive()
+      onEnd?.()
+      return
+    }
+
     activeRef.current = { segment, options: { rate, onEnd } }
     setSegmentActive(true)
     setSegmentPaused(false)
@@ -81,20 +88,32 @@ export function useSegmentPlayer(videoEl: HTMLVideoElement | null) {
     videoEl.playbackRate = rate
     videoEl.currentTime = segment.from
 
+    let settled = false
+    const finish = () => {
+      if (settled) return
+      settled = true
+      videoEl.pause()
+      videoEl.playbackRate = 1
+      rafRef.current = 0
+      clearActive()
+      onEnd?.()
+    }
+
     const watch = () => {
-      if (videoEl.currentTime >= segment.to || videoEl.ended) {
-        videoEl.pause()
-        videoEl.playbackRate = 1
-        rafRef.current = 0
-        clearActive()
-        onEnd?.()
+      if (videoEl.error || videoEl.currentTime >= segment.to || videoEl.ended) {
+        finish()
         return
       }
       rafRef.current = requestAnimationFrame(watch)
     }
 
     const started = videoEl.play()
-    if (started && typeof started.catch === "function") started.catch(() => {})
+    if (started && typeof started.catch === "function") {
+      started.catch(() => {
+        cancel()
+        finish()
+      })
+    }
     rafRef.current = requestAnimationFrame(watch)
   }, [cancel, clearActive, videoEl])
 

@@ -66,4 +66,18 @@ describe("useSegmentPlayer", () => {
     expect(result.current.segmentPaused).toBe(false)
     expect(onEnd).not.toHaveBeenCalled()
   })
+
+  it("finishes immediately when the video source is unavailable", () => {
+    const video = fakeVideo()
+    Object.defineProperty(video, "error", { get: () => ({ code: 4 }) })
+    const onEnd = vi.fn()
+    const { result } = renderHook(() => useSegmentPlayer(video))
+
+    act(() => {
+      result.current.play({ from: 0, to: 10 }, { onEnd })
+    })
+
+    expect(onEnd).toHaveBeenCalledTimes(1)
+    expect(result.current.segmentActive).toBe(false)
+  })
 })
