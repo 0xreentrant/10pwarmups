@@ -11,10 +11,8 @@ import {
 import { useSelector } from "@xstate/react"
 import ScheduleHomeScreen from "./components/ScheduleHomeScreen"
 import BetaTestScreen from "./components/BetaTestScreen"
-import CompletionScreen from "./components/CompletionScreen"
 import ProgressScreen from "./components/ProgressScreen"
 import TaggerView, { type TaggerTab } from "./components/tagger/TaggerView"
-import TrainingScreen from "./components/TrainingScreen"
 import CinemaReviewView from "./components/training/CinemaReviewView"
 import TrainingSessionView from "./components/training/TrainingSessionView"
 import WhatsNewPopover from "./components/WhatsNewPopover"
@@ -377,14 +375,16 @@ function useScheduleHomeHandlers() {
     scrollToSectionId: routerInstance.state.location.hash || undefined,
     onDeckClick: (deckId: string) => {
       const fromPath = routerInstance.state.location.pathname
-      if (fromPath === "/all") rememberAllMenuReturn(window.scrollY)
+      const scrollY = window.scrollY
+      if (fromPath === "/all") rememberAllMenuReturn(scrollY)
       else clearMenuReturn()
       appActor.send({ type: "START_DECK", deckId })
       routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
     },
     onReviewClick: (deckId: string) => {
       const fromPath = routerInstance.state.location.pathname
-      if (fromPath === "/all") rememberAllMenuReturn(window.scrollY)
+      const scrollY = window.scrollY
+      if (fromPath === "/all") rememberAllMenuReturn(scrollY)
       else clearMenuReturn()
       appActor.send({ type: "START_REVIEW", deckId })
       routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
@@ -439,7 +439,7 @@ function AllDecksHomeRoute() {
     if (savedY != null) {
       requestAnimationFrame(() => window.scrollTo(0, savedY))
     }
-  }, [])
+  }, [handlers.scrollToSectionId])
 
   return (
     <ScheduleHomeScreen
@@ -471,6 +471,47 @@ function BetaTestLandingRoute() {
       onHome={() => routerInstance.navigate({ to: "/" })}
     />
   )
+}
+
+function deckSessionHandlers(
+  routerInstance: ReturnType<typeof useRouter>,
+  deck: (typeof DECKS)[number],
+  deckId: string,
+) {
+  return {
+    onExit: () => {
+      const target = sessionHomePathForDeckId(deckId)
+      appActor.send({ type: "REQUEST_EXIT" })
+      routerInstance.navigate(target)
+    },
+    onSwitchToReview: () => {
+      appActor.send({ type: "START_REVIEW", deckId })
+      routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
+    },
+    onRestart: () => {
+      appActor.send({ type: "START_DECK", deckId })
+      routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
+    },
+    onTryAgain: () => {
+      appActor.send({ type: "START_DECK", deckId: deck.id })
+      routerInstance.navigate({ to: "/$deckId/training", params: { deckId: deck.id } })
+    },
+    onNext: () => {
+      const nid = nextDeckId(deck.id)
+      if (nid) {
+        appActor.send({ type: "START_DECK", deckId: nid })
+        routerInstance.navigate({ to: "/$deckId/training", params: { deckId: nid } })
+      } else {
+        appActor.send({ type: "GO_HOME" })
+        routerInstance.navigate(sessionHomePathForDeck(deck))
+      }
+    },
+    onHome: () => {
+      appActor.send({ type: "GO_HOME" })
+      routerInstance.navigate(sessionHomePathForDeck(deck))
+    },
+    onStats: () => routerInstance.navigate({ to: "/$deckId", params: { deckId } }),
+  }
 }
 
 function betaSessionHandlers(
@@ -511,7 +552,8 @@ function TrainingRoute() {
   const routerInstance = useRouter()
   const { deckId } = trainingRoute.useParams()
   const deck = DECKS.find(d => d.id === deckId)!
-  const session = useSelector(appActor, s => s.context.session)!
+  const snap = useSelector(appActor, s => s)
+  const handlers = deckSessionHandlers(routerInstance, deck, deckId)
 
   useEffect(() => {
     const sub = appActor.subscribe(snapshot => {
@@ -523,20 +565,14 @@ function TrainingRoute() {
   }, [deckId, routerInstance])
 
   return (
-    <TrainingScreen
+    <TrainingSessionView
+      snap={snap}
+      send={appActor.send}
       deck={deck}
-      mode="training"
-      session={session}
-      onOptionClick={optionIndex => appActor.send({ type: "OPTION_CLICK", optionIndex })}
-      onBack={() => {
-        appActor.send({ type: "REQUEST_EXIT" })
-        routerInstance.navigate(sessionHomePathForDeckId(deckId))
+      {...handlers}
+      onRestart={() => {
+        appActor.send({ type: "START_DECK", deckId })
       }}
-      onSwitchToReview={() => {
-        appActor.send({ type: "START_REVIEW", deckId })
-        routerInstance.navigate({ to: "/$deckId/review", params: { deckId } })
-      }}
-      onSwitchToTrain={() => {}}
     />
   )
 }
@@ -547,16 +583,13 @@ function ReviewRoute() {
   const deck = DECKS.find(d => d.id === deckId)!
 
   return (
-    <TrainingScreen
+    <CinemaReviewView
       deck={deck}
-      mode="review"
-      session={null}
-      onOptionClick={() => {}}
       onBack={() => {
+        const target = sessionHomePathForDeckId(deckId)
         appActor.send({ type: "REQUEST_EXIT" })
-        routerInstance.navigate(sessionHomePathForDeckId(deckId))
+        routerInstance.navigate(target)
       }}
-      onSwitchToReview={() => {}}
       onSwitchToTrain={() => {
         appActor.send({ type: "START_DECK", deckId })
         routerInstance.navigate({ to: "/$deckId/training", params: { deckId } })
@@ -569,33 +602,14 @@ function CompletedRoute() {
   const routerInstance = useRouter()
   const { deckId } = completedRoute.useParams()
   const deck = DECKS.find(d => d.id === deckId)!
-  const progress = useSelector(appActor, s => s.context.progress)
-  const session = useSelector(appActor, s => s.context.session)!
+  const snap = useSelector(appActor, s => s)
 
   return (
-    <CompletionScreen
+    <TrainingSessionView
+      snap={snap}
+      send={appActor.send}
       deck={deck}
-      session={session}
-      progress={progress}
-      onNext={() => {
-        const nid = nextDeckId(deck.id)
-        if (nid) {
-          appActor.send({ type: "START_DECK", deckId: nid })
-          routerInstance.navigate({ to: "/$deckId/training", params: { deckId: nid } })
-        } else {
-          appActor.send({ type: "GO_HOME" })
-          routerInstance.navigate(sessionHomePathForDeckId(deck.id))
-        }
-      }}
-      onHome={() => {
-        appActor.send({ type: "GO_HOME" })
-        routerInstance.navigate(sessionHomePathForDeck(deck))
-      }}
-      onTryAgain={() => {
-        appActor.send({ type: "START_DECK", deckId: deck.id })
-        routerInstance.navigate({ to: "/$deckId/training", params: { deckId: deck.id } })
-      }}
-      onStats={() => routerInstance.navigate({ to: "/$deckId", params: { deckId } })}
+      {...deckSessionHandlers(routerInstance, deck, deckId)}
     />
   )
 }

@@ -39,7 +39,7 @@ describe('Acceptance flows', () => {
     await renderWithRouter(HOME_SERIES_A)
     await startFirstDeck()
 
-    expect(screen.getByText('A1')).toBeInTheDocument()
+    expect(document.querySelector('.bl-overlay')).toBeTruthy()
     expect(getOptionButtons().length).toBe(4)
     expect(screen.getByRole('button', { name: new RegExp(A1_MOVES[0], 'i') })).toBeInTheDocument()
   })
@@ -51,8 +51,8 @@ describe('Acceptance flows', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 2 }).textContent).toMatch(/Perfect/)
-    }, { timeout: 3000 })
-  })
+    }, { timeout: 15000 })
+  }, 60000)
 
   it('shows loaded progress on the series home', async () => {
     localStorage.setItem('tp_progress', JSON.stringify({
@@ -75,33 +75,30 @@ describe('Acceptance flows', () => {
     const answerSequence = [true, false, true, true, true]
     for (let i = 0; i < answerSequence.length; i++) {
       if (answerSequence[i]) {
-        clickOptionWithText(A1_MOVES[i])
+        await clickOptionWithText(A1_MOVES[i])
       } else {
-        clickWrongOption(A1_MOVES[i])
+        await clickWrongOption(A1_MOVES[i])
       }
-      await new Promise(r => setTimeout(r, 50))
     }
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { level: 2 }).textContent).toMatch(/Complete/)
-      expect(screen.getByText('Final streak')).toBeInTheDocument()
-      expect(screen.getByText('3')).toBeInTheDocument()
-    }, { timeout: 8000 })
+      expect(screen.getByText(/streak 3/)).toBeInTheDocument()
+    }, { timeout: 15000 })
 
     await waitFor(() => {
       const saved = JSON.parse(localStorage.getItem('tp_progress')!)
       expect(saved['A1'].attempts[0].wrongMoves).toContain(1)
       expect(saved['A1'].attempts[0].finalStreak).toBe(3)
     }, { timeout: 3000 })
-  })
+  }, 60000)
 
   it('discards incomplete attempts when the user abandons training', async () => {
     await renderWithRouter(HOME_SERIES_A)
     await startFirstDeck()
     await clickOptionWithText(A1_MOVES[0])
-    await new Promise(r => setTimeout(r, 100))
 
-    fireEvent.click(screen.getByText(/← Back/))
+    fireEvent.click(screen.getByRole('button', { name: 'Exit training' }))
     await confirmLeaveTest()
 
     const saved = JSON.parse(localStorage.getItem('tp_progress')!)

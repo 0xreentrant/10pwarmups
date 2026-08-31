@@ -30,13 +30,16 @@ globalThis.localStorage = {
   clear() { this.store = {} },
 }
 
+// 8080 is often taken locally (e.g. assets-src http.server); override with PORT=
+const port = Number(process.env.PORT) || 8081
+
 const server = createInspectorServer({
-  port: 8080,
+  port,
   autoOpen: true,
 })
 
 const inspector = createWebSocketInspector({
-  url: "ws://localhost:8080",
+  url: `ws://localhost:${port}`,
 })
 
 const actor = createActor(appMachine, {
@@ -47,7 +50,7 @@ const actor = createActor(appMachine, {
 actor.start()
 
 console.log("XState machine viewer running at https://stately.ai/inspect")
-console.log("Relay server: ws://localhost:8080")
+console.log(`Relay server: ws://localhost:${port}`)
 console.log("Initial state:", actor.getSnapshot().value)
 console.log("Press Ctrl+C to stop")
 

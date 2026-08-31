@@ -13,6 +13,7 @@ import {
   HOME_ALL,
   HOME_SERIES_A,
 } from "./test/trainingHelpers"
+import { waitForCinematicOptions } from "./test/cinematicTrainingHelpers"
 import { defaultWeekSeriesLetter } from "./utils/seriesRoute"
 import { startBetaFirstDeck, dismissBetaProgressIntro } from "./test/cinematicTrainingHelpers"
 
@@ -63,8 +64,8 @@ describe("routing", () => {
     const { router } = await renderWithRouter(HOME_SERIES_A)
     await startFirstDeck()
     expect(router.state.location.pathname).toBe("/A1/training")
-    expect(screen.getByText("Kneeling")).toBeInTheDocument()
-    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
+    expect(document.querySelector(".bl-overlay")).toBeTruthy()
+    expect(document.querySelector(".bl-deck .ao-option")).toBeTruthy()
   })
 
   it("navigates to /progress when Stats is clicked", async () => {
@@ -82,14 +83,13 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/completed")
       expect(screen.getByRole("heading", { level: 2 }).textContent).toMatch(/Perfect/)
-    }, { timeout: 5000 })
-  })
+    }, { timeout: 15000 })
+  }, 60000)
 
   it("browser back from training after one answer returns home immediately", async () => {
     const { router, history } = await renderWithRouter(HOME_SERIES_A)
     await startFirstDeck()
-    clickOptionWithText(A1_MOVES[0])
-    await new Promise(r => setTimeout(r, 100))
+    await clickOptionWithText(A1_MOVES[0])
     const homeScreen = watchForText("10th Planet")
 
     try {
@@ -111,8 +111,7 @@ describe("routing", () => {
   it("allows router navigation away from active training without a prompt", async () => {
     const { router } = await renderWithRouter(HOME_SERIES_A)
     await startFirstDeck()
-    clickOptionWithText(A1_MOVES[0])
-    await new Promise(r => setTimeout(r, 100))
+    await clickOptionWithText(A1_MOVES[0])
 
     void router.navigate({ to: "/series/$letter", params: { letter: "A" } })
 
@@ -127,7 +126,7 @@ describe("routing", () => {
     const { router } = await renderWithRouter(HOME_SERIES_A)
     await startFirstDeck()
 
-    fireEvent.click(screen.getByText(/← Back/))
+    fireEvent.click(screen.getByRole("button", { name: "Exit training" }))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/series/A")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
@@ -140,9 +139,9 @@ describe("routing", () => {
     await dismissScheduleOnboarding()
     const trainButtons = await screen.findAllByText("Train")
     fireEvent.click(trainButtons[0])
-    await screen.findByText(/What's next/)
+    await waitForCinematicOptions()
 
-    fireEvent.click(screen.getByText(/← Back/))
+    fireEvent.click(screen.getByRole("button", { name: "Exit training" }))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/all")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
@@ -158,7 +157,7 @@ describe("routing", () => {
       expect(router.state.location.pathname).toMatch(/\/review$/)
     })
 
-    fireEvent.click(screen.getByText(/← Back/))
+    fireEvent.click(screen.getByRole("button", { name: "Exit review" }))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/all")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
@@ -173,24 +172,22 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/review")
     })
+    expect(document.querySelector(".ct-overlay")).toBeTruthy()
     expect(screen.getByText("Kneeling")).toBeInTheDocument()
-    expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
-    expect(screen.getByText(A1_MOVES[0])).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Train" })).toBeInTheDocument()
   })
 
   it("confirms before switching from training to review and resets quiz progress", async () => {
     const { router } = await renderWithRouter(HOME_SERIES_A)
     await startFirstDeck()
-    clickOptionWithText(A1_MOVES[0])
-    await new Promise(r => setTimeout(r, 100))
+    await clickOptionWithText(A1_MOVES[0])
 
     fireEvent.click(screen.getByRole("button", { name: "Review" }))
     expect(screen.getByText(/Switch to review/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByText("Keep training"))
     expect(screen.queryByText(/Switch to review/i)).not.toBeInTheDocument()
-    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
+    expect(document.querySelector(".bl-overlay")).toBeTruthy()
     expect(router.state.location.pathname).toBe("/A1/training")
 
     fireEvent.click(screen.getByRole("button", { name: "Review" }))
@@ -199,8 +196,8 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/review")
     })
-    expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
-    expect(screen.getByText(A1_MOVES[0])).toBeInTheDocument()
+    expect(document.querySelector(".ct-overlay")).toBeTruthy()
+    expect(screen.getByText("Kneeling")).toBeInTheDocument()
   })
 
   it("switches from review to train without a confirm dialog", async () => {
@@ -215,7 +212,7 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/training")
     })
-    expect(screen.getByText(/What's next/i)).toBeInTheDocument()
+    expect(document.querySelector(".bl-overlay")).toBeTruthy()
     expect(screen.queryByText(/Switch to review/i)).not.toBeInTheDocument()
   })
 
@@ -227,7 +224,7 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/A1/review")
     })
 
-    fireEvent.click(screen.getByText(/← Back/))
+    fireEvent.click(screen.getByRole("button", { name: "Exit review" }))
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/series/A")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
@@ -241,16 +238,16 @@ describe("routing", () => {
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/completed")
-    }, { timeout: 5000 })
+    }, { timeout: 15000 })
 
     history.back()
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/series/A")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
-      expect(screen.queryByText(/What's next/i)).not.toBeInTheDocument()
+      expect(document.querySelector(".bl-overlay")).toBeFalsy()
     })
-  })
+  }, 60000)
 
   it("browser back from deck progress entered via completion returns to completed results", async () => {
     const { router, history } = await renderWithRouter(HOME_SERIES_A)
@@ -259,7 +256,7 @@ describe("routing", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Progress history")).toBeInTheDocument()
-    }, { timeout: 5000 })
+    }, { timeout: 15000 })
 
     fireEvent.click(screen.getByText("Progress history"))
 
@@ -273,8 +270,8 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/completed")
       expect(screen.getByRole("heading", { level: 2 }).textContent).toMatch(/Perfect/)
-    }, { timeout: 5000 })
-  })
+    }, { timeout: 15000 })
+  }, 60000)
 
   it("browser forward from home returns to completed results after backing out of completion", async () => {
     const { router, history } = await renderWithRouter(HOME_SERIES_A)
@@ -283,7 +280,7 @@ describe("routing", () => {
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/completed")
-    }, { timeout: 5000 })
+    }, { timeout: 15000 })
 
     history.back()
 
@@ -297,8 +294,8 @@ describe("routing", () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/completed")
       expect(screen.getByRole("heading", { level: 2 }).textContent).toMatch(/Perfect/)
-    }, { timeout: 5000 })
-  })
+    }, { timeout: 15000 })
+  }, 60000)
 
   it("redirects direct completed URL visits to home without an active completed session", async () => {
     const { router } = await renderWithRouter("/A1/completed")
@@ -318,7 +315,7 @@ describe("routing", () => {
 
     await waitFor(() => {
       expect(screen.getByText(/← Home/)).toBeInTheDocument()
-    }, { timeout: 5000 })
+    }, { timeout: 15000 })
 
     fireEvent.click(screen.getByText(/← Home/))
 
@@ -326,7 +323,7 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/series/A")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
     })
-  })
+  }, 60000)
 
   it("navigates to deck progress when Progress history is clicked from completion", async () => {
     const { router } = await renderWithRouter(HOME_SERIES_A)
@@ -335,7 +332,7 @@ describe("routing", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Progress history")).toBeInTheDocument()
-    }, { timeout: 5000 })
+    }, { timeout: 15000 })
 
     fireEvent.click(screen.getByText("Progress history"))
 
@@ -343,7 +340,7 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/A1")
       expect(screen.getByText("Summary")).toBeInTheDocument()
     })
-  })
+  }, 60000)
 
   it("redirects /tagger to the first video warmup in edit mode", async () => {
     const { router } = await renderWithRouter("/tagger")

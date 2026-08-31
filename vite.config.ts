@@ -21,7 +21,7 @@ export default defineConfig({
       hmr: {
         protocol: "wss",
         host: tailscaleServeHost,
-        clientPort: 443,
+        clientPort: Number(process.env.TAILSCALE_SERVE_PORT ?? 443),
       },
     }),
     watch: {
