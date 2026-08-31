@@ -10,6 +10,17 @@ export function taggerSeedTimestamps(
   return resolveMoveTimestamps(deckId, moveCount, duration)
 }
 
+/** M:SS.mmm for video scrub readouts (native controls only show whole seconds). */
+export function formatVideoTimeMs(sec: number): string {
+  if (!Number.isFinite(sec) || sec < 0) return "0:00.000"
+  const totalMs = Math.round(sec * 1000)
+  const ms = totalMs % 1000
+  const totalSec = Math.floor(totalMs / 1000)
+  const s = totalSec % 60
+  const m = Math.floor(totalSec / 60)
+  return `${m}:${String(s).padStart(2, "0")}.${String(ms).padStart(3, "0")}`
+}
+
 /** Map a pointer X on the track rect to a clamped time in [0, duration]. */
 export function timeFromClientX(
   clientX: number,

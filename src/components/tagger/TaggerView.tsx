@@ -15,6 +15,7 @@ import {
 import {
   MAX_NUDGE_MS,
   MIN_NUDGE_MS,
+  NUDGE_MS_STEP,
   usePersistedNudgeMs,
 } from "../../hooks/usePersistedNudgeMs"
 import {
@@ -28,6 +29,7 @@ import {
   resolveMoveNames,
   saveMoveNamesForDeck,
 } from "../../hooks/usePersistedTaggerMoveNames"
+import { deckHasTaggedMoves } from "../../utils/deckTimestamps"
 import { nextDeckId, precomputeDeckOptions } from "../../utils/deckUtils"
 import { listVideoDeckIds, videoSrcForDeck } from "../../utils/deckVideo"
 import { CinemaOverlay } from "../cinema/review"
@@ -38,6 +40,7 @@ import { taggerKeyDownAction, taggerKeyTarget, taggerKeyUpShouldSuppress } from 
 import { SELECT_NUDGE_SEC, taggerMachine } from "./taggerMachine"
 import {
   buildJsonText,
+  formatVideoTimeMs,
   isFiniteTimestamp,
   moveIndexAtTime,
   parseTimestampsJson,
@@ -114,6 +117,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const videoRef = useRef<HTMLVideoElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const settingsRef = useRef<HTMLDivElement>(null)
+  const nudgeInputRef = useRef<HTMLInputElement>(null)
   const moveNameDialogRef = useRef<HTMLDialogElement>(null)
   const [editVideoEl, setEditVideoEl] = useState<HTMLVideoElement | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -178,6 +182,19 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     window.addEventListener("pointerdown", onPointerDown)
     return () => window.removeEventListener("pointerdown", onPointerDown)
   }, [settingsOpen])
+
+  useEffect(() => {
+    if (!settingsOpen) return
+    const el = nudgeInputRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setNudgeMs(Number(el.value) + (e.deltaY < 0 ? NUDGE_MS_STEP : -NUDGE_MS_STEP))
+    }
+    el.addEventListener("wheel", onWheel, { passive: false })
+    return () => el.removeEventListener("wheel", onWheel)
+  }, [settingsOpen, setNudgeMs])
 
   useEffect(() => {
     setLoadError(null)
@@ -637,17 +654,16 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
                   </span>
                   <div className="flex items-center gap-2">
                     <input
-                      type="range"
+                      ref={nudgeInputRef}
+                      type="number"
                       min={MIN_NUDGE_MS}
                       max={MAX_NUDGE_MS}
-                      step={50}
+                      step={NUDGE_MS_STEP}
                       value={nudgeMs}
                       onChange={e => setNudgeMs(Number(e.target.value))}
-                      className="min-w-0 flex-1"
+                      className="min-w-0 flex-1 border border-border bg-black px-2 py-1.5 text-sm tabular-nums"
                     />
-                    <span className="w-12 shrink-0 text-right text-xs tabular-nums text-text">
-                      {nudgeMs}ms
-                    </span>
+                    <span className="shrink-0 text-xs text-muted">ms</span>
                   </div>
                 </label>
               </div>
@@ -743,9 +759,14 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
         <select value={deckId} onChange={e => onDeckChange(e.target.value)}>
           {VIDEO_IDS.map(id => {
             const d = DECKS.find(x => x.id === id)
+            const untagged = !deckHasTaggedMoves(id, d?.moves.length ?? 0)
             return (
-              <option key={id} value={id}>
-                {id}{d ? ` - ${d.name}` : ""}
+              <option
+                key={id}
+                value={id}
+                style={untagged ? { color: "var(--color-accent)" } : undefined}
+              >
+                {id}{d ? ` - ${d.name}` : ""}{untagged ? " · untagged" : ""}
               </option>
             )
           })}
@@ -757,14 +778,20 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
           <div className="mb-4 flex flex-col items-stretch gap-4 sm:flex-row sm:items-start">
             <div className="min-w-0 flex-1">
               {videoSrc && (
-                <video
-                  key={deckId}
-                  ref={videoRef}
-                  className="max-h-[60vh] w-full object-contain bg-black"
-                  src={videoSrc}
-                  controls
-                  playsInline
-                />
+                <>
+                  <video
+                    key={deckId}
+                    ref={videoRef}
+                    className="max-h-[60vh] w-full object-contain bg-black"
+                    src={videoSrc}
+                    controls
+                    playsInline
+                  />
+                  <p className="mt-1 font-mono text-xs tabular-nums text-muted">
+                    {formatVideoTimeMs(currentTime)}
+                    {duration > 0 ? ` / ${formatVideoTimeMs(duration)}` : ""}
+                  </p>
+                </>
               )}
             </div>
 

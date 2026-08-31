@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react"
 
 export const NUDGE_MS_STORAGE_KEY = "tp_tagger_nudge_ms"
-export const DEFAULT_NUDGE_MS = 2000
+export const DEFAULT_NUDGE_MS = 125
 export const MIN_NUDGE_MS = 1
 export const MAX_NUDGE_MS = 60_000
+export const NUDGE_MS_STEP = 5
 
 export function clampNudgeMs(n: number): number {
   if (!Number.isFinite(n)) return DEFAULT_NUDGE_MS

@@ -1,9 +1,18 @@
 import { describe, expect, it } from "vitest"
 import {
   buildJsonText,
+  formatVideoTimeMs,
   parseTimestampsJson,
   timeFromClientX,
 } from "./taggerTimestamps"
+
+describe("formatVideoTimeMs", () => {
+  it("formats minutes, seconds, and milliseconds", () => {
+    expect(formatVideoTimeMs(0)).toBe("0:00.000")
+    expect(formatVideoTimeMs(83.456)).toBe("1:23.456")
+    expect(formatVideoTimeMs(61.001)).toBe("1:01.001")
+  })
+})
 
 describe("timeFromClientX", () => {
   it("maps track edges and midpoint, clamping outside the track", () => {
