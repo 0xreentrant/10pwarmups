@@ -47,8 +47,20 @@ export default function TrainingZonesDemo({ onComplete }: TrainingZonesDemoProps
 
   if (phase === "zones" && stepIndex >= STEPS.length) return null
 
+  function advance() {
+    if (phase === "intro") {
+      setPhase("zones")
+      return
+    }
+    setStepIndex(i => i + 1)
+  }
+
   return (
-    <div className={`bl-train-demo${phase === "intro" ? "" : " bl-train-demo--locked"}`} aria-hidden={phase !== "intro"}>
+    <div
+      className={`bl-train-demo${phase === "intro" ? "" : " bl-train-demo--locked"}`}
+      aria-hidden={phase !== "intro"}
+      onClick={advance}
+    >
       <TrainingZonesDemoStyles />
       {phase === "intro" ? (
         <div className="bl-train-demo-intro" role="dialog" aria-label="New train mode">
@@ -57,7 +69,10 @@ export default function TrainingZonesDemo({ onComplete }: TrainingZonesDemoProps
           <button
             type="button"
             className="bl-train-demo-ok"
-            onClick={() => setPhase("zones")}
+            onClick={e => {
+              e.stopPropagation()
+              advance()
+            }}
           >
             OK
           </button>
@@ -146,6 +161,7 @@ function TrainingZonesDemoStyles() {
 
       .bl-train-demo--locked {
         pointer-events: auto;
+        cursor: pointer;
       }
 
       .bl-train-demo-zone {

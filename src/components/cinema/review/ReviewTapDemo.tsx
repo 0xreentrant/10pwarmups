@@ -37,10 +37,19 @@ export default function ReviewTapDemo({ onComplete }: ReviewTapDemoProps) {
 
   const step = STEPS[stepIndex]
 
+  function advance() {
+    if (phase === "intro") {
+      setPhase("zones")
+      return
+    }
+    setStepIndex(i => i + 1)
+  }
+
   return (
     <div
       className="ct-tap-demo"
       aria-hidden={phase !== "intro"}
+      onClick={advance}
     >
       <ReviewTapDemoStyles />
       {phase === "intro" ? (
@@ -50,7 +59,10 @@ export default function ReviewTapDemo({ onComplete }: ReviewTapDemoProps) {
           <button
             type="button"
             className="ct-tap-demo-ok"
-            onClick={() => setPhase("zones")}
+            onClick={e => {
+              e.stopPropagation()
+              advance()
+            }}
           >
             OK
           </button>
@@ -87,6 +99,7 @@ function ReviewTapDemoStyles() {
         inset: 0;
         z-index: 40;
         pointer-events: auto;
+        cursor: pointer;
       }
 
       .ct-tap-demo-intro {

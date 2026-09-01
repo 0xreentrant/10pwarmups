@@ -90,8 +90,16 @@ export default function BetaScheduleDemo({ mode, onComplete }: BetaScheduleDemoP
       }
     : null
 
+  function advance() {
+    setStepIndex(i => i + 1)
+  }
+
   return (
-    <div className="bt-sched-demo bt-sched-demo--locked" aria-hidden>
+    <div
+      className="bt-sched-demo bt-sched-demo--locked"
+      aria-hidden
+      onClick={advance}
+    >
       <BetaScheduleDemoStyles />
       {zoneRect && (
         <div
@@ -140,7 +148,7 @@ function BetaScheduleDemoStyles() {
       }
 
       .bt-sched-demo--locked {
-        cursor: default;
+        cursor: pointer;
       }
 
       .bt-sched-demo-zone {
