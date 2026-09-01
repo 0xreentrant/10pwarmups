@@ -80,6 +80,7 @@ export function taggerKeyDownAction(input: {
 
   if (arrowDelta !== null) return { type: "scrub", deltaSec: arrowDelta }
   if (input.code === "Delete" || input.key === "Delete") return { type: "delete-marker" }
+  if (input.code === "Backspace" || input.key === "Backspace") return { type: "delete-marker" }
   if (input.code === "Space" || input.key === " ") return { type: "toggle-playback" }
   return { type: "ignore" }
 }

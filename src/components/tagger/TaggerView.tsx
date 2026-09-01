@@ -1,5 +1,5 @@
 import { useMachine } from "@xstate/react"
-import { useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react"
+import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react"
 import { appMachine } from "../../appMachine"
 import { DECKS } from "../../data/decks"
 import { warmupNoteForDeck } from "../../data/warmupNotes"
@@ -48,9 +48,10 @@ import {
   timeFromClientX,
 } from "./taggerTimestamps"
 
+import type { TaggerTab } from "./taggerTypes"
+
 const VIDEO_IDS = listVideoDeckIds()
 
-type TaggerTab = "edit" | "train" | "review"
 type SavedTarget = "json" | "note"
 
 async function postTaggerApi(path: string, body: unknown): Promise<void> {
@@ -64,8 +65,6 @@ async function postTaggerApi(path: string, body: unknown): Promise<void> {
     throw new Error(data?.error ?? "Save failed")
   }
 }
-
-export type { TaggerTab }
 
 type TaggerViewProps = {
   warmup: string
@@ -127,6 +126,9 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const [moveNameDraft, setMoveNameDraft] = useState("")
   const [movePartnerDraft, setMovePartnerDraft] = useState<Partner>("A")
   const [hoveredMoveIndex, setHoveredMoveIndex] = useState<number | null>(null)
+  const [listDragIndex, setListDragIndex] = useState<number | null>(null)
+  const [listDropIndex, setListDropIndex] = useState<number | null>(null)
+  const [dropLineTop, setDropLineTop] = useState<number | null>(null)
   const [jsonPast, setJsonPast] = useState<string[]>([])
   const [jsonFuture, setJsonFuture] = useState<string[]>([])
 
@@ -136,6 +138,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const skipHistoryCommitRef = useRef(false)
   const jsonTextareaRef = useRef<HTMLTextAreaElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
+  const moveListBodyRef = useRef<HTMLDivElement>(null)
+  const moveRowRefs = useRef<Array<HTMLDivElement | null>>([])
 
   const deck = DECKS.find(d => d.id === deckId)
   const defaultMoveNames = deck?.moves.map(m => m.text) ?? []
@@ -293,6 +297,15 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     }
     previewSend({ type: "START_PREVIEW", deckId, timestamps })
   }, [mode, deckId, timestampsReady, timestamps, previewSend])
+
+  useLayoutEffect(() => {
+    if (listDropIndex === null || listDragIndex === null || listDropIndex === listDragIndex) {
+      setDropLineTop(null)
+      return
+    }
+    const row = moveRowRefs.current[listDropIndex]
+    setDropLineTop(row ? row.offsetTop : null)
+  }, [listDropIndex, listDragIndex, moveCount, moveNames, timestamps, activeIndex, selectedIndex])
 
   useEffect(() => {
     if (tagger.value !== "dragging") return
@@ -452,8 +465,6 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     if (selectedIndex === null) return
     const t = timestamps[selectedIndex]
     if (!isFiniteTimestamp(t)) return
-    const label = moveNames[selectedIndex] ?? `Move ${selectedIndex + 1}`
-    if (!window.confirm(`Remove timestamp for ${label}?`)) return
     send({ type: "DELETE_SELECTED" })
   }
 
@@ -569,6 +580,33 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     setMoveNameDraft(moveNames[index] ?? deck?.moves[index]?.text ?? `Move ${index + 1}`)
     setMovePartnerDraft(movePartners[index] ?? deck?.moves[index]?.partner ?? "A")
     moveNameDialogRef.current?.showModal()
+  }
+
+  function addMove() {
+    const newIndex = moveCount
+    send({ type: "ADD_MOVE" })
+    setEditingMoveIndex(newIndex)
+    setMoveNameDraft(`Move ${newIndex + 1}`)
+    setMovePartnerDraft("A")
+    moveNameDialogRef.current?.showModal()
+  }
+
+  function deleteEditingMove() {
+    if (editingMoveIndex === null || moveCount <= 1) return
+    const label =
+      moveNameDraft.trim() ||
+      moveNames[editingMoveIndex] ||
+      deck?.moves[editingMoveIndex]?.text ||
+      `Move ${editingMoveIndex + 1}`
+    if (!window.confirm(`Delete ${label}?`)) return
+    send({ type: "DELETE_MOVE", index: editingMoveIndex })
+    moveNameDialogRef.current?.close()
+    setEditingMoveIndex(null)
+  }
+
+  function reorderMove(from: number, to: number) {
+    if (from === to) return
+    send({ type: "REORDER_MOVE", from, to })
   }
 
   function saveMoveName() {
@@ -717,20 +755,30 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
               ))}
             </div>
           </fieldset>
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-between gap-3">
             <button
               type="button"
-              className="text-muted text-[11px] uppercase tracking-wider"
-              onClick={() => {
-                setEditingMoveIndex(null)
-                moveNameDialogRef.current?.close()
-              }}
+              className="text-accent text-[11px] uppercase tracking-wider disabled:opacity-50"
+              disabled={moveCount <= 1}
+              onClick={deleteEditingMove}
             >
-              Cancel
+              Delete
             </button>
-            <button type="submit" className="text-[11px] uppercase tracking-wider text-text">
-              Save
-            </button>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                className="text-muted text-[11px] uppercase tracking-wider"
+                onClick={() => {
+                  setEditingMoveIndex(null)
+                  moveNameDialogRef.current?.close()
+                }}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="text-[11px] uppercase tracking-wider text-text">
+                Save
+              </button>
+            </div>
           </div>
         </form>
       </dialog>
@@ -786,6 +834,11 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
                     src={videoSrc}
                     controls
                     playsInline
+                    tabIndex={-1}
+                    onFocus={() => {
+                      videoRef.current?.blur()
+                      rootRef.current?.focus({ preventScroll: true })
+                    }}
                   />
                   <p className="mt-1 font-mono text-xs tabular-nums text-muted">
                     {formatVideoTimeMs(currentTime)}
@@ -796,14 +849,79 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
             </div>
 
             <div className="max-h-[60vh] w-full shrink-0 overflow-y-auto sm:ml-auto sm:w-[15.4rem]">
-              <p className="mb-1 text-muted text-[11px] uppercase tracking-wider">Moves</p>
-              {deck?.moves.map((move, i) => (
+              <div className="mb-1 flex items-center justify-between gap-2">
+                <p className="text-muted text-[11px] uppercase tracking-wider">Moves</p>
+                <button
+                  type="button"
+                  aria-label="Add move"
+                  className="p-0.5 text-muted hover:text-text"
+                  onClick={addMove}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      d="M12 5v14M5 12h14"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <div ref={moveListBodyRef} className="relative isolate">
+                {dropLineTop !== null && (
+                  <div
+                    className="pointer-events-none absolute right-0 left-0 z-50 h-0.5 bg-white"
+                    style={{ top: dropLineTop }}
+                    aria-hidden
+                  />
+                )}
+              {Array.from({ length: moveCount }, (_, i) => {
+                const deckMove = deck?.moves[i]
+                return (
                 <div
                   key={i}
+                  ref={el => {
+                    moveRowRefs.current[i] = el
+                  }}
                   className={`flex w-full items-center gap-1 py-0.5 ${
-                    i === activeIndex ? "outline outline-1 outline-accent" : ""
-                  }`}
+                    i === activeIndex ? "ring-1 ring-inset ring-accent" : ""
+                  } ${listDragIndex === i ? "opacity-50" : ""}`}
+                  onDragOver={e => {
+                    e.preventDefault()
+                    if (listDragIndex !== null && listDragIndex !== i) setListDropIndex(i)
+                  }}
+                  onDragLeave={() => setListDropIndex(null)}
+                  onDrop={e => {
+                    e.preventDefault()
+                    if (listDragIndex !== null) reorderMove(listDragIndex, i)
+                    setListDragIndex(null)
+                    setListDropIndex(null)
+                  }}
                 >
+                  <button
+                    type="button"
+                    draggable
+                    aria-label={`Reorder move ${i + 1}`}
+                    className="shrink-0 cursor-grab p-0.5 text-muted hover:text-text active:cursor-grabbing"
+                    onDragStart={e => {
+                      setListDragIndex(i)
+                      e.dataTransfer.effectAllowed = "move"
+                    }}
+                    onDragEnd={() => {
+                      setListDragIndex(null)
+                      setListDropIndex(null)
+                    }}
+                    onClick={e => e.stopPropagation()}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+                      <path
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        d="M8 7h8M8 12h8M8 17h8"
+                      />
+                    </svg>
+                  </button>
                   <button
                     type="button"
                     className={`flex min-w-0 flex-1 gap-2 text-left text-xs ${
@@ -813,7 +931,10 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
                   >
                     <span className="min-w-5 text-muted">{i + 1}</span>
                     <MoveLabel
-                      move={{ ...move, text: moveNames[i] ?? move.text, partner: movePartners[i] ?? move.partner }}
+                      move={{
+                        text: moveNames[i] ?? deckMove?.text ?? `Move ${i + 1}`,
+                        partner: movePartners[i] ?? deckMove?.partner ?? "A",
+                      }}
                       className={
                         i === hoveredMoveIndex
                           ? "rounded-sm bg-white/15 px-0.5 -mx-0.5"
@@ -851,7 +972,9 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
                     </svg>
                   </button>
                 </div>
-              ))}
+                )
+              })}
+              </div>
             </div>
           </div>
 

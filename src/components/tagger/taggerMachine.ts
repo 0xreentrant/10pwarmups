@@ -38,6 +38,34 @@ export type TaggerEvent =
   | { type: "RESET"; timestamps: (number | null)[]; moveNames: string[]; movePartners: Partner[] }
   | { type: "DELETE_SELECTED" }
   | { type: "SET_MOVE"; index: number; name: string; partner: Partner }
+  | { type: "ADD_MOVE" }
+  | { type: "DELETE_MOVE"; index: number }
+  | { type: "REORDER_MOVE"; from: number; to: number }
+
+export function reorderArrayAt<T>(arr: readonly T[], from: number, to: number): T[] {
+  if (from === to || from < 0 || to < 0 || from >= arr.length || to >= arr.length) {
+    return arr.slice()
+  }
+  const next = arr.slice()
+  const [item] = next.splice(from, 1)
+  next.splice(to, 0, item)
+  return next
+}
+
+export function remapIndexAfterReorder(
+  index: number | null,
+  from: number,
+  to: number,
+): number | null {
+  if (index === null || from === to) return index
+  if (index === from) return to
+  if (from < to) {
+    if (index > from && index <= to) return index - 1
+  } else if (from > to) {
+    if (index >= to && index < from) return index + 1
+  }
+  return index
+}
 
 function clampTime(time: number, duration: number): number {
   if (duration <= 0) return 0
@@ -202,6 +230,57 @@ const taggerSetup = setup({
       nextPartners[event.index] = event.partner
       return { moveNames: nextNames, movePartners: nextPartners }
     }),
+    addMove: assign(({ context }) => {
+      const nextCount = context.moveCount + 1
+      const nextNames = context.moveNames.slice()
+      while (nextNames.length < context.moveCount) nextNames.push(`Move ${nextNames.length + 1}`)
+      nextNames.push(`Move ${nextCount}`)
+      const nextPartners = context.movePartners.slice()
+      while (nextPartners.length < context.moveCount) nextPartners.push("A")
+      nextPartners.push("A")
+      const nextTimestamps = context.timestamps.slice()
+      while (nextTimestamps.length < context.moveCount) nextTimestamps.push(null)
+      nextTimestamps.push(null)
+      return {
+        moveCount: nextCount,
+        moveNames: nextNames,
+        movePartners: nextPartners,
+        timestamps: nextTimestamps,
+        selectedIndex: nextCount - 1,
+      }
+    }),
+    deleteMove: assign(({ context, event }) => {
+      if (event.type !== "DELETE_MOVE") return {}
+      if (context.moveCount <= 1) return {}
+      const idx = event.index
+      if (idx < 0 || idx >= context.moveCount) return {}
+      const removeAt = <T,>(arr: T[]) => [...arr.slice(0, idx), ...arr.slice(idx + 1)]
+      let selectedIndex = context.selectedIndex
+      if (selectedIndex !== null) {
+        if (selectedIndex === idx) selectedIndex = null
+        else if (selectedIndex > idx) selectedIndex -= 1
+      }
+      return {
+        moveCount: context.moveCount - 1,
+        moveNames: removeAt(context.moveNames),
+        movePartners: removeAt(context.movePartners),
+        timestamps: removeAt(context.timestamps),
+        selectedIndex,
+      }
+    }),
+    reorderMove: assign(({ context, event }) => {
+      if (event.type !== "REORDER_MOVE") return {}
+      const { from, to } = event
+      if (from === to || from < 0 || to < 0 || from >= context.moveCount || to >= context.moveCount) {
+        return {}
+      }
+      return {
+        moveNames: reorderArrayAt(context.moveNames, from, to),
+        movePartners: reorderArrayAt(context.movePartners, from, to),
+        timestamps: reorderArrayAt(context.timestamps, from, to),
+        selectedIndex: remapIndexAfterReorder(context.selectedIndex, from, to),
+      }
+    }),
   },
 })
 
@@ -232,6 +311,9 @@ export const taggerMachine = taggerSetup.createMachine({
         RESET: { actions: "reset" },
         DELETE_SELECTED: { actions: "deleteSelected" },
         SET_MOVE: { actions: "setMove" },
+        ADD_MOVE: { actions: "addMove" },
+        DELETE_MOVE: { actions: "deleteMove" },
+        REORDER_MOVE: { actions: "reorderMove" },
         DRAG_START: { target: "dragging", actions: "dragStart" },
       },
     },

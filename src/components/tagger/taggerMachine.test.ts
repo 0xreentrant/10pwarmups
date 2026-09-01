@@ -1,7 +1,7 @@
 import { createActor } from "xstate"
 import { describe, expect, it } from "vitest"
 import { moveIndexAtTime } from "./taggerTimestamps"
-import { taggerMachine } from "./taggerMachine"
+import { reorderArrayAt, remapIndexAfterReorder, taggerMachine } from "./taggerMachine"
 
 function start() {
   const actor = createActor(taggerMachine)
@@ -139,5 +139,66 @@ describe("taggerMachine", () => {
     expect(ctx.moveNames).toEqual(["Deck Alpha", "Deck Beta"])
     expect(ctx.movePartners).toEqual(["A", "B"])
     expect(ctx.selectedIndex).toBe(null)
+  })
+
+  it("ADD_MOVE appends a move and selects it", () => {
+    const actor = start()
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 2, moveNames: NAMES2, movePartners: PARTNERS2 })
+    actor.send({ type: "SEED", duration: 30, timestamps: [0, 10] })
+    actor.send({ type: "ADD_MOVE" })
+    const ctx = actor.getSnapshot().context
+    expect(ctx.moveCount).toBe(3)
+    expect(ctx.moveNames).toEqual(["Move 1", "Move 2", "Move 3"])
+    expect(ctx.movePartners).toEqual(["A", "A", "A"])
+    expect(ctx.timestamps).toEqual([0, 10, null])
+    expect(ctx.selectedIndex).toBe(2)
+  })
+
+  it("DELETE_MOVE removes a move and shifts later indices", () => {
+    const actor = start()
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3, movePartners: PARTNERS3 })
+    actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
+    actor.send({ type: "SELECT", index: 2 })
+    actor.send({ type: "DELETE_MOVE", index: 1 })
+    const ctx = actor.getSnapshot().context
+    expect(ctx.moveCount).toBe(2)
+    expect(ctx.moveNames).toEqual(["Move 1", "Move 3"])
+    expect(ctx.timestamps).toEqual([0, 20])
+    expect(ctx.selectedIndex).toBe(1)
+  })
+
+  it("DELETE_MOVE is a no-op when only one move remains", () => {
+    const actor = start()
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 1, moveNames: ["Only"], movePartners: ["A"] })
+    actor.send({ type: "SEED", duration: 30, timestamps: [0] })
+    actor.send({ type: "DELETE_MOVE", index: 0 })
+    const ctx = actor.getSnapshot().context
+    expect(ctx.moveCount).toBe(1)
+    expect(ctx.timestamps).toEqual([0])
+  })
+
+  it("REORDER_MOVE reorders names, partners, timestamps, and selection", () => {
+    const actor = start()
+    actor.send({ type: "SET_DECK", deckId: "A1", moveCount: 3, moveNames: NAMES3, movePartners: PARTNERS3 })
+    actor.send({ type: "SEED", duration: 30, timestamps: [0, 10, 20] })
+    actor.send({ type: "SELECT", index: 1 })
+    actor.send({ type: "REORDER_MOVE", from: 1, to: 0 })
+    const ctx = actor.getSnapshot().context
+    expect(ctx.moveNames).toEqual(["Move 2", "Move 1", "Move 3"])
+    expect(ctx.movePartners).toEqual(["A", "A", "A"])
+    expect(ctx.timestamps).toEqual([10, 0, 20])
+    expect(ctx.selectedIndex).toBe(0)
+  })
+})
+
+describe("reorder helpers", () => {
+  it("reorderArrayAt moves an item between indices", () => {
+    expect(reorderArrayAt(["a", "b", "c"], 1, 2)).toEqual(["a", "c", "b"])
+  })
+
+  it("remapIndexAfterReorder tracks selected index through a move", () => {
+    expect(remapIndexAfterReorder(1, 1, 3)).toBe(3)
+    expect(remapIndexAfterReorder(3, 1, 3)).toBe(2)
+    expect(remapIndexAfterReorder(0, 1, 3)).toBe(0)
   })
 })

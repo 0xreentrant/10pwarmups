@@ -5,6 +5,7 @@ import {
   parseTimestampsJson,
   timeFromClientX,
 } from "./taggerTimestamps"
+import { reorderArrayAt } from "./taggerMachine"
 
 describe("formatVideoTimeMs", () => {
   it("formats minutes, seconds, and milliseconds", () => {
@@ -143,6 +144,19 @@ describe("buildJsonText", () => {
       { name: "First", player: "a", t: 0 },
       { name: "Second", player: "b", t: null },
       { name: "Third", player: "a", t: 2.5 },
+    ])
+  })
+
+  it("reflects reordered move arrays", () => {
+    const names = reorderArrayAt(["First", "Second", "Third"], 2, 0)
+    const partners = reorderArrayAt(["A", "B", "A"] as const, 2, 0)
+    const timestamps = reorderArrayAt([0, null, 2.5], 2, 0)
+    const json = buildJsonText("A1", timestamps, names, [...partners])
+    const parsed = JSON.parse(json)
+    expect(parsed.timestamps.map((row: { name: string }) => row.name)).toEqual([
+      "Third",
+      "First",
+      "Second",
     ])
   })
 })

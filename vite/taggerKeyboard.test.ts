@@ -57,8 +57,11 @@ describe("taggerKeyDownAction", () => {
     })
   })
 
-  it("deletes selected marker on Delete outside editors", () => {
+  it("deletes selected marker on Delete or Backspace outside editors", () => {
     expect(taggerKeyDownAction(key({ code: "Delete", key: "Delete" }))).toEqual({
+      type: "delete-marker",
+    })
+    expect(taggerKeyDownAction(key({ code: "Backspace", key: "Backspace" }))).toEqual({
       type: "delete-marker",
     })
   })

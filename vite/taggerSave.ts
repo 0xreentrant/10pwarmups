@@ -100,9 +100,14 @@ export function saveTaggerJson(jsonText: string): { deckId: string } {
   const deck = DECKS.find(d => d.id === deckId)
   if (!deck) throw new Error(`Unknown deck ${deckId}`)
 
+  const list = (JSON.parse(jsonText) as { timestamps?: unknown }).timestamps
+  if (!Array.isArray(list) || list.length === 0) {
+    throw new Error("Need at least one move in timestamps")
+  }
+
   const result = parseTimestampsJson(
     jsonText,
-    deck.moves.length,
+    list.length,
     deck.moves.map(m => m.text),
   )
   if (!result.ok) throw new Error(result.error)
