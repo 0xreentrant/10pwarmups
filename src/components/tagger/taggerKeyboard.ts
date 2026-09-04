@@ -4,6 +4,7 @@ export type TaggerKeyDownAction =
   | { type: "undo" }
   | { type: "redo" }
   | { type: "scrub"; deltaSec: number }
+  | { type: "seek-start" }
   | { type: "delete-marker" }
   | { type: "toggle-playback" }
   | { type: "ignore" }
@@ -79,6 +80,7 @@ export function taggerKeyDownAction(input: {
         : null
 
   if (arrowDelta !== null) return { type: "scrub", deltaSec: arrowDelta }
+  if (input.code === "Home" || input.key === "Home") return { type: "seek-start" }
   if (input.code === "Delete" || input.key === "Delete") return { type: "delete-marker" }
   if (input.code === "Backspace" || input.key === "Backspace") return { type: "delete-marker" }
   if (input.code === "Space" || input.key === " ") return { type: "toggle-playback" }
@@ -97,5 +99,6 @@ export function taggerKeyUpShouldSuppress(
     code === "ArrowRight" ||
     key === "ArrowLeft" ||
     key === "ArrowRight"
-  return isSpace || isArrow
+  const isHome = code === "Home" || key === "Home"
+  return isSpace || isArrow || isHome
 }

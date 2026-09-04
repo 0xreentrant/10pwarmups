@@ -57,6 +57,18 @@ describe("taggerKeyDownAction", () => {
     })
   })
 
+  it("seeks to start on Home outside editors", () => {
+    expect(taggerKeyDownAction(key({ code: "Home", key: "Home" }))).toEqual({
+      type: "seek-start",
+    })
+  })
+
+  it("ignores Home in the json editor", () => {
+    expect(
+      taggerKeyDownAction(key({ target: "json-editor", code: "Home", key: "Home" })),
+    ).toEqual({ type: "ignore" })
+  })
+
   it("deletes selected marker on Delete or Backspace outside editors", () => {
     expect(taggerKeyDownAction(key({ code: "Delete", key: "Delete" }))).toEqual({
       type: "delete-marker",
@@ -119,5 +131,6 @@ describe("taggerKeyUpShouldSuppress", () => {
   it("suppresses player keyup outside text fields", () => {
     expect(taggerKeyUpShouldSuppress("default", "Space", " ")).toBe(true)
     expect(taggerKeyUpShouldSuppress("default", "ArrowRight", "ArrowRight")).toBe(true)
+    expect(taggerKeyUpShouldSuppress("default", "Home", "Home")).toBe(true)
   })
 })

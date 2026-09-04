@@ -424,6 +424,14 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       return
     }
 
+    if (action.type === "seek-start") {
+      e.preventDefault()
+      e.stopPropagation()
+      send({ type: "SCRUB", time: 0 })
+      video.currentTime = 0
+      return
+    }
+
     if (action.type === "delete-marker") {
       e.preventDefault()
       e.stopPropagation()
