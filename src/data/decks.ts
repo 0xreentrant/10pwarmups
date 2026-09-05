@@ -658,11 +658,13 @@ const DECKS: Deck[] = [
       m("2 Arm Bars", "A"),
       m("Shoulder Hook", "A"),
       m("Deep Hook", "A"),
+      m("The Clamp", "A"),
       m("Cut the Angle", "A"),
       m("Three Pumps", "A"),
       m("The Toss", "A"),
       m("Spider Web", "A"),
       m("Bollinger Break", "A"),
+      m("Hitchhiker Escape", "B"),
     ]
   },
   {
@@ -718,8 +720,7 @@ const DECKS: Deck[] = [
     id: "G4", series: "G", name: "Lockdown",
     link: "https://www.instagram.com/10pwarmups/reel/DZGc-XCTcsI/",
     moves: [
-      m("Lockdown", "B"),
-      m("Head & Arm", "A"),
+      m("Lockdown & Head and Arm", ["A", "B"]),
       m("Jaws of Life", "B"),
       m("Buttock Compressor", "A"),
       m("Shrimp and Frame", "B"),
@@ -739,10 +740,11 @@ const DECKS: Deck[] = [
       m("Inverted Arm Bar", "B"),
       m("Swim Move", "B"),
       m("Spiderweb", "B"),
-      m("Pin the Hand Leg Escape", "B"),
+      m("Pin the Hand Leg Escape", "A"),
       m("Silverado", "B"),
-      m("Rewind", "A"),
+      m("Rewind", ["A", "B"]),
       m("Prison Break Escape", "A"),
+      m("Backside Heelhook", "B"),
     ]
   },
   {

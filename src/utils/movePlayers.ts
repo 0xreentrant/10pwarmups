@@ -31,28 +31,14 @@ export type MarkerDotAppearance = {
 
 export function markerDotAppearance(
   players: readonly Partner[],
-  selected: boolean,
+  _selected = false,
 ): MarkerDotAppearance {
   const p = normalizePlayers(players)
   if (bothPlayers(p)) {
     const gradient =
       "linear-gradient(135deg, var(--color-partner-b) 50%, var(--color-partner-a) 50%)"
-    if (selected) {
-      return { className: "border-2 border-transparent", style: { background: gradient } }
-    }
-    return {
-      className: "border-2 border-transparent",
-      style: {
-        background: `linear-gradient(var(--color-surface), var(--color-surface)) padding-box, ${gradient} border-box`,
-      },
-    }
+    return { className: "border-2 border-transparent", style: { background: gradient } }
   }
-  if (p[0] === "B") {
-    return selected
-      ? { className: "border-partner-b bg-partner-b" }
-      : { className: "border-partner-b bg-surface" }
-  }
-  return selected
-    ? { className: "border-partner-a bg-partner-a" }
-    : { className: "border-partner-a bg-surface" }
+  if (p[0] === "B") return { className: "border-partner-b bg-partner-b" }
+  return { className: "border-partner-a bg-partner-a" }
 }

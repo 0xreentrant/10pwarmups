@@ -1007,7 +1007,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
                   key={i}
                   type="button"
                   aria-label={`Move ${i + 1} at ${t.toFixed(2)}s`}
-                  className={`absolute top-1/2 z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ${dot.className} ${active ? "outline outline-2 outline-offset-1 outline-accent" : ""}`}
+                  className={`absolute top-1/2 z-10 h-[18px] w-[18px] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${dot.className} ${active ? "outline outline-2 outline-offset-1 outline-accent" : ""}`}
                   style={{ left: `${pct}%`, ...dot.style }}
                   onPointerEnter={() => setHoveredMoveIndex(i)}
                   onPointerLeave={() => setHoveredMoveIndex(null)}
