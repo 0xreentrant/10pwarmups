@@ -718,7 +718,8 @@ const DECKS: Deck[] = [
     id: "G4", series: "G", name: "Lockdown",
     link: "https://www.instagram.com/10pwarmups/reel/DZGc-XCTcsI/",
     moves: [
-      m("Lockdown & Head and Arm", ["A", "B"]),
+      m("Lockdown", "B"),
+      m("Head & Arm", "A"),
       m("Jaws of Life", "B"),
       m("Buttock Compressor", "A"),
       m("Shrimp and Frame", "B"),
