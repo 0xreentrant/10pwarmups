@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import type { Partner } from "../../types/domain"
 import {
   buildJsonText,
   formatVideoTimeMs,
@@ -153,11 +154,12 @@ describe("parseTimestampsJson", () => {
 
 describe("buildJsonText", () => {
   it("includes move names, players, and null times in export", () => {
+    const players: Partner[][] = [["A"], ["B"], ["A"]]
     const json = buildJsonText(
       "A1",
       [0, null, 2.5],
       ["First", "Second", "Third"],
-      [["A"], ["B"], ["A"]],
+      players,
     )
     const parsed = JSON.parse(json)
     expect(parsed.deckId).toBe("A1")
@@ -170,7 +172,8 @@ describe("buildJsonText", () => {
 
   it("reflects reordered move arrays", () => {
     const names = reorderArrayAt(["First", "Second", "Third"], 2, 0)
-    const playerLists = reorderArrayAt([["A"], ["B"], ["A"]], 2, 0)
+    const players: Partner[][] = [["A"], ["B"], ["A"]]
+    const playerLists = reorderArrayAt(players, 2, 0)
     const timestamps = reorderArrayAt([0, null, 2.5], 2, 0)
     const json = buildJsonText("A1", timestamps, names, playerLists)
     const parsed = JSON.parse(json)

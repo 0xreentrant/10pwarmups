@@ -16,7 +16,8 @@
     "test:pwa": "vitest run --config vitest.pwa.config.ts",
     "test:e2e": "node tests/e2e/offline.mjs",
     "test:all": "npm run test:run && npm run build && npm run test:pwa && npm run test:e2e",
-    "type-check": "tsc -b --noEmit"
+    "type-check": "tsc -b --noEmit",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "keywords": [],
   "author": "",

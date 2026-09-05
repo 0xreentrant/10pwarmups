@@ -218,7 +218,7 @@ export function parseTimestampsJson(
   const timestamps = entries.map(entry => entry.t)
   const names = entries.map(entry => entry.name?.trim() ?? "")
   while (names.length < moveCount) names.push("")
-  const playerLists = entries.map(entry => entry.players ?? ["A"])
+  const playerLists = entries.map(entry => entry.players ?? (["A"] as Partner[]))
   return {
     ok: true,
     timestamps,

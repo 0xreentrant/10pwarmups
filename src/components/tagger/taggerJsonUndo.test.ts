@@ -1,5 +1,6 @@
 import { createActor, type ActorRefFrom } from "xstate"
 import { describe, expect, it } from "vitest"
+import type { Partner } from "../../types/domain"
 import {
   commitJsonHistory,
   redoJsonHistory,
@@ -9,7 +10,7 @@ import { taggerMachine } from "./taggerMachine"
 import { buildJsonText, parseTimestampsJson } from "./taggerTimestamps"
 
 const NAMES3 = ["Move 1", "Move 2", "Move 3"]
-const PLAYERS3 = [["A"], ["A"], ["A"]] as const
+const PLAYERS3: Partner[][] = [["A"], ["A"], ["A"]]
 
 type TaggerActor = ActorRefFrom<typeof taggerMachine>
 
@@ -65,7 +66,7 @@ function startTagger(): TaggerActor {
     deckId: "A1",
     moveCount: 3,
     moveNames: NAMES3,
-    movePlayers: [...PLAYERS3],
+    movePlayers: PLAYERS3,
   })
   actor.send({ type: "SEED", duration: 30, timestamps: [0, null, 20] })
   return actor
