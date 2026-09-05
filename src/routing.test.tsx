@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import { screen, fireEvent, waitFor } from "@testing-library/react"
+import { act, screen, fireEvent, waitFor } from "@testing-library/react"
 import { DECKS } from "./data/decks"
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from "./data/whatsNew"
 import { SCHEDULE_ONBOARDING_STORAGE_KEY, SCHEDULE_ONBOARDING_VERSION } from "./data/scheduleOnboarding"
@@ -93,7 +93,9 @@ describe("routing", () => {
     const homeScreen = watchForText("10th Planet")
 
     try {
-      history.back()
+      await act(async () => {
+        history.back()
+      })
       await waitFor(() => {
         expect(router.state.location.pathname).toBe("/series/A")
         expect(screen.getByText("10th Planet")).toBeInTheDocument()
@@ -113,7 +115,9 @@ describe("routing", () => {
     await startFirstDeck()
     await clickOptionWithText(A1_MOVES[0])
 
-    void router.navigate({ to: "/series/$letter", params: { letter: "A" } })
+    await act(async () => {
+      await router.navigate({ to: "/series/$letter", params: { letter: "A" } })
+    })
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/series/A")
@@ -240,7 +244,9 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/A1/completed")
     }, { timeout: 15000 })
 
-    history.back()
+    await act(async () => {
+      history.back()
+    })
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/series/A")
@@ -265,7 +271,9 @@ describe("routing", () => {
       expect(screen.getByText("Summary")).toBeInTheDocument()
     })
 
-    history.back()
+    await act(async () => {
+      history.back()
+    })
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/completed")
@@ -282,14 +290,18 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/A1/completed")
     }, { timeout: 15000 })
 
-    history.back()
+    await act(async () => {
+      history.back()
+    })
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/series/A")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
     })
 
-    history.forward()
+    await act(async () => {
+      history.forward()
+    })
 
     await waitFor(() => {
       expect(router.state.location.pathname).toBe("/A1/completed")

@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react"
+import { act, render } from "@testing-library/react"
 import { RouterProvider, createMemoryHistory, createRouter } from "@tanstack/react-router"
 import { routeTree } from "../router"
 
@@ -13,8 +13,13 @@ export function createTestRouter(initialPath = "/") {
 
 export async function renderWithRouter(initialPath = "/") {
   const { router, history } = createTestRouter(initialPath)
-  await router.load()
-  const result = render(<RouterProvider router={router} />)
+  // Transitioner loads + emits on mount; keep those updates inside act so React
+  // does not warn about state updates outside the test harness.
+  const result = await act(async () => {
+    const rendered = render(<RouterProvider router={router} />)
+    await router.load()
+    return rendered
+  })
   return {
     ...result,
     router,

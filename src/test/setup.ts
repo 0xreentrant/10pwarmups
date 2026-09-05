@@ -1,5 +1,12 @@
 import '@testing-library/jest-dom'
 
+// jsdom stubs these as notImplemented; TanStack Router calls scrollTo on every
+// onRendered navigation, which floods stderr without a real implementation.
+function noopScroll(this: Window, ..._args: unknown[]) {}
+Object.defineProperty(window, 'scrollTo', { configurable: true, writable: true, value: noopScroll })
+Object.defineProperty(window, 'scroll', { configurable: true, writable: true, value: noopScroll })
+Object.defineProperty(window, 'scrollBy', { configurable: true, writable: true, value: noopScroll })
+
 class IntersectionObserverMock {
   observe() {}
   unobserve() {}
