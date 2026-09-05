@@ -8,6 +8,7 @@ import { ANTE_CLOCK_MS, useAnteRound, type DrillPhase } from "../ante/useAnteRou
 import type { BleedVariant } from "./bleedVariant"
 import Dusk2CompleteOverlay from "./Dusk2CompleteOverlay"
 import TrainingZonesDemo from "./TrainingZonesDemo"
+import PartnerTags from "../../PartnerTags"
 
 const CORRECT_HOLD_MS = 300
 
@@ -262,12 +263,12 @@ export default function BleedDusk2Overlay({
 
         {!finale && !buzzed && (
           <div className="bl-quiz">
-            <span
-              key={`partner-${drill.move.partner}`}
-              className={`bl-partner-tag bl-partner-tag--${drill.move.partner} bl-partner-tag--pop`}
-            >
-              Person {drill.move.partner}
-            </span>
+            <PartnerTags
+              key={`partner-${drill.move.players.join("-")}`}
+              players={drill.move.players}
+              classPrefix="bl"
+              pop
+            />
             <div className="bl-deck">
               <AnteOptions round={round} />
             </div>

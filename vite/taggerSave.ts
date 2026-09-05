@@ -3,6 +3,8 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { parseTimestampsJson } from "../src/components/tagger/taggerTimestamps"
 import { DECKS } from "../src/data/decks"
+import type { Partner } from "../src/types/domain"
+import { normalizePlayers } from "../src/utils/movePlayers"
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..")
 
@@ -15,9 +17,13 @@ export function formatTimestampsBlock(timestamps: (number | null)[]): string {
   return timestamps.map(formatTimestampLine).join("\n")
 }
 
-export function formatMoveLine(text: string, partner: string): string {
+export function formatMoveLine(text: string, players: Partner | Partner[]): string {
   const escaped = text.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")
-  return `      m("${escaped}", "${partner}"),`
+  const list = normalizePlayers(players)
+  if (list.length === 1) {
+    return `      m("${escaped}", "${list[0]}"),`
+  }
+  return `      m("${escaped}", [${list.map(p => `"${p}"`).join(", ")}]),`
 }
 
 export function findMatchingBracketEnd(
@@ -120,12 +126,12 @@ export function saveTaggerJson(jsonText: string): { deckId: string } {
   )
   fs.writeFileSync(tsPath, tsContent, "utf8")
 
-  if (result.names || result.partners) {
+  if (result.names || result.playerLists) {
     const decksPath = path.join(root, "src/data/decks.ts")
     const names = result.names ?? deck.moves.map(m => m.text)
-    const partners = result.partners ?? deck.moves.map(m => m.partner)
+    const playerLists = result.playerLists ?? deck.moves.map(m => m.players)
     const movesBlock = names
-      .map((name, i) => formatMoveLine(name, partners[i] ?? "A"))
+      .map((name, i) => formatMoveLine(name, playerLists[i] ?? ["A"]))
       .join("\n")
     const decksContent = replaceDeckMoves(fs.readFileSync(decksPath, "utf8"), deckId, movesBlock)
     fs.writeFileSync(decksPath, decksContent, "utf8")

@@ -9,7 +9,7 @@ import { taggerMachine } from "./taggerMachine"
 import { buildJsonText, parseTimestampsJson } from "./taggerTimestamps"
 
 const NAMES3 = ["Move 1", "Move 2", "Move 3"]
-const PARTNERS3: ("A" | "B")[] = ["A", "A", "A"]
+const PLAYERS3 = [["A"], ["A"], ["A"]] as const
 
 type TaggerActor = ActorRefFrom<typeof taggerMachine>
 
@@ -65,7 +65,7 @@ function startTagger(): TaggerActor {
     deckId: "A1",
     moveCount: 3,
     moveNames: NAMES3,
-    movePartners: PARTNERS3,
+    movePlayers: [...PLAYERS3],
   })
   actor.send({ type: "SEED", duration: 30, timestamps: [0, null, 20] })
   return actor
@@ -79,13 +79,13 @@ function loadJson(actor: TaggerActor, jsonText: string) {
     type: "LOAD",
     timestamps: result.timestamps,
     names: result.names,
-    partners: result.partners,
+    playerLists: result.playerLists,
   })
 }
 
 function machineJson(actor: TaggerActor): string {
   const ctx = actor.getSnapshot().context
-  return buildJsonText(ctx.deckId, ctx.timestamps, ctx.moveNames, ctx.movePartners)
+  return buildJsonText(ctx.deckId, ctx.timestamps, ctx.moveNames, ctx.movePlayers)
 }
 
 describe("tagger JSON document undo", () => {

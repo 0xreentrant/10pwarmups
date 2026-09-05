@@ -233,8 +233,23 @@
   }
 
   .move-label-btn:hover .text-partner-a,
-  .move-label-btn:hover .text-partner-b {
+  .move-label-btn:hover .text-partner-b,
+  .move-label-btn:hover .text-partner-both {
     text-decoration: underline;
+  }
+
+  .text-partner-both {
+    background: repeating-linear-gradient(
+      135deg,
+      var(--color-partner-a) 0,
+      var(--color-partner-a) 50%,
+      var(--color-partner-b) 50%,
+      var(--color-partner-b) 100%
+    );
+    background-size: 6px 6px;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 
   .popover-backdrop {

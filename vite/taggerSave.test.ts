@@ -20,6 +20,10 @@ describe("taggerSave formatting", () => {
     expect(formatMoveLine("Say \"hi\"", "B")).toBe('      m("Say \\"hi\\"", "B"),')
   })
 
+  it("formats dual-player moves as an array", () => {
+    expect(formatMoveLine("Shared", ["A", "B"])).toBe('      m("Shared", ["A", "B"]),')
+  })
+
   it("replaces a deck timestamp block", () => {
     const source = `export const MOVE_TIMESTAMPS = {
   A1: [

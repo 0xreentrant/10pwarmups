@@ -32,6 +32,7 @@ import {
 import { deckHasTaggedMoves } from "../../utils/deckTimestamps"
 import { nextDeckId, precomputeDeckOptions } from "../../utils/deckUtils"
 import { listVideoDeckIds, videoSrcForDeck } from "../../utils/deckVideo"
+import { markerDotAppearance, normalizePlayers, togglePlayerDraft } from "../../utils/movePlayers"
 import { CinemaOverlay } from "../cinema/review"
 import MoveLabel from "../MoveLabel"
 import TrainingSessionView from "../training/TrainingSessionView"
@@ -94,7 +95,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     deckId,
     moveCount,
     moveNames,
-    movePartners,
+    movePlayers,
     timestamps,
     duration,
     currentTime,
@@ -124,7 +125,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const [playbackSpeed, setPlaybackSpeed] = usePersistedPlaybackSpeed(editVideoEl)
   const [editingMoveIndex, setEditingMoveIndex] = useState<number | null>(null)
   const [moveNameDraft, setMoveNameDraft] = useState("")
-  const [movePartnerDraft, setMovePartnerDraft] = useState<Partner>("A")
+  const [movePlayersDraft, setMovePlayersDraft] = useState<Partner[]>(["A"])
   const [hoveredMoveIndex, setHoveredMoveIndex] = useState<number | null>(null)
   const [listDragIndex, setListDragIndex] = useState<number | null>(null)
   const [listDropIndex, setListDropIndex] = useState<number | null>(null)
@@ -153,7 +154,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       ? moveIndexAtTime(timestamps, currentTime)
       : -1
   const previewTimestamps = timestampsReady ? timestamps : null
-  const onDiskJson = buildJsonText(deckId, timestamps, moveNames, movePartners)
+  const onDiskJson = buildJsonText(deckId, timestamps, moveNames, movePlayers)
   const savedNoteText = savedNoteByDeck[deckId] ?? warmupNoteForDeck(deckId)
   const jsonUnsaved = jsonDraft !== onDiskJson
   const notesUnsaved = notesDraft !== savedNoteText
@@ -162,8 +163,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     const d = DECKS.find(x => x.id === warmup)
     const moves = d?.moves.length ?? 0
     const names = deckMoveNames(warmup, d?.moves.map(m => m.text) ?? [])
-    const partners = d?.moves.map(m => m.partner) ?? []
-    send({ type: "SET_DECK", deckId: warmup, moveCount: moves, moveNames: names, movePartners: partners })
+    const playerLists = d?.moves.map(m => m.players) ?? []
+    send({ type: "SET_DECK", deckId: warmup, moveCount: moves, moveNames: names, movePlayers: playerLists })
   }, [warmup, send])
 
   useEffect(() => {
@@ -342,7 +343,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
           return loaded || name
         })
       : undefined
-    send({ type: "LOAD", timestamps: result.timestamps, names, partners: result.partners })
+    send({ type: "LOAD", timestamps: result.timestamps, names, playerLists: result.playerLists })
     return true
   }
 
@@ -538,7 +539,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
         duration > 0 ? duration : Number.POSITIVE_INFINITY,
       ),
       moveNames: defaultMoveNames,
-      movePartners: deck?.moves.map(m => m.partner) ?? [],
+      movePlayers: deck?.moves.map(m => m.players) ?? [],
     })
   }
 
@@ -586,7 +587,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   function openMoveNameEditor(index: number) {
     setEditingMoveIndex(index)
     setMoveNameDraft(moveNames[index] ?? deck?.moves[index]?.text ?? `Move ${index + 1}`)
-    setMovePartnerDraft(movePartners[index] ?? deck?.moves[index]?.partner ?? "A")
+    setMovePlayersDraft(normalizePlayers(movePlayers[index] ?? deck?.moves[index]?.players ?? ["A"]))
     moveNameDialogRef.current?.showModal()
   }
 
@@ -595,7 +596,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     send({ type: "ADD_MOVE" })
     setEditingMoveIndex(newIndex)
     setMoveNameDraft(`Move ${newIndex + 1}`)
-    setMovePartnerDraft("A")
+    setMovePlayersDraft(["A"])
     moveNameDialogRef.current?.showModal()
   }
 
@@ -621,7 +622,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     if (editingMoveIndex === null) return
     const trimmed = moveNameDraft.trim()
     if (!trimmed) return
-    send({ type: "SET_MOVE", index: editingMoveIndex, name: trimmed, partner: movePartnerDraft })
+    send({ type: "SET_MOVE", index: editingMoveIndex, name: trimmed, players: movePlayersDraft })
     moveNameDialogRef.current?.close()
     setEditingMoveIndex(null)
   }
@@ -750,13 +751,13 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
                   key={p}
                   type="button"
                   className={`flex-1 border px-2 py-1.5 text-sm ${
-                    movePartnerDraft === p
+                    movePlayersDraft.includes(p)
                       ? p === "A"
                         ? "border-partner-a text-partner-a"
                         : "border-partner-b text-partner-b"
                       : "border-border text-muted"
                   }`}
-                  onClick={() => setMovePartnerDraft(p)}
+                  onClick={() => setMovePlayersDraft(prev => togglePlayerDraft(prev, p))}
                 >
                   {p}
                 </button>
@@ -941,7 +942,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
                     <MoveLabel
                       move={{
                         text: moveNames[i] ?? deckMove?.text ?? `Move ${i + 1}`,
-                        partner: movePartners[i] ?? deckMove?.partner ?? "A",
+                        players: movePlayers[i] ?? deckMove?.players ?? ["A"],
                       }}
                       className={
                         i === hoveredMoveIndex
@@ -997,17 +998,17 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
               const pct = duration > 0 ? (t / duration) * 100 : 0
               const selected = i === selectedIndex
               const active = i === activeIndex
+              const dot = markerDotAppearance(
+                movePlayers[i] ?? deck?.moves[i]?.players ?? ["A"],
+                selected,
+              )
               return (
                 <button
                   key={i}
                   type="button"
                   aria-label={`Move ${i + 1} at ${t.toFixed(2)}s`}
-                  className={`absolute top-1/2 z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 ${
-                    selected
-                      ? "border-accent bg-accent"
-                      : "border-text bg-surface"
-                  } ${active ? "outline outline-2 outline-offset-1 outline-accent" : ""}`}
-                  style={{ left: `${pct}%` }}
+                  className={`absolute top-1/2 z-10 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full ${dot.className} ${active ? "outline outline-2 outline-offset-1 outline-accent" : ""}`}
+                  style={{ left: `${pct}%`, ...dot.style }}
                   onPointerEnter={() => setHoveredMoveIndex(i)}
                   onPointerLeave={() => setHoveredMoveIndex(null)}
                   onPointerDown={e => startMarkerDrag(i, e)}

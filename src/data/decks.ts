@@ -1,10 +1,11 @@
 // ─── DATA ────────────────────────────────────────────────────────────────────
 // Each deck: { id, series, name, link?, moves, notes? }
 // notes?: Record<number, string> — keyed by move index within the deck
-// Each move: { text: string, partner: "A" | "B" }
-// Partner B moves shown in red
+// Each move: { text: string, players: ("A" | "B")[] }
+// Partner B moves shown in red; both players use split styling
 
 import type { Deck, Move, Partner, Series } from "../types/domain"
+import { normalizePlayers } from "../utils/movePlayers"
 
 const SERIES: Series[] = [
   { id: "A", name: "Granbys" },
@@ -17,7 +18,9 @@ const SERIES: Series[] = [
   { id: "H", name: "De La Riva" },
 ];
 
-function m(text: string, partner: Partner): Move { return { text, partner }; }
+function m(text: string, players: Partner | readonly Partner[]): Move {
+  return { text, players: normalizePlayers(players) }
+}
 
 const DECKS: Deck[] = [
   {
@@ -715,8 +718,7 @@ const DECKS: Deck[] = [
     id: "G4", series: "G", name: "Lockdown",
     link: "https://www.instagram.com/10pwarmups/reel/DZGc-XCTcsI/",
     moves: [
-      m("Lockdown", "B"),
-      m("Head & Arm", "A"),
+      m("Lockdown & Head and Arm", ["A", "B"]),
       m("Jaws of Life", "B"),
       m("Buttock Compressor", "A"),
       m("Shrimp and Frame", "B"),

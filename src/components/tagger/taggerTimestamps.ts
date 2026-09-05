@@ -1,5 +1,6 @@
 import { isFiniteTimestamp, resolveMoveTimestamps } from "../../data/moveTimestamps"
 import type { Partner } from "../../types/domain"
+import { normalizePlayers } from "../../utils/movePlayers"
 
 /** Stored tags aligned to deck move count; null per move when untagged. */
 export function taggerSeedTimestamps(
@@ -36,7 +37,7 @@ export function timeFromClientX(
 export { isFiniteTimestamp, moveIndexAtTime } from "../../data/moveTimestamps"
 
 export type ParseTimestampsResult =
-  | { ok: true; timestamps: (number | null)[]; names?: string[]; partners?: Partner[] }
+  | { ok: true; timestamps: (number | null)[]; names?: string[]; playerLists?: Partner[][] }
   | { ok: false; error: string }
 
 export function partnerToPlayer(partner: Partner): "a" | "b" {
@@ -49,18 +50,36 @@ export function playerToPartner(player: unknown): Partner | undefined {
   return undefined
 }
 
+export function playersToJson(players: readonly Partner[]): ("a" | "b")[] {
+  return normalizePlayers(players).map(partnerToPlayer)
+}
+
+function parsePlayersFromRow(row: { player?: unknown; players?: unknown }): Partner[] | undefined {
+  if (Array.isArray(row.players)) {
+    const out: Partner[] = []
+    for (const p of row.players) {
+      const partner = playerToPartner(p)
+      if (partner && !out.includes(partner)) out.push(partner)
+    }
+    if (out.length) return normalizePlayers(out)
+  }
+  const single = playerToPartner(row.player)
+  if (single) return [single]
+  return undefined
+}
+
 export function buildJsonText(
   deckId: string,
   timestamps: (number | null)[],
   moveNames: string[],
-  movePartners: Partner[],
+  movePlayers: Partner[][],
 ): string {
   return JSON.stringify(
     {
       deckId,
       timestamps: timestamps.map((t, i) => ({
         name: moveNames[i] ?? `Move ${i + 1}`,
-        player: partnerToPlayer(movePartners[i] ?? "A"),
+        players: playersToJson(movePlayers[i] ?? ["A"]),
         t: isFiniteTimestamp(t) ? t : null,
       })),
     },
@@ -69,7 +88,7 @@ export function buildJsonText(
   )
 }
 
-type ParsedTimestampEntry = { name?: string; t: number | null; partner?: Partner }
+type ParsedTimestampEntry = { name?: string; t: number | null; players?: Partner[] }
 
 function nameOccurrenceIndex(names: readonly string[], index: number): number {
   const name = names[index]?.trim()
@@ -100,11 +119,11 @@ function mergeSparseNamedTimestamps(
   entries: ParsedTimestampEntry[],
   moveCount: number,
   referenceNames: readonly string[],
-): { timestamps: (number | null)[]; names: string[]; partners: Partner[] } {
+): { timestamps: (number | null)[]; names: string[]; playerLists: Partner[][] } {
   const timestamps = Array.from({ length: moveCount }, () => null as number | null)
   const names = referenceNames.slice(0, moveCount)
   while (names.length < moveCount) names.push("")
-  const partners = Array.from({ length: moveCount }, () => "A" as Partner)
+  const playerLists = Array.from({ length: moveCount }, () => ["A"] as Partner[])
 
   for (let moveIdx = 0; moveIdx < moveCount; moveIdx++) {
     const refName = referenceNames[moveIdx]?.trim()
@@ -114,10 +133,10 @@ function mergeSparseNamedTimestamps(
     timestamps[moveIdx] = entry.t
     const loadedName = entry.name?.trim()
     if (loadedName) names[moveIdx] = loadedName
-    if (entry.partner) partners[moveIdx] = entry.partner
+    if (entry.players) playerLists[moveIdx] = entry.players
   }
 
-  return { timestamps, names, partners }
+  return { timestamps, names, playerLists }
 }
 
 /** Parse tagger JSON: `{ deckId?, timestamps: (number|null)[] | { name?, t }[] }`. deckId ignored. */
@@ -157,18 +176,18 @@ export function parseTimestampsJson(
       continue
     }
     if (item && typeof item === "object" && "t" in item) {
-      const row = item as { t: unknown; name?: unknown; player?: unknown }
+      const row = item as { t: unknown; name?: unknown; player?: unknown; players?: unknown }
       const name = typeof row.name === "string" ? row.name : undefined
       if (name) sawName = true
-      const partner = playerToPartner(row.player)
-      if (partner) sawPlayer = true
+      const players = parsePlayersFromRow(row)
+      if (players) sawPlayer = true
       const t = row.t
       if (t === null) {
-        entries.push({ name, partner, t: null })
+        entries.push({ name, players, t: null })
         continue
       }
       if (typeof t === "number" && Number.isFinite(t)) {
-        entries.push({ name, partner, t })
+        entries.push({ name, players, t })
         continue
       }
     }
@@ -192,18 +211,18 @@ export function parseTimestampsJson(
       ok: true,
       timestamps: merged.timestamps,
       names: merged.names,
-      partners: sawPlayer ? merged.partners : undefined,
+      playerLists: sawPlayer ? merged.playerLists : undefined,
     }
   }
 
   const timestamps = entries.map(entry => entry.t)
   const names = entries.map(entry => entry.name?.trim() ?? "")
   while (names.length < moveCount) names.push("")
-  const partners = entries.map(entry => entry.partner ?? "A")
+  const playerLists = entries.map(entry => entry.players ?? ["A"])
   return {
     ok: true,
     timestamps,
     names: names.slice(0, moveCount),
-    partners: sawPlayer ? partners.slice(0, moveCount) : undefined,
+    playerLists: sawPlayer ? playerLists.slice(0, moveCount) : undefined,
   }
 }
