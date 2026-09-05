@@ -26,7 +26,23 @@ describe("timeFromClientX", () => {
 })
 
 describe("parseTimestampsJson", () => {
-  it("parses player field on object timestamps", () => {
+  it("parses players field on object timestamps", () => {
+    const text = JSON.stringify({
+      deckId: "x",
+      timestamps: [
+        { name: "A", players: ["a"], t: 1 },
+        { name: "B", players: ["a", "b"], t: 2 },
+      ],
+    })
+    expect(parseTimestampsJson(text, 2)).toEqual({
+      ok: true,
+      timestamps: [1, 2],
+      names: ["A", "B"],
+      playerLists: [["A"], ["A", "B"]],
+    })
+  })
+
+  it("parses legacy player field on object timestamps", () => {
     const text = JSON.stringify({
       deckId: "x",
       timestamps: [
@@ -38,7 +54,7 @@ describe("parseTimestampsJson", () => {
       ok: true,
       timestamps: [1, 2],
       names: ["A", "B"],
-      partners: ["A", "B"],
+      playerLists: [["A"], ["B"]],
     })
   })
 
@@ -136,22 +152,27 @@ describe("parseTimestampsJson", () => {
 })
 
 describe("buildJsonText", () => {
-  it("includes move names, player, and null times in export", () => {
-    const json = buildJsonText("A1", [0, null, 2.5], ["First", "Second", "Third"], ["A", "B", "A"])
+  it("includes move names, players, and null times in export", () => {
+    const json = buildJsonText(
+      "A1",
+      [0, null, 2.5],
+      ["First", "Second", "Third"],
+      [["A"], ["B"], ["A"]],
+    )
     const parsed = JSON.parse(json)
     expect(parsed.deckId).toBe("A1")
     expect(parsed.timestamps).toEqual([
-      { name: "First", player: "a", t: 0 },
-      { name: "Second", player: "b", t: null },
-      { name: "Third", player: "a", t: 2.5 },
+      { name: "First", players: ["a"], t: 0 },
+      { name: "Second", players: ["b"], t: null },
+      { name: "Third", players: ["a"], t: 2.5 },
     ])
   })
 
   it("reflects reordered move arrays", () => {
     const names = reorderArrayAt(["First", "Second", "Third"], 2, 0)
-    const partners = reorderArrayAt(["A", "B", "A"] as const, 2, 0)
+    const playerLists = reorderArrayAt([["A"], ["B"], ["A"]], 2, 0)
     const timestamps = reorderArrayAt([0, null, 2.5], 2, 0)
-    const json = buildJsonText("A1", timestamps, names, [...partners])
+    const json = buildJsonText("A1", timestamps, names, playerLists)
     const parsed = JSON.parse(json)
     expect(parsed.timestamps.map((row: { name: string }) => row.name)).toEqual([
       "Third",

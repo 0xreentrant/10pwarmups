@@ -28,9 +28,9 @@ const deck: Deck = {
   name: "Test",
   series: "A",
   moves: [
-    { text: "Move A", partner: "A" },
-    { text: "Move B", partner: "A" },
-    { text: "Move C", partner: "A" },
+    { text: "Move A", players: ["A"] },
+    { text: "Move B", players: ["A"] },
+    { text: "Move C", players: ["A"] },
   ],
 }
 

@@ -7,8 +7,8 @@ const testDeck: Deck = {
   id: 'T1',
   name: 'Test Deck',
   moves: [
-    { text: 'Move Alpha', partner: 'A' },
-    { text: 'Move Beta', partner: 'B' },
+    { text: 'Move Alpha', players: ['A'] },
+    { text: 'Move Beta', players: ['B'] },
   ],
   notes: { 0: 'Alpha coaching note' },
 }

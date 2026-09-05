@@ -12,9 +12,9 @@ const mockDecks: Deck[] = [
     name: "Kneeling",
     series: "A",
     moves: [
-      { text: "Kneeling Granby", partner: "A" },
-      { text: "Seated Granby", partner: "A" },
-      { text: "Bridging Granby", partner: "A" },
+      { text: "Kneeling Granby", players: ["A"] },
+      { text: "Seated Granby", players: ["A"] },
+      { text: "Bridging Granby", players: ["A"] },
     ],
   },
   {
@@ -22,8 +22,8 @@ const mockDecks: Deck[] = [
     name: "Seated",
     series: "A",
     moves: [
-      { text: "Belly to Belly Granby", partner: "A" },
-      { text: "Granby Flow", partner: "A" },
+      { text: "Belly to Belly Granby", players: ["A"] },
+      { text: "Granby Flow", players: ["A"] },
     ],
   },
   {
@@ -31,9 +31,9 @@ const mockDecks: Deck[] = [
     name: "Pool",
     series: "A",
     moves: [
-      { text: "Half Granby", partner: "A" },
-      { text: "Rolling Granby", partner: "B" },
-      { text: "Inverted Granby", partner: "B" },
+      { text: "Half Granby", players: ["A"] },
+      { text: "Rolling Granby", players: ["B"] },
+      { text: "Inverted Granby", players: ["B"] },
     ],
   },
 ]

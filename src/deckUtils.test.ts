@@ -8,9 +8,9 @@ const mockDecks: Deck[] = [
     name: 'Kneeling',
     series: 'A',
     moves: [
-      { text: 'Kneeling Granby', partner: 'A' },
-      { text: 'Seated Granby', partner: 'A' },
-      { text: 'Bridging Granby', partner: 'A' },
+      { text: 'Kneeling Granby', players: ['A'] },
+      { text: 'Seated Granby', players: ['A'] },
+      { text: 'Bridging Granby', players: ['A'] },
     ],
   },
   {
@@ -18,9 +18,9 @@ const mockDecks: Deck[] = [
     name: 'Black Mamba',
     series: 'B',
     moves: [
-      { text: 'Black Mamba', partner: 'A' },
-      { text: 'Kneeling Granby', partner: 'B' },
-      { text: 'Peel', partner: 'B' },
+      { text: 'Black Mamba', players: ['A'] },
+      { text: 'Kneeling Granby', players: ['B'] },
+      { text: 'Peel', players: ['B'] },
     ],
   },
 ]
@@ -44,16 +44,16 @@ describe('precomputeDeckOptions', () => {
     })
   })
 
-  it('always includes the correct next move with partner on the answer only', () => {
+  it('always includes the correct next move with players on the answer only', () => {
     const allOptions = precomputeDeckOptions(mockDecks[0], mockDecks)
     allOptions.forEach((opts, i) => {
       const move = mockDecks[0].moves[i]
       const correct = opts.filter(o => o.correct)
       expect(correct).toHaveLength(1)
       expect(correct[0].text).toBe(move.text)
-      expect(correct[0].partner).toBe(move.partner)
+      expect(correct[0].players).toEqual(move.players)
       opts.filter(o => !o.correct).forEach(o => {
-        expect(o.partner).toBeUndefined()
+        expect(o.players).toBeUndefined()
       })
     })
   })
@@ -70,21 +70,21 @@ describe('precomputeDeckOptions', () => {
 
   it('regenerates the distractor pool when the cursor is exhausted', () => {
     const tinyDecks: Deck[] = [
-      { id: 'solo', name: 'Solo', moves: [{ text: 'OnlyMove', partner: 'A' }] },
+      { id: 'solo', name: 'Solo', moves: [{ text: 'OnlyMove', players: ['A'] }] },
       {
         id: 'pool',
         name: 'Pool',
         moves: [
-          { text: 'Alpha', partner: 'A' },
-          { text: 'Beta', partner: 'B' },
-          { text: 'Gamma', partner: 'A' },
+          { text: 'Alpha', players: ['A'] },
+          { text: 'Beta', players: ['B'] },
+          { text: 'Gamma', players: ['A'] },
         ],
       },
     ]
     const longDeck: Deck = {
       id: 'long',
       name: 'Long',
-      moves: Array.from({ length: 8 }, (_, i) => ({ text: `Move${i}`, partner: 'A' as const })),
+      moves: Array.from({ length: 8 }, (_, i) => ({ text: `Move${i}`, players: ['A'] as const })),
     }
     const allOptions = precomputeDeckOptions(longDeck, tinyDecks)
     allOptions.forEach((opts, i) => {

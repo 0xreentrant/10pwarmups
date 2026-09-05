@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent } from "react"
 import MoveLabel from "../../MoveLabel"
 import MoveList from "../../MoveList"
+import PartnerTags from "../../PartnerTags"
 import { usePersistedMediaVolume } from "../../../hooks/usePersistedMediaVolume"
 import type { Deck } from "../../../types/domain"
 import { captureAmbientColor } from "../frameCapture"
@@ -262,7 +263,7 @@ export default function CinemaOverlay({
       {showTapDemo && <ReviewTapDemo onComplete={() => setDemoComplete(true)} />}
 
       <div className={`ct-caption${review ? " ct-caption--review" : ""}${showTapDemo ? " ct-caption--demo" : ""}`}>
-        <span className={`ct-partner-tag ct-partner-tag--${move.partner}`}>Person {move.partner}</span>
+        <PartnerTags players={move.players} classPrefix="ct" />
         {!review && (
           <div className="ct-caption-index">Move {currentIndex + 1} / {deck.moves.length}</div>
         )}

@@ -1,5 +1,6 @@
 import { assign, setup } from "xstate"
 import type { Partner } from "../../types/domain"
+import { normalizePlayers } from "../../utils/movePlayers"
 
 const SEEK_HOLD_EPS = 0.08
 /** Past move start so video undershoot still lands in this move's segment. */
@@ -11,7 +12,7 @@ export interface TaggerContext {
   /** Display/export names per move index (editable in tagger). */
   moveNames: string[]
   /** Person A/B per move index (editable in tagger). */
-  movePartners: Partner[]
+  movePlayers: Partner[][]
   /** Start time per move index - null = missing / not placed yet. */
   timestamps: (number | null)[]
   duration: number
@@ -26,7 +27,7 @@ export interface TaggerContext {
 }
 
 export type TaggerEvent =
-  | { type: "SET_DECK"; deckId: string; moveCount: number; moveNames: string[]; movePartners: Partner[] }
+  | { type: "SET_DECK"; deckId: string; moveCount: number; moveNames: string[]; movePlayers: Partner[][] }
   | { type: "SEED"; duration: number; timestamps: (number | null)[] }
   | { type: "TIME"; time: number }
   | { type: "SCRUB"; time: number }
@@ -34,10 +35,10 @@ export type TaggerEvent =
   | { type: "DRAG_START"; index: number; time: number }
   | { type: "DRAG"; time: number }
   | { type: "DRAG_END" }
-  | { type: "LOAD"; timestamps: (number | null)[]; names?: string[]; partners?: Partner[] }
-  | { type: "RESET"; timestamps: (number | null)[]; moveNames: string[]; movePartners: Partner[] }
+  | { type: "LOAD"; timestamps: (number | null)[]; names?: string[]; playerLists?: Partner[][] }
+  | { type: "RESET"; timestamps: (number | null)[]; moveNames: string[]; movePlayers: Partner[][] }
   | { type: "DELETE_SELECTED" }
-  | { type: "SET_MOVE"; index: number; name: string; partner: Partner }
+  | { type: "SET_MOVE"; index: number; name: string; players: Partner[] }
   | { type: "ADD_MOVE" }
   | { type: "DELETE_MOVE"; index: number }
   | { type: "REORDER_MOVE"; from: number; to: number }
@@ -89,7 +90,7 @@ const taggerSetup = setup({
         deckId: event.deckId,
         moveCount: event.moveCount,
         moveNames: event.moveNames.slice(0, event.moveCount),
-        movePartners: event.movePartners.slice(0, event.moveCount),
+        movePlayers: event.movePlayers.slice(0, event.moveCount).map(normalizePlayers),
         timestamps: [],
         duration: 0,
         currentTime: 0,
@@ -185,14 +186,14 @@ const taggerSetup = setup({
     load: assign(({ context, event }) => {
       if (event.type !== "LOAD") return {}
       if (event.timestamps.length !== context.moveCount) return {}
-      const updates: Partial<Pick<TaggerContext, "timestamps" | "moveNames" | "movePartners">> = {
+      const updates: Partial<Pick<TaggerContext, "timestamps" | "moveNames" | "movePlayers">> = {
         timestamps: event.timestamps,
       }
       if (event.names?.length === context.moveCount) {
         updates.moveNames = event.names
       }
-      if (event.partners?.length === context.moveCount) {
-        updates.movePartners = event.partners
+      if (event.playerLists?.length === context.moveCount) {
+        updates.movePlayers = event.playerLists.map(normalizePlayers)
       }
       return updates
     }),
@@ -200,11 +201,11 @@ const taggerSetup = setup({
       if (event.type !== "RESET") return {}
       if (event.timestamps.length !== context.moveCount) return {}
       if (event.moveNames.length !== context.moveCount) return {}
-      if (event.movePartners.length !== context.moveCount) return {}
+      if (event.movePlayers.length !== context.moveCount) return {}
       return {
         timestamps: event.timestamps,
         moveNames: event.moveNames,
-        movePartners: event.movePartners,
+        movePlayers: event.movePlayers.map(normalizePlayers),
         selectedIndex: null,
       }
     }),
@@ -225,26 +226,26 @@ const taggerSetup = setup({
       const nextNames = context.moveNames.slice()
       while (nextNames.length < context.moveCount) nextNames.push(`Move ${nextNames.length + 1}`)
       nextNames[event.index] = trimmed
-      const nextPartners = context.movePartners.slice()
-      while (nextPartners.length < context.moveCount) nextPartners.push("A")
-      nextPartners[event.index] = event.partner
-      return { moveNames: nextNames, movePartners: nextPartners }
+      const nextPlayers = context.movePlayers.slice()
+      while (nextPlayers.length < context.moveCount) nextPlayers.push(["A"])
+      nextPlayers[event.index] = normalizePlayers(event.players)
+      return { moveNames: nextNames, movePlayers: nextPlayers }
     }),
     addMove: assign(({ context }) => {
       const nextCount = context.moveCount + 1
       const nextNames = context.moveNames.slice()
       while (nextNames.length < context.moveCount) nextNames.push(`Move ${nextNames.length + 1}`)
       nextNames.push(`Move ${nextCount}`)
-      const nextPartners = context.movePartners.slice()
-      while (nextPartners.length < context.moveCount) nextPartners.push("A")
-      nextPartners.push("A")
+      const nextPlayers = context.movePlayers.slice()
+      while (nextPlayers.length < context.moveCount) nextPlayers.push(["A"])
+      nextPlayers.push(["A"])
       const nextTimestamps = context.timestamps.slice()
       while (nextTimestamps.length < context.moveCount) nextTimestamps.push(null)
       nextTimestamps.push(null)
       return {
         moveCount: nextCount,
         moveNames: nextNames,
-        movePartners: nextPartners,
+        movePlayers: nextPlayers,
         timestamps: nextTimestamps,
         selectedIndex: nextCount - 1,
       }
@@ -263,7 +264,7 @@ const taggerSetup = setup({
       return {
         moveCount: context.moveCount - 1,
         moveNames: removeAt(context.moveNames),
-        movePartners: removeAt(context.movePartners),
+        movePlayers: removeAt(context.movePlayers),
         timestamps: removeAt(context.timestamps),
         selectedIndex,
       }
@@ -276,7 +277,7 @@ const taggerSetup = setup({
       }
       return {
         moveNames: reorderArrayAt(context.moveNames, from, to),
-        movePartners: reorderArrayAt(context.movePartners, from, to),
+        movePlayers: reorderArrayAt(context.movePlayers, from, to),
         timestamps: reorderArrayAt(context.timestamps, from, to),
         selectedIndex: remapIndexAfterReorder(context.selectedIndex, from, to),
       }
@@ -291,7 +292,7 @@ export const taggerMachine = taggerSetup.createMachine({
     deckId: "",
     moveCount: 0,
     moveNames: [],
-    movePartners: [],
+    movePlayers: [],
     timestamps: [],
     duration: 0,
     currentTime: 0,

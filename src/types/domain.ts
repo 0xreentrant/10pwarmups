@@ -2,7 +2,7 @@ export type Partner = 'A' | 'B'
 
 export interface Move {
   text: string
-  partner: Partner
+  players: Partner[]
 }
 
 export interface Series {
@@ -27,7 +27,7 @@ export interface MoveAnswer {
 export interface QuestionOption {
   text: string
   correct: boolean
-  partner?: Partner
+  players?: Partner[]
 }
 
 export interface Attempt {

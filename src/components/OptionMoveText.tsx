@@ -8,7 +8,7 @@ interface OptionMoveTextProps {
 }
 
 export default function OptionMoveText({ move, revealed = false }: OptionMoveTextProps) {
-  if (revealed && move.partner) {
+  if (revealed && move.players?.length) {
     return <MoveLabel move={move} />
   }
   return <span>{move.text}</span>

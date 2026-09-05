@@ -10,7 +10,7 @@ function makeRound(drillOverrides: Partial<AnteDrillView> = {}): AnteRound {
     moveIdx: 0,
     total: 3,
     options: [
-      { text: "Kneeling Granby", correct: true, partner: "A" },
+      { text: "Kneeling Granby", correct: true, players: ["A"] },
       { text: "Wrong One", correct: false },
       { text: "Wrong Two", correct: false },
       { text: "Wrong Three", correct: false },
@@ -20,7 +20,7 @@ function makeRound(drillOverrides: Partial<AnteDrillView> = {}): AnteRound {
     misses: 0,
     history: [],
     beat: 0,
-    move: { text: "Kneeling Granby", partner: "A" },
+    move: { text: "Kneeling Granby", players: ["A"] },
     ...drillOverrides,
   }
   return { drill, live: true, answer: vi.fn() } as unknown as AnteRound

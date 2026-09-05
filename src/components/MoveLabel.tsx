@@ -1,12 +1,13 @@
 import type { Partner } from "../types/domain"
+import { moveLabelClass, normalizePlayers } from "../utils/movePlayers"
 
 interface MoveLabelProps {
-  move: { text: string, partner?: Partner }
+  move: { text: string, players?: Partner | readonly Partner[] }
   className?: string
 }
 
 export default function MoveLabel({ move, className = "" }: MoveLabelProps) {
-  const partnerClass = move.partner === "B" ? "text-partner-b" : "text-partner-a"
+  const partnerClass = moveLabelClass(normalizePlayers(move.players ?? ["A"]))
   return (
     <span className={`${partnerClass} ${className}`.trim()}>
       {move.text}

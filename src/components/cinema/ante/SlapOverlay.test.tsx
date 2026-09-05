@@ -16,7 +16,7 @@ function makeCtx(drillOverrides: Partial<AnteDrillView> = {}): TappedCtx {
     misses: 0,
     history: [],
     beat: 1,
-    move: { text: "Banana Split", partner: "A" },
+    move: { text: "Banana Split", players: ["A"] },
     ...drillOverrides,
   }
   const round = { drill, next: () => {} } as AnteRound
@@ -26,7 +26,7 @@ function makeCtx(drillOverrides: Partial<AnteDrillView> = {}): TappedCtx {
     name: "Test",
     moves: Array.from({ length: 30 }, (_, i) => ({
       text: i === 11 ? "Defend" : i === 10 ? "Banana Split" : `Move ${i}`,
-      partner: "A" as const,
+      players: ["A"] as const,
     })),
   } as Deck
   return { round, deck, prevStreak: 0, onHome: () => {} }
