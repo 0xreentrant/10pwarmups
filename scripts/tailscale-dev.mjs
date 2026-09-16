@@ -14,7 +14,12 @@ console.log(`Tailnet DNS: https://${dns} (needs tailscale serve; run npm run tai
 
 const child = spawn("npx", ["vite", "--strictPort"], {
   stdio: "inherit",
-  env: { ...process.env, TAILSCALE_HOST: ip },
+  env: {
+    ...process.env,
+    TAILSCALE_HOST: ip,
+    // MagicDNS Host header (via tailscale serve) must pass Vite allowedHosts.
+    TAILSCALE_SERVE_HOST: dns,
+  },
 })
 
 child.on("exit", (code, signal) => {
