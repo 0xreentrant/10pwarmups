@@ -22,6 +22,8 @@ export interface WeekdaySlot {
   label: (typeof WEEKDAY_LABELS)[number]
   dayIndex: number
   group: SeriesId | null
+  /** Deck id for that day's series in this week's cycle (e.g. A1, B4). */
+  deckId: string | null
   isToday: boolean
 }
 
@@ -29,6 +31,8 @@ export interface ScheduleState {
   weekNumber: number
   isTrainingDay: boolean
   featuredGroup: SeriesId | null
+  /** Deck for today’s featured series when it is a training day. */
+  featuredDeckId: string | null
   weekDays: WeekdaySlot[]
 }
 
@@ -50,10 +54,27 @@ export function getSeriesName(id: SeriesId): string {
   return SERIES.find(s => s.id === id)?.name ?? id
 }
 
+/**
+ * Which video in a series (1-4) plays in this week.
+ * Each series appears four times in the 8-week cycle and advances A1-A2-A3-A4
+ * (and the same for B-H) on each appearance.
+ */
+export function deckNumberForSeriesInWeek(weekNumber: number, series: SeriesId): number {
+  let appearance = 0
+  for (let week = 1; week <= weekNumber; week++) {
+    if (SCHEDULE[week].includes(series)) appearance++
+  }
+  return appearance
+}
+
+export function deckIdForSeriesInWeek(weekNumber: number, series: SeriesId): string {
+  return `${series}${deckNumberForSeriesInWeek(weekNumber, series)}`
+}
+
 export function formatWeekGroupsSummary(weekDays: WeekdaySlot[]): string {
   return weekDays
-    .filter(d => d.group)
-    .map(d => `${d.label} ${d.group}`)
+    .filter(d => d.deckId)
+    .map(d => `${d.label} ${d.deckId}`)
     .join(" · ")
 }
 
@@ -64,13 +85,18 @@ export function getScheduleState(date = new Date(), weekNumber = getWeekNumber(d
   const dayIndex = date.getDay()
   const isTrainingDay = dayIndex >= 1 && dayIndex <= 4
   const featuredGroup = isTrainingDay ? weekGroups[dayIndex - 1] : null
+  const featuredDeckId = featuredGroup ? deckIdForSeriesInWeek(weekNumber, featuredGroup) : null
 
-  const weekDays: WeekdaySlot[] = WEEKDAY_LABELS.map((label, index) => ({
-    label,
-    dayIndex: index,
-    group: index >= 1 && index <= 4 ? weekGroups[index - 1] : null,
-    isToday: index === dayIndex,
-  }))
+  const weekDays: WeekdaySlot[] = WEEKDAY_LABELS.map((label, index) => {
+    const group = index >= 1 && index <= 4 ? weekGroups[index - 1] : null
+    return {
+      label,
+      dayIndex: index,
+      group,
+      deckId: group ? deckIdForSeriesInWeek(weekNumber, group) : null,
+      isToday: index === dayIndex,
+    }
+  })
 
-  return { weekNumber, isTrainingDay, featuredGroup, weekDays }
+  return { weekNumber, isTrainingDay, featuredGroup, featuredDeckId, weekDays }
 }

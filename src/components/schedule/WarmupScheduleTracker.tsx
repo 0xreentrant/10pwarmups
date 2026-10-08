@@ -5,16 +5,18 @@ const PILL_BASE = "px-2 py-1 text-[10px] tracking-wide uppercase border"
 function TodayBanner({
   isTrainingDay,
   featuredGroup,
+  featuredDeckId,
   weekSummary,
 }: {
   isTrainingDay: boolean
   featuredGroup: SeriesId | null
+  featuredDeckId: string | null
   weekSummary: string
 }) {
   if (isTrainingDay && featuredGroup) {
     return (
       <div className="mb-4 px-2 py-2 border border-accent text-[11px] tracking-wide uppercase">
-        Today · <span className="text-accent font-disp font-bold">{featuredGroup}</span> · {getSeriesName(featuredGroup)}
+        Today · <span className="text-accent font-disp font-bold">{featuredDeckId ?? featuredGroup}</span> · {getSeriesName(featuredGroup)}
       </div>
     )
   }
@@ -43,7 +45,7 @@ function WeekPills({
           day.isToday ? "border-accent text-accent" : "border-border text-muted",
           day.group ? "hover:text-accent transition-colors cursor-pointer" : "",
         ].join(" ")
-        const label = `${day.label}${day.group ? ` ${day.group}` : " rest"}`
+        const label = `${day.label}${day.deckId ? ` ${day.deckId}` : day.group ? ` ${day.group}` : " rest"}`
 
         if (day.group) {
           return (
@@ -83,6 +85,7 @@ export default function WarmupScheduleTracker({
       <TodayBanner
         isTrainingDay={state.isTrainingDay}
         featuredGroup={state.featuredGroup}
+        featuredDeckId={state.featuredDeckId}
         weekSummary={weekSummary}
       />
     </div>
