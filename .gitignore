@@ -4,3 +4,5 @@ dist-server
 .env
 *.tsbuildinfo
 .lighthouseci/
+public/videos/backup/
+public/videos/backups/
