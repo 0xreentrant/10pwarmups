@@ -1,0 +1,219 @@
+{
+  "main": {
+    "id": "7a6e30f0aed39385",
+    "type": "split",
+    "children": [
+      {
+        "id": "8af4044f3b790422",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "1a47825caf63e097",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Techniques/MTS 234 Truck with Kevin Berbrich.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "MTS 234 Truck with Kevin Berbrich"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "87357c07b1736712",
+    "type": "split",
+    "children": [
+      {
+        "id": "c5afc4ba05099dea",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ed07c3a86285434e",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "bd38bf0c81081276",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "c26d4420009580b5",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "90cea0816f8c2b91",
+    "type": "split",
+    "children": [
+      {
+        "id": "ac5ba342c88d01e7",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3477939a332c93ed",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Techniques/MTS 260 Deathbed Flows Spiderweb.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "36018d319c944586",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Techniques/MTS 260 Deathbed Flows Spiderweb.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "b3114f415cc875a4",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "72d36451d1745572",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "1833171a0a0a751a",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Techniques/MTS 260 Deathbed Flows Spiderweb.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "1a47825caf63e097",
+  "lastOpenFiles": [
+    "Techniques/MTS 229 The Truck Love Handle.md",
+    "Techniques/MTS 224 Side Control- Stay Un-frame-able.md",
+    "Techniques/MTS 217 Rubber Guard with Jeremiah Vance.md",
+    "Techniques/MTS 260 Deathbed Flows Spiderweb.md",
+    "Technique Guide/Home.md",
+    "Technique Guide/Zombie from top.md",
+    "Technique Guide/Zombie.md",
+    "Technique Guide/Z-Guard Leg Drag (Derek Stewart).md",
+    "Technique Guide/Z Guard Half Guard With Double Unders.md",
+    "Technique Guide/Z Guard Half and Half.md",
+    "Technique Guide/Z Guard Dogfight.md",
+    "Technique Guide/Z Guard.md",
+    "Technique Guide/X-Guard Sweep.md",
+    "Technique Guide/X-Clinch.md",
+    "Technique Guide/X-Blast.md",
+    "Technique Guide/X guard to Honey Hole Leg Drag.md",
+    "Technique Guide/X Guard.md",
+    "Technique Guide/X guard.md",
+    "Technique Guide/Wrestling Warm Ups A with Rob Rodriguez.md",
+    "Technique Guide/Wrestling for MMA w- Amir Allam.md",
+    "Technique Guide/Wrestling for MMA and BJJ w- 10th Planet brown belt Amir Allam.md",
+    "Technique Guide/Work on One Side.md",
+    "Technique Guide/Wild Beast Control Drills.md",
+    "Technique Guide/Wild Beast Control Details.md",
+    "Technique Guide/Wild Beast Control.md",
+    "Technique Guide/Wild Beast.md",
+    "Technique Guide"
+  ]
+}

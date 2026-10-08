@@ -1,0 +1,288 @@
+# 10th Planet Techniques Vault
+
+Source: https://www.10thplanetjj.com/techniques-archive/
+Scraped: 2026-09-21T23:08:12.561Z
+Count: 260
+
+## Index
+
+- [[Techniques/MTS 260 Deathbed Flows Spiderweb|MTS 260 Deathbed Flows Spiderweb]] — `https://vimeo.com/1226043686`
+- [[Techniques/MTS 259 Modern Leg Locks with Phil Schwartz|MTS 259 Modern Leg Locks with Phil Schwartz]] — `https://vimeo.com/1220284436`
+- [[Techniques/MTS 258 State of Rubber Guard|MTS 258 State of Rubber Guard]] — `https://vimeo.com/1213675063`
+- [[Techniques/MTS 257 Jail Break|MTS 257 Jail Break]] — `https://vimeo.com/1203540253`
+- [[Techniques/MTS 256 Twister – The Final 3|MTS 256 Twister – The Final 3]] — `https://vimeo.com/1195942075`
+- [[Techniques/MTS 255 DMs Passing|MTS 255 DMs Passing]] — `https://vimeo.com/1189023693`
+- [[Techniques/MTS 254 Mount Attacks|MTS 254 Mount Attacks]] — `https://vimeo.com/1182123661`
+- [[Techniques/MTS 253 Dog Fight - Dog Shot|MTS 253 Dog Fight / Dog Shot]] — `https://vimeo.com/1172317419`
+- [[Techniques/MTS 252 Zero Guard|MTS 252 Zero Guard]] — `https://vimeo.com/1163881815`
+- [[Techniques/MTS 251 Deathbed Flow – Lockdown|MTS 251 Deathbed Flow – Lockdown]] — `https://vimeo.com/1157434768`
+- [[Techniques/MTS 250 Deathbed Flow – Twister Side|MTS 250 Deathbed Flow – Twister Side]] — `https://vimeo.com/1150538894`
+- [[Techniques/MTS 249 The Toss|MTS 249 The Toss]] — `https://vimeo.com/1142910721`
+- [[Techniques/MTS 248 Deathbed Flows|MTS 248 Deathbed Flows]] — `https://vimeo.com/1138686996`
+- [[Techniques/MTS 247 EBI OT|MTS 247 EBI OT]] — `https://vimeo.com/1131211118`
+- [[Techniques/MTS 246 Geo Martinez Open Guard|MTS 246 Geo Martinez Open Guard]] — `https://vimeo.com/1119008749`
+- [[Techniques/MTS 245 Bryce Mitchell Twister Series|MTS 245 Bryce Mitchell Twister Series]] — `https://vimeo.com/1111762308`
+- [[Techniques/MTS 244 Rubber Guard Troubleshooting Part 2|MTS 244 Rubber Guard Troubleshooting Part 2]] — `https://vimeo.com/1102046162`
+- [[Techniques/MTS 243 Rubber Guard Troubleshooting Part 1|MTS 243 Rubber Guard Troubleshooting Part 1]] — `https://vimeo.com/1101400891`
+- [[Techniques/MTS 242 Prison Guard Death Bed Flow|MTS 242 Prison Guard Death Bed Flow]] — `https://vimeo.com/1094827540`
+- [[Techniques/MTS 241 Death Bed Flow – Rubber Guard|MTS 241 Death Bed Flow – Rubber Guard]] — `https://vimeo.com/1083079571`
+- [[Techniques/MTS 240 Carni - Bear Trap|MTS 240 Carni / Bear Trap]] — `https://vimeo.com/1076744517`
+- [[Techniques/MTS 239 JJOD Dog Bar - Pancho Villa|MTS 239 JJOD Dog Bar / Pancho Villa]] — `https://vimeo.com/1068976202`
+- [[Techniques/MTS 238 Death Bed Flows Truck|MTS 238 Death Bed Flows Truck]] — `https://vimeo.com/1059984889`
+- [[Techniques/MTS 237 Death Bed Flows – Rubber Guard|MTS 237 Death Bed Flows – Rubber Guard]] — `https://vimeo.com/1053300841`
+- [[Techniques/MTS 236 Quarter Guard For MMA|MTS 236 Quarter Guard For MMA]] — `https://vimeo.com/1044222040`
+- [[Techniques/MTS 235 Truck with Geo Martinez|MTS 235 Truck with Geo Martinez]] — `https://vimeo.com/1037093867`
+- [[Techniques/MTS 234 Truck with Kevin Berbrich|MTS 234 Truck with Kevin Berbrich]] — `https://vimeo.com/1025599364`
+- [[Techniques/MTS 233 Truck with Nathan Orchard|MTS 233 Truck with Nathan Orchard]] — `https://vimeo.com/1020284553`
+- [[Techniques/MTS 232 Truck with Kemoy Anderson|MTS 232 Truck with Kemoy Anderson]] — `https://vimeo.com/1014194864`
+- [[Techniques/MTS 231 Top Half to Mount|MTS 231 Top Half to Mount]] — `https://vimeo.com/1006040192`
+- [[Techniques/MTS 230 EBI OT|MTS 230 EBI OT]] — `https://vimeo.com/996886796`
+- [[Techniques/MTS 229 The Truck Love Handle|MTS 229 The Truck Love Handle]] — `https://vimeo.com/985832560`
+- [[Techniques/MTS 228 White Belt Wall Warmups F|MTS 228 White Belt Wall Warmups F]] — `https://vimeo.com/970837902`
+- [[Techniques/MTS 227 The Valley Twister|MTS 227 The Valley Twister]] — `https://vimeo.com/949021142`
+- [[Techniques/MTS 226 Full Rubber Guard Invisible Collar|MTS 226 Full Rubber Guard Invisible Collar]] — `https://vimeo.com/936388089`
+- [[Techniques/MTS 225 Ultimate Rubber Guard Round|MTS 225 Ultimate Rubber Guard Round]] — `https://vimeo.com/936356847`
+- [[Techniques/MTS 224 Side Control- Stay Un-frame-able|MTS 224 Side Control: Stay Un-frame-able]] — `https://vimeo.com/927203289`
+- [[Techniques/MTS 223 Thien Luu Nguyen|MTS 223 Thien Luu Nguyen]] — `https://vimeo.com/919903763`
+- [[Techniques/MTS 222 EBI Champion Alan Sanchez|MTS 222 EBI Champion Alan Sanchez]] — `https://vimeo.com/914946146`
+- [[Techniques/MTS 221 Rubber Guard with Fedor Nikolov|MTS 221 Rubber Guard with Fedor Nikolov]] — `https://vimeo.com/911729376`
+- [[Techniques/MTS 220 Knee Bar From Twister Side|MTS 220 Knee Bar From Twister Side]] — `https://vimeo.com/902485112`
+- [[Techniques/MTS 219 Bypass Passing From Scratch|MTS 219 Bypass Passing From Scratch]] — `https://vimeo.com/892051059`
+- [[Techniques/MTS 218 El Coyote Behind The Scenes|MTS 218 El Coyote Behind The Scenes]] — `https://vimeo.com/881551599`
+- [[Techniques/MTS 217 Rubber Guard with Jeremiah Vance|MTS 217 Rubber Guard with Jeremiah Vance]] — `https://vimeo.com/872665980`
+- [[Techniques/MTS 216 Rubber Guard with Richie Martinez|MTS 216 Rubber Guard with Richie Martinez]] — `https://vimeo.com/863374035`
+- [[Techniques/MTS 215 Rubber Guard with Nathan Orchard|MTS 215 Rubber Guard with Nathan Orchard]] — `https://vimeo.com/855470212`
+- [[Techniques/MTS 214 Rubber Guard with Ben Eddy|MTS 214 Rubber Guard with Ben Eddy]] — `https://vimeo.com/845026239`
+- [[Techniques/MTS 213 HQ Live Drills at Black Belt Invasion|MTS 213 HQ Live Drills at Black Belt Invasion]] — `https://vimeo.com/837750588`
+- [[Techniques/MTS 212 Thug Nasty Returns Part 2|MTS 212 Thug Nasty Returns Part 2]] — `https://vimeo.com/825644095`
+- [[Techniques/MTS 211 Bryce Mitchell Visits Part 1|MTS 211 Bryce Mitchell Visits Part 1]] — `https://vimeo.com/814738943`
+- [[Techniques/MTS 210 Rubberguard Philosophy|MTS 210 Rubberguard Philosophy]] — `https://vimeo.com/806053710`
+- [[Techniques/MTS 209 Smash Side Control|MTS 209 Smash Side Control]] — `https://vimeo.com/796358877`
+- [[Techniques/MTS 208 Lock Drag Setups|MTS 208 Lock Drag Setups]] — `https://vimeo.com/789375879`
+- [[Techniques/MTS 207 Twister Side Attacks|MTS 207 Twister Side Attacks]] — `https://vimeo.com/779700223`
+- [[Techniques/MTS 206 100% Lockdown|MTS 206 100% Lockdown]] — `https://vimeo.com/771225183`
+- [[Techniques/MTS 205 Quarter Guard Concepts|MTS 205 Quarter Guard Concepts]] — `https://vimeo.com/762834270`
+- [[Techniques/MTS 204 Quarter Guard Strategies|MTS 204 Quarter Guard Strategies]] — `https://vimeo.com/755235650`
+- [[Techniques/MTS 203 Prison Guard To Spider Web|MTS 203 Prison Guard To Spider Web]] — `https://vimeo.com/737175681`
+- [[Techniques/MTS 202 Meathook Options|MTS 202 Meathook Options]] — `https://vimeo.com/725040079`
+- [[Techniques/MTS 201 Prison Guard Breakdown|MTS 201 Prison Guard Breakdown]] — `https://vimeo.com/714799142`
+- [[Techniques/MTS 200 Lockdown Strategies|MTS 200 Lockdown Strategies]] — `https://vimeo.com/700135421`
+- [[Techniques/MTS 199 Grace’s Twister|MTS 199 Grace’s Twister]] — `https://vimeo.com/691263980`
+- [[Techniques/MTS 198 Deep Hook Philosophy|MTS 198 Deep Hook Philosophy]] — `https://vimeo.com/676668536`
+- [[Techniques/MTS 197 Twister Side Control|MTS 197 Twister Side Control]] — `https://vimeo.com/668869777`
+- [[Techniques/MTS 196 Rubber Guard with Ben Eddy Warmups E1|MTS 196 Rubber Guard with Ben Eddy Warmups E1]] — `https://vimeo.com/661344430`
+- [[Techniques/MTS 195 Advanced Arm Triangle Warmups E1|MTS 195 Advanced Arm Triangle Warmups E1]] — `https://vimeo.com/650508297`
+- [[Techniques/MTS 194 Rear Naked Choke Series Warmups D|MTS 194 Rear Naked Choke Series Warmups D]] — `https://vimeo.com/638465472`
+- [[Techniques/MTS 193 Deep Down The Lockdown Hole|MTS 193 Deep Down The Lockdown Hole]] — `https://vimeo.com/604467833`
+- [[Techniques/MTS 192 Rubber Guard Live Drills|MTS 192 Rubber Guard Live Drills]] — `https://vimeo.com/586540871`
+- [[Techniques/MTS 191 Passing with Danny Gutierrez|MTS 191 Passing with Danny Gutierrez]] — `https://vimeo.com/571448848`
+- [[Techniques/MTS 190 Back Attacks With Luis Quinones|MTS 190 Back Attacks With Luis Quinones]] — `https://vimeo.com/562970980`
+- [[Techniques/MTS 189 Prison Guard Homie X|MTS 189 Prison Guard Homie X]] — `https://vimeo.com/539543116`
+- [[Techniques/MTS 188 Advanced EBI OT|MTS 188 Advanced EBI OT]] — `https://vimeo.com/532762379`
+- [[Techniques/MTS 187 Troubleshooting The Lockdown|MTS 187 Troubleshooting The Lockdown]] — `https://vimeo.com/520215465`
+- [[Techniques/MTS 186 Advanced Passing|MTS 186 Advanced Passing]] — `https://vimeo.com/508318570`
+- [[Techniques/MTS 185 Quarter Guard Strategies|MTS 185 Quarter Guard Strategies]] — `https://vimeo.com/499024461`
+- [[Techniques/MTS 184 Rubber Guard to Side Control|MTS 184 Rubber Guard to Side Control]] — `https://vimeo.com/488288367`
+- [[Techniques/MTS 183 Spiderweb – Silverado|MTS 183 Spiderweb – Silverado]] — `https://vimeo.com/476069058`
+- [[Techniques/MTS 182 Leg Locks At HQ|MTS 182 Leg Locks At HQ]] — `https://vimeo.com/468834540`
+- [[Techniques/MTS 181 Passing Basics – D Day|MTS 181 Passing Basics – D Day]] — `https://vimeo.com/462290101`
+- [[Techniques/MTS 180 Side Control Principles|MTS 180 Side Control Principles]] — `https://vimeo.com/454160835`
+- [[Techniques/MTS 179 Rubber Guard- Cobra Clinch|MTS 179 Rubber Guard: Cobra Clinch]] — `https://vimeo.com/447082958`
+- [[Techniques/MTS 178 Banana Splits In Transition|MTS 178 Banana Splits In Transition]] — `https://vimeo.com/441149568`
+- [[Techniques/MTS 177 Tripod Passing|MTS 177 Tripod Passing]] — `https://vimeo.com/434243580`
+- [[Techniques/MTS 176 Lockdown Clinches|MTS 176 Lockdown Clinches]] — `https://vimeo.com/426664984`
+- [[Techniques/MTS 175 Focusing on the Truck|MTS 175 Focusing on the Truck]] — `https://vimeo.com/419635687`
+- [[Techniques/MTS 174 Corona Lockdown Sweep|MTS 174 Corona Lockdown Sweep]] — `https://vimeo.com/411572587`
+- [[Techniques/MTS 173 Rolling Inverted 3 Piece|MTS 173 Rolling Inverted 3 Piece]] — `https://vimeo.com/403618636`
+- [[Techniques/MTS 172 Spider Clinch|MTS 172 Spider Clinch]] — `https://vimeo.com/396861939`
+- [[Techniques/MTS 171 Posture & Clinching|MTS 171 Posture & Clinching]] — `https://vimeo.com/392909516`
+- [[Techniques/MTS 170 Samurai Calf Slicer|MTS 170 Samurai Calf Slicer]] — `https://vimeo.com/388049252`
+- [[Techniques/MTS 169 Rubber Guard – The Pump|MTS 169 Rubber Guard – The Pump]] — `https://vimeo.com/383354035`
+- [[Techniques/MTS 168 Twister Side to Vaporizer|MTS 168 Twister Side to Vaporizer]] — `https://vimeo.com/378404321`
+- [[Techniques/MTS 167 Lockdown Entries|MTS 167 Lockdown Entries]] — `https://vimeo.com/376064619`
+- [[Techniques/MTS 166 Maia vs Askren Breakdown|MTS 166 Maia vs Askren Breakdown]] — `https://vimeo.com/371838711`
+- [[Techniques/MTS 165 100 Percent Revisited|MTS 165 100 Percent Revisited]] — `https://vimeo.com/367670216`
+- [[Techniques/MTS 164 Lockdown - Lockdrag|MTS 164 Lockdown / Lockdrag]] — `https://vimeo.com/363383377`
+- [[Techniques/MTS 163 Lockdown From The Top|MTS 163 Lockdown From The Top]] — `https://vimeo.com/357952024`
+- [[Techniques/MTS 162 X Break Meets Vaporizer|MTS 162 X Break Meets Vaporizer]] — `https://vimeo.com/353890478`
+- [[Techniques/MTS 161 New Lockdown Path|MTS 161 New Lockdown Path]] — `https://vimeo.com/349834935`
+- [[Techniques/MTS 160 Perfect Dog Fight|MTS 160 Perfect Dog Fight]] — `https://vimeo.com/345875778`
+- [[Techniques/MTS 159 Mexican Dead Orchard|MTS 159 Mexican Dead Orchard]] — `https://vimeo.com/343342070`
+- [[Techniques/MTS 158 Rubber Guard Ultra Stomp|MTS 158 Rubber Guard Ultra Stomp]] — `https://vimeo.com/339035811`
+- [[Techniques/MTS 157 ADV 1-4 Guard Combos|MTS 157 ADV 1/4 Guard Combos]] — `https://vimeo.com/333879455`
+- [[Techniques/MTS 156 Rubber Guard- The Pyramid|MTS 156 Rubber Guard: The Pyramid]] — `https://vimeo.com/329691425`
+- [[Techniques/MTS 155 ADV Truck Banana Split|MTS 155 ADV Truck Banana Split]] — `https://vimeo.com/325798470`
+- [[Techniques/MTS 154 ADV Lockdown Details|MTS 154 ADV Lockdown Details]] — `https://vimeo.com/320324725`
+- [[Techniques/MTS 153 Monkey Mount Options|MTS 153 Monkey Mount Options]] — `https://vimeo.com/315424826`
+- [[Techniques/MTS 152 OMA Plata Options|MTS 152 OMA Plata Options]] — `https://vimeo.com/312232416`
+- [[Techniques/MTS 151 Rubber Guard Back Up Plan|MTS 151 Rubber Guard Back Up Plan]] — `https://vimeo.com/308461699`
+- [[Techniques/MTS 150 Advanced Techs With Marvin Castelle|MTS 150 Advanced Techs With Marvin Castelle]] — `https://vimeo.com/305810464`
+- [[Techniques/MTS 149 Twister Side Philosophy|MTS 149 Twister Side Philosophy]] — `https://vimeo.com/300954991`
+- [[Techniques/MTS 148 Advanced Guard Clinch Combos|MTS 148 Advanced Guard Clinch Combos]] — `https://vimeo.com/296955567`
+- [[Techniques/MTS 147 Polishing the Meat Hook|MTS 147 Polishing the Meat Hook]] — `https://vimeo.com/293186036`
+- [[Techniques/MTS 146 ADV Prison Guard Electric Homie|MTS 146 ADV Prison Guard Electric Homie]] — `https://vimeo.com/289577155`
+- [[Techniques/MTS 145 Quintet 2 Behind The Scenes|MTS 145 Quintet 2 Behind The Scenes]] — `https://vimeo.com/286271081`
+- [[Techniques/MTS 144 Rubber Guard Master Jeremiah Vance|MTS 144 Rubber Guard Master Jeremiah Vance]] — `https://vimeo.com/282540235`
+- [[Techniques/MTS 143 Advanced Inversions with Marvin Castelle|MTS 143 Advanced Inversions with Marvin Castelle]] — `https://vimeo.com/279568228`
+- [[Techniques/MTS 142 Dogfight To Homie Control|MTS 142 Dogfight To Homie Control]] — `https://vimeo.com/276117339`
+- [[Techniques/MTS 141 Baseball Bat Fury|MTS 141 Baseball Bat Fury]] — `https://vimeo.com/272875470`
+- [[Techniques/MTS 140 Gogo Launch|MTS 140 Gogo Launch]] — `https://vimeo.com/268892313`
+- [[Techniques/MTS 139 Advanced Rubber Guard- The Pump|MTS 139 Advanced Rubber Guard: The Pump]] — `https://vimeo.com/265629286`
+- [[Techniques/MTS 138 3 Ways To Clear The Neck|MTS 138 3 Ways To Clear The Neck]] — `https://vimeo.com/262267127`
+- [[Techniques/MTS 137 Back Control To Spider Web|MTS 137 Back Control To Spider Web]] — `https://vimeo.com/258904236`
+- [[Techniques/MTS 136 Return Of The Flying Kung Fu|MTS 136 Return Of The Flying Kung Fu]] — `https://vimeo.com/255693484`
+- [[Techniques/MTS 135 Jiu Jitsu For CJJ|MTS 135 Jiu Jitsu For CJJ]] — `https://vimeo.com/252433611`
+- [[Techniques/MTS 134 Invisible Collar in Austin|MTS 134 Invisible Collar in Austin]] — `https://vimeo.com/249632574`
+- [[Techniques/MTS 133 Polishing The Isosceles Triangle|MTS 133 Polishing The Isosceles Triangle]] — `https://vimeo.com/247498331`
+- [[Techniques/MTS 132 Heel Hook From The Lockdown|MTS 132 Heel Hook From The Lockdown]] — `https://vimeo.com/244222969`
+- [[Techniques/MTS 131 The Truck In Big Bear|MTS 131 The Truck In Big Bear]] — `https://vimeo.com/241095364`
+- [[Techniques/MTS 130 High Level Lockdown|MTS 130 High Level Lockdown]] — `https://vimeo.com/237769643`
+- [[Techniques/MTS 129- Polishing The Twister Pass|MTS 129: Polishing The Twister Pass]] — `https://vimeo.com/234798111`
+- [[Techniques/MTS 128- Advanced Back Escapes|MTS 128: Advanced Back Escapes]] — `https://vimeo.com/231799544`
+- [[Techniques/MTS 127- The Slow Vape|MTS 127: The Slow Vape]] — `https://vimeo.com/228923745`
+- [[Techniques/MTS 126- Breaking Down F & G|MTS 126: Breaking Down F & G]] — `https://vimeo.com/226268758`
+- [[Techniques/MTS 125- D & H Update|MTS 125: D & H Update]] — `https://vimeo.com/223652680`
+- [[Techniques/MTS 124- How U Gonna Capture-|MTS 124: How U Gonna Capture?]] — `https://vimeo.com/220367540`
+- [[Techniques/MTS 123- Valley of the Truck|MTS 123: Valley of the Truck]] — `https://vimeo.com/217949344`
+- [[Techniques/MTS 122- The Power of The Underhook|MTS 122: The Power of The Underhook]] — `https://vimeo.com/215097544`
+- [[Techniques/MTS 121- Warmups F 2017|MTS 121: Warmups F 2017]] — `https://vimeo.com/211760519`
+- [[Techniques/MTS 120- “2 Ton Truck”|MTS 120: “2 Ton Truck”]] — `https://vimeo.com/208347494`
+- [[Techniques/MTS 119- Next Level Twister|MTS 119: Next Level Twister]] — `https://vimeo.com/205999187`
+- [[Techniques/MTS 118- 2 Things in Mexico|MTS 118: 2 Things in Mexico]] — `https://vimeo.com/201803686`
+- [[Techniques/MTS 117- DeSev Revisited|MTS 117: DeSev Revisited]] — `https://vimeo.com/198642743`
+- [[Techniques/MTS 116- Rubber Guard – The Standup Battle|MTS 116: Rubber Guard – The Standup Battle]] — `https://vimeo.com/196615248`
+- [[Techniques/MTS 115- The New C4|MTS 115: The New C4]] — `https://vimeo.com/194306890`
+- [[Techniques/MTS 114- Tentacle|MTS 114: Tentacle]] — `https://vimeo.com/190942203`
+- [[Techniques/MTS 113- Camp Cucuy|MTS 113: Camp Cucuy]] — `https://vimeo.com/187922372`
+- [[Techniques/MTS 112- The Ditch|MTS 112: The Ditch]] — `https://vimeo.com/184622030`
+- [[Techniques/MTS 111- Shuck, Squeeze, Jump, Cliff|MTS 111: Shuck, Squeeze, Jump, Cliff]] — `https://vimeo.com/181879057`
+- [[Techniques/MTS 110- Anti-Leg Lock Game Part 2|MTS 110: Anti-Leg Lock Game Part 2]] — `https://vimeo.com/179240722`
+- [[Techniques/MTS 109- UNDER JACK CITY|MTS 109: UNDER JACK CITY]] — `https://vimeo.com/176234623`
+- [[Techniques/MTS 108- Lock Up Your Legs Part 2|MTS 108: Lock Up Your Legs Part 2]] — `https://vimeo.com/173232445`
+- [[Techniques/MTS 107- Lock Up Your Legs Part 1|MTS 107: Lock Up Your Legs Part 1]] — `https://vimeo.com/170397111`
+- [[Techniques/MTS 106- Trust Your PDUs|MTS 106: Trust Your PDUs]] — `https://vimeo.com/167971904`
+- [[Techniques/MTS 105- Top Lock Clinch|MTS 105: Top Lock Clinch]] — `https://vimeo.com/165176303`
+- [[Techniques/MTS 104- Mini-Stomp 1, 2, 3|MTS 104: Mini-Stomp 1, 2, 3]] — `https://vimeo.com/162625414`
+- [[Techniques/MTS 103- Anti-Leg Lock Game|MTS 103: Anti-Leg Lock Game]] — `https://vimeo.com/160380212`
+- [[Techniques/MTS 102- Rubber Side|MTS 102: Rubber Side]] — `https://vimeo.com/157078752`
+- [[Techniques/MTS 101- COP Clinch Revisited|MTS 101: COP Clinch Revisited]] — `https://vimeo.com/154773465`
+- [[Techniques/MTS 100- 10 x 10|MTS 100: 10 x 10]] — `https://vimeo.com/152249389`
+- [[Techniques/MTS 99- Twister Side Control|MTS 99: Twister Side Control]] — `https://vimeo.com/149952465`
+- [[Techniques/MTS 98- Cummings Honey Flow|MTS 98: Cummings Honey Flow]] — `https://vimeo.com/147616678`
+- [[Techniques/MTS 97- Plan B|MTS 97: Plan B]] — `https://vimeo.com/144949012`
+- [[Techniques/MTS 96- Pre-Web|MTS 96: Pre-Web]] — `https://vimeo.com/142708237`
+- [[Techniques/MTS 95- Prison Guard Revisited|MTS 95: Prison Guard Revisited]] — `https://vimeo.com/140241803`
+- [[Techniques/MTS 94- Polishing The Japanese Neck Tie|MTS 94: Polishing The Japanese Neck Tie]] — `https://vimeo.com/138367322`
+- [[Techniques/MTS 93- Reverse Alcatraz|MTS 93: Reverse Alcatraz]] — `https://vimeo.com/136322048`
+- [[Techniques/MTS 92 – Live Drills 1|MTS 92 – Live Drills 1]] — `https://vimeo.com/134464856`
+- [[Techniques/MTS 91- 2-on-1 C.O.P. Clinch|MTS 91: 2-on-1 C.O.P. Clinch]] — `https://vimeo.com/132481278`
+- [[Techniques/MTS 90- X Guard to DOA|MTS 90: X Guard to DOA]] — `https://vimeo.com/130369562`
+- [[Techniques/MTS 89- 1-4 Ashi|MTS 89: 1/4 Ashi]] — `https://vimeo.com/128754368`
+- [[Techniques/MTS 88- Leg Locks|MTS 88: Leg Locks]] — `https://vimeo.com/129142599`
+- [[Techniques/MTS 87- Studying Tape 4|MTS 87: Studying Tape 4]] — `https://vimeo.com/129142601`
+- [[Techniques/MTS 86- Dan Severn|MTS 86: Dan Severn]] — `https://vimeo.com/129142602`
+- [[Techniques/MTS 85- Killa B Part 3|MTS 85: Killa B Part 3]] — `https://vimeo.com/129142600`
+- [[Techniques/MTS 84- D Day|MTS 84: D Day]] — `https://vimeo.com/129146289`
+- [[Techniques/MTS 83- Killa B Part 2|MTS 83: Killa B Part 2]] — `https://vimeo.com/129146291`
+- [[Techniques/MTS 82- Electric Orchard|MTS 82: Electric Orchard]] — `https://vimeo.com/129146293`
+- [[Techniques/MTS 81- Killa B|MTS 81: Killa B]] — `https://vimeo.com/129146295`
+- [[Techniques/MTS 80- Z-SHOOT-PULL|MTS 80: Z-SHOOT-PULL]] — `https://vimeo.com/129146296`
+- [[Techniques/MTS 79- Brokeback Mount|MTS 79: Brokeback Mount]] — `https://vimeo.com/129150181`
+- [[Techniques/MTS 78- Death From Below|MTS 78: Death From Below]] — `https://vimeo.com/129150182`
+- [[Techniques/MTS 77- Gogo Clinch|MTS 77: Gogo Clinch]] — `https://vimeo.com/129150184`
+- [[Techniques/MTS 76- Isosceles Triangle|MTS 76: Isosceles Triangle]] — `https://vimeo.com/129150185`
+- [[Techniques/MTS 75- Butt Clinch|MTS 75: Butt Clinch]] — `https://vimeo.com/129150186`
+- [[Techniques/MTS 74- Slow Samurai|MTS 74: Slow Samurai]] — `https://vimeo.com/136761517`
+- [[Techniques/MTS 73- New Final 3|MTS 73: New Final 3]] — `https://vimeo.com/129152886`
+- [[Techniques/MTS 72- The Mystery Pass|MTS 72: The Mystery Pass]] — `https://vimeo.com/129152887`
+- [[Techniques/MTS 71- Bravo Breakdown|MTS 71: Bravo Breakdown]] — `https://vimeo.com/129152888`
+- [[Techniques/MTS 70- Polishing Warm Ups B|MTS 70: Polishing Warm Ups B]] — `https://vimeo.com/129152889`
+- [[Techniques/MTS 69- Polishing Warm Ups E|MTS 69: Polishing Warm Ups E]] — `https://vimeo.com/129156658`
+- [[Techniques/MTS 68- Polishing Warm Ups F|MTS 68: Polishing Warm Ups F]] — `https://vimeo.com/129156659`
+- [[Techniques/MTS 67- Polishing Warm Ups G|MTS 67: Polishing Warm Ups G]] — `https://vimeo.com/129156660`
+- [[Techniques/MTS 66- Polishing Warm Ups H|MTS 66: Polishing Warm Ups H]] — `https://vimeo.com/129156661`
+- [[Techniques/MTS 65- Polishing Warm Ups D|MTS 65: Polishing Warm Ups D]] — `https://vimeo.com/129156664`
+- [[Techniques/MTS 64- The Back Of The Truck|MTS 64: The Back Of The Truck]] — `https://vimeo.com/129159881`
+- [[Techniques/MTS 63- Escape From Side Control|MTS 63: Escape From Side Control]] — `https://vimeo.com/129162536`
+- [[Techniques/MTS 62- Studying Tape 3|MTS 62: Studying Tape 3]] — `https://vimeo.com/129162537`
+- [[Techniques/MTS 61- UK Part 6|MTS 61: UK Part 6]] — `https://vimeo.com/129162539`
+- [[Techniques/MTS 60- UK PART 5|MTS 60: UK PART 5]] — `https://vimeo.com/129159887`
+- [[Techniques/MTS 59- Muddy Waters Revisited|MTS 59: Muddy Waters Revisited]] — `https://vimeo.com/129165042`
+- [[Techniques/MTS 58- 10 Years|MTS 58: 10 Years]] — `https://vimeo.com/129165043`
+- [[Techniques/MTS 57- UK PART 4|MTS 57: UK PART 4]] — `https://vimeo.com/129165045`
+- [[Techniques/MTS 56- UK Part 3|MTS 56: UK Part 3]] — `https://vimeo.com/129165046`
+- [[Techniques/MTS 55- UK Part 2|MTS 55: UK Part 2]] — `https://vimeo.com/129165047`
+- [[Techniques/MTS 54- UK Part 1|MTS 54: UK Part 1]] — `https://vimeo.com/129167428`
+- [[Techniques/MTS 53- THE SLEEPING DRAGON|MTS 53: THE SLEEPING DRAGON]] — `https://vimeo.com/129167432`
+- [[Techniques/MTS 52- Gracie National 2013|MTS 52: Gracie National 2013]] — `https://vimeo.com/129167433`
+- [[Techniques/MTS 51- End Of The World|MTS 51: End Of The World]] — `https://vimeo.com/129167434`
+- [[Techniques/MTS 50- Studying Tape 2|MTS 50: Studying Tape 2]] — `https://vimeo.com/129167437`
+- [[Techniques/MTS 49- Sub Only Rules|MTS 49: Sub Only Rules]] — `https://vimeo.com/129169620`
+- [[Techniques/MTS 48- The Red Destroyer|MTS 48: The Red Destroyer]] — `https://vimeo.com/129169621`
+- [[Techniques/MTS 47- Black Mamba|MTS 47: Black Mamba]] — `https://vimeo.com/129169622`
+- [[Techniques/MTS 46- The Bridge|MTS 46:  The Bridge]] — `https://vimeo.com/129170743`
+- [[Techniques/MTS 45- Single Day|MTS 45: Single Day]] — `https://vimeo.com/129170745`
+- [[Techniques/MTS 44- Freak Show|MTS 44: Freak Show]] — `https://vimeo.com/129170746`
+- [[Techniques/MTS 43- Studying Tape|MTS 43: Studying Tape]] — `https://vimeo.com/129170747`
+- [[Techniques/MTS 42- Hub & Tug|MTS 42: Hub & Tug]] — `https://vimeo.com/129170748`
+- [[Techniques/MTS 41- Rutten Tootin’|MTS 41: Rutten Tootin’]] — `https://vimeo.com/129172742`
+- [[Techniques/MTS 40- Renarco|MTS 40: Renarco]] — `https://vimeo.com/129172744`
+- [[Techniques/MTS 39- Leg Locks Up Ur Ass|MTS 39: Leg Locks Up Ur Ass]] — `https://vimeo.com/129172746`
+- [[Techniques/MTS 38- Enter the Draco|MTS 38: Enter the Draco]] — `https://vimeo.com/129172747`
+- [[Techniques/MTS 37- Planet X|MTS 37:  Planet X]] — `https://vimeo.com/129172748`
+- [[Techniques/MTS 36- Dead Zones|MTS 36: Dead Zones]] — `https://vimeo.com/129174457`
+- [[Techniques/MTS 35- 300|MTS 35: 300]] — `https://vimeo.com/129174458`
+- [[Techniques/MTS 34- Rubber Guard 101|MTS 34: Rubber Guard 101]] — `https://vimeo.com/129174459`
+- [[Techniques/MTS 33- OG Grape Juice|MTS 33: OG Grape Juice]] — `https://vimeo.com/129174460`
+- [[Techniques/MTS 32- Filmes de Porrada|MTS 32: Filmes de Porrada]] — `https://vimeo.com/129174461`
+- [[Techniques/MTS 31- Doggy Style|MTS 31: Doggy Style]] — `https://vimeo.com/129190963`
+- [[Techniques/MTS 30- Black Belts Don’t Cry|MTS 30: Black Belts Don’t Cry]] — `https://vimeo.com/129190961`
+- [[Techniques/MTS 29- Return Of The Death Knuckle|MTS 29: Return Of The Death Knuckle]] — `https://vimeo.com/129191542`
+- [[Techniques/MTS 28- 94%|MTS 28: 94%]] — `https://vimeo.com/129191544`
+- [[Techniques/MTS 27- Yuma Ma So Fat|MTS 27: Yuma Ma So Fat]] — `https://vimeo.com/129191545`
+- [[Techniques/MTS 26- Fruits And Vegetables|MTS 26: Fruits And Vegetables]] — `https://vimeo.com/129191547`
+- [[Techniques/MTS 25- You Know How 10 Cruise|MTS 25: You Know How 10 Cruise]] — `https://vimeo.com/129191551`
+- [[Techniques/MTS 24- Cheick Yo Self|MTS 24: Cheick Yo Self]] — `https://vimeo.com/129192609`
+- [[Techniques/MTS 23- Brent Goes Black|MTS 23: Brent Goes Black]] — `https://vimeo.com/129192610`
+- [[Techniques/MTS 22- 7 Days A Week|MTS 22: 7 Days A Week]] — `https://vimeo.com/129192611`
+- [[Techniques/MTS 21- You Know How 10 Do|MTS 21: You Know How 10 Do]] — `https://vimeo.com/129192612`
+- [[Techniques/MTS 20- Barbed Penis|MTS 20: Barbed Penis]] — `https://vimeo.com/129192614`
+- [[Techniques/MTS 19- Hedge Hedge Winey|MTS 19: Hedge Hedge Winey]] — `https://vimeo.com/129195315`
+- [[Techniques/MTS 18- Orochon Challenge|MTS 18: Orochon Challenge]] — `https://vimeo.com/129195316`
+- [[Techniques/MTS 17- Put Another Shrimp on Renato|MTS 17: Put Another Shrimp on Renato]] — `https://vimeo.com/129195321`
+- [[Techniques/MTS 16- Wrath of Renato|MTS 16: Wrath of Renato]] — `https://vimeo.com/129195318`
+- [[Techniques/MTS 15- Prison Rules|MTS 15: Prison Rules]] — `https://vimeo.com/129195320`
+- [[Techniques/MTS 14- E=MC Gonna Have to Stab a B!@ch|MTS 14: E=MC Gonna Have to Stab a B!@ch]] — `https://vimeo.com/129196753`
+- [[Techniques/MTS 13- Attack of the Renato|MTS 13: Attack of the Renato]] — `https://vimeo.com/129196754`
+- [[Techniques/MTS 12- Pijamas|MTS 12: Pijamas]] — `https://vimeo.com/129196756`
+- [[Techniques/MTS 11- Enter the Rogan|MTS 11: Enter the Rogan]] — `https://vimeo.com/129196757`
+- [[Techniques/MTS 10- Bright California Nuglets-|MTS 10: Bright California Nuglets?]] — `https://vimeo.com/129196758`
+- [[Techniques/MTS 9- Fake Clouds in the Sky|MTS 9: Fake Clouds in the Sky]] — `https://vimeo.com/129198433`
+- [[Techniques/MTS 8- Jiu-Jitsu That’s It|MTS 8: Jiu-Jitsu That’s It]] — `https://vimeo.com/129198435`
+- [[Techniques/MTS 7|MTS 7]] — `https://vimeo.com/129198436`
+- [[Techniques/MTS 6- Bow to Your Sensei|MTS 6: Bow to Your Sensei]] — `https://vimeo.com/129198437`
+- [[Techniques/MTS 5- Einstein-isode|MTS 5: Einstein-isode]] — `https://vimeo.com/129198438`
+- [[Techniques/MTS 4- Karate’s Comeback|MTS 4: Karate’s Comeback]] — `https://vimeo.com/129275002`
+- [[Techniques/MTS 3- Can’t we all just get along-|MTS 3: Can’t we all just get along?]] — `https://vimeo.com/129275003`
+- [[Techniques/MTS 2- Great Big White World|MTS 2: Great Big White World]] — `https://vimeo.com/129275004`
+- [[Techniques/MTS 1- Purple to Black|MTS 1: Purple to Black]] — `https://vimeo.com/129275006`
+
+## Disk estimate (high quality)
+
+- Approx total runtime (TOC proxy): **491 hours** across 260 videos
+- Median episode: **93 min**
+- Vimeo sizes need auth cookies; estimate from bitrate × duration:
+
+- 720p ~3 Mbps: ~**647 GB**
+- 1080p ~6 Mbps: ~**1295 GB**
+- 1080p high ~8 Mbps: ~**1726 GB**
+- 1080p high ~10 Mbps: ~**2158 GB**
+
+Best current guess for 1080p high quality: **~0.9–1.6 TB**.
+
+## Technique Guide
+
+Move-level index from the public spreadsheet.
+
+- [[Technique Guide/Home|Technique Guide index]]
+
