@@ -10,9 +10,9 @@ function tailscaleIPv4() {
 const { ip, dns } = tailscaleIPv4()
 
 console.log(`Phone URL: http://${ip}:5173`)
-console.log(`Tailnet DNS: https://${dns} (needs tailscale serve; run npm run tailscale:serve)`)
+console.log(`Tailnet DNS: https://${dns} (needs tailscale serve; run pnpm run tailscale:serve)`)
 
-const child = spawn("npx", ["vite", "--strictPort"], {
+const child = spawn("pnpm", ["exec", "vite", "--strictPort"], {
   stdio: "inherit",
   env: {
     ...process.env,

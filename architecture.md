@@ -7,6 +7,7 @@ Client-only Vite/React PWA for 10th Planet warmup recall training. No trainee ac
 | Layer | Choice |
 |--------|--------|
 | Build | Vite 8 + React 19 + TypeScript + Tailwind CSS v4 |
+| Packages | pnpm (`packageManager` in `package.json`) |
 | Router | TanStack Router (`src/router.tsx`) |
 | State | XState 5 `appMachine` + singleton `appActor` |
 | Persistence | `localStorage` key `tp_progress` (and other `tp_*` prefs) |
@@ -165,7 +166,7 @@ No server for train/review progress. Tagger saves go through `server/main.ts`.
 
 ## Tagger admin
 
-Google login uses the same arctic authorization-code flow as Qalm (`server/main.ts`). Only emails in `ADMIN_EMAILS` get a token. The token is an HMAC bearer (`tp_admin_token` in localStorage), not a cookie, because prod Pages (`https://openthesystem.app`) and the API (`https://10p-api.qalm.work`) are different sites.
+Google login uses the same arctic authorization-code flow as Qalm (`server/main.ts`). The tagger UI mounts only after a token is stored. Only emails in `ADMIN_EMAILS` get a token. The token is an HMAC bearer (`tp_admin_token` in localStorage), not a cookie, because prod Pages (`https://openthesystem.app`) and the API (`https://10p-api.qalm.work`) are different sites.
 
 | Place | Browser | Callback | Save |
 |-------|---------|----------|------|
@@ -173,13 +174,14 @@ Google login uses the same arctic authorization-code flow as Qalm (`server/main.
 | Tailscale | `https://<machine>.ts.net` | same origin via `tailscale serve` | `TAGGER_SAVE=fs` |
 | Prod | `https://openthesystem.app` | `https://10p-api.qalm.work/auth/google/callback` | `TAGGER_SAVE=github` commits via the Contents API, which redeploys Pages |
 
-Local: `npm run server` bundles `server/main.ts`, then `node --env-file=.env` listens on :3101. Then `npm run dev`. See `.env.example`. Prod will inject the same variables from systemd and will not use `--env-file`. Prod host setup is not done yet.
+Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` listens on :3101. Then `pnpm run dev`. See `.env.example`. Prod will inject the same variables from systemd and will not use `--env-file`. Prod host setup is not done yet.
 
 ## Changelog
 
 | Date | Change |
 |------|--------|
 | 2026-10-07 | Tagger admin Google login locally. Prod droplet deploy is the next step. |
+| 2026-10-08 | Package manager is pnpm. `package-lock.json` is gone. |
 
 ## Authoritative files
 

@@ -11,11 +11,11 @@ try {
   const origin = httpsPort === "443" ? `https://${host}` : `https://${host}:${httpsPort}`
   console.log(`HTTPS (phone): ${origin}`)
   console.log(
-    `In another terminal: TAILSCALE_SERVE_HOST=${host} TAILSCALE_SERVE_PORT=${httpsPort} npm run dev`,
+    `In another terminal: TAILSCALE_SERVE_HOST=${host} TAILSCALE_SERVE_PORT=${httpsPort} pnpm run dev`,
   )
   console.log(`Status: tailscale serve status`)
   console.log(`Stop this port: tailscale serve --https=${httpsPort} off`)
-  console.log(`Stop all: npm run tailscale:reset`)
+  console.log(`Stop all: pnpm run tailscale:reset`)
 } catch {
   console.error("If serve is disabled on your tailnet, open the enable URL printed above, then rerun.")
   process.exit(1)

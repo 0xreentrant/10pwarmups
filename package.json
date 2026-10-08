@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "dev": "vite",
-    "server": "npm run build:server && node --env-file=.env dist-server/main.js",
+    "server": "pnpm run build:server && node --env-file=.env dist-server/main.js",
     "build:server": "vite build --config vite.server.config.ts",
     "dev:tailscale": "node scripts/tailscale-dev.mjs",
     "tailscale:serve": "node scripts/tailscale-serve.mjs",
@@ -17,16 +17,18 @@
     "machine:view": "node scripts/viewMachine.mjs",
     "test:pwa": "vitest run --config vitest.pwa.config.ts",
     "test:e2e": "node tests/e2e/offline.mjs",
-    "test:all": "npm run test:run && npm run build && npm run test:pwa && npm run test:e2e",
+    "test:all": "pnpm run test:run && pnpm run build && pnpm run test:pwa && pnpm run test:e2e",
     "type-check": "tsc -b --noEmit",
     "prepare": "git config core.hooksPath .githooks"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "packageManager": "pnpm@10.34.6",
   "type": "module",
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.0",
+    "@tanstack/history": "^1.162.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",

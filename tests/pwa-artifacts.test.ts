@@ -21,7 +21,7 @@ function extractPrecacheUrls(swContent: string) {
 describe("PWA build artifacts", () => {
   beforeAll(() => {
     if (!fs.existsSync(dist)) {
-      throw new Error("dist/ not found — run npm run build first")
+      throw new Error("dist/ not found - run pnpm run build first")
     }
   })
 

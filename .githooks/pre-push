@@ -11,5 +11,5 @@ if [[ -s "${HOME}/.nvm/nvm.sh" ]]; then
   nvm use >/dev/null
 fi
 
-echo "pre-push: npm run type-check"
-npm run type-check
+echo "pre-push: pnpm run type-check"
+pnpm run type-check
