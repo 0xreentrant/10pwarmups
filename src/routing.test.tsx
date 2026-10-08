@@ -362,6 +362,7 @@ describe("routing", () => {
   })
 
   it("navigates tagger tabs and warmup via URL", async () => {
+    localStorage.setItem("tp_admin_token", "test.token")
     const { router } = await renderWithRouter("/tagger/A1/edit")
 
     await screen.findByRole("heading", { name: "Video Tagger" })
