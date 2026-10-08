@@ -82,6 +82,7 @@ stateDiagram-v2
 | `/beta-test/$warmup/train` | train + `tapDemo` |
 | `/beta-test/$warmup/review` | review + `tapDemo` |
 | `/beta-test/$warmup/completed` | completed |
+| `/admin` | `CatalogMockView` (local mock: titles, sections, new entries) |
 | `/tagger/$warmup/$mode` | `TaggerView` (`edit` \| `train` \| `review`) |
 
 Train/review routes guard on `appActor` state + matching deck. URL alone is not enough.
@@ -95,6 +96,7 @@ Train/review routes guard on `appActor` state + matching deck. URL alone is not 
 | Completed | `completed` | locked + `finalAttempt` | already written | `Dusk2CompleteOverlay` |
 | Preview | `training` + `preview` | yes | no | same train UI inside tagger (isolated machine) |
 | Tagger | `taggerMachine` (+ local preview machine) | N/A for edit | not global `tp_progress` | edit tags; train/review phone frames |
+| Catalog mock | `/admin` local React state | N/A | no | edit entry title and section; add sections and entries |
 
 Train → Review confirms via `ReviewConfirmPopover` and drops the in-flight attempt. Review → Train is immediate `START_DECK`.
 
@@ -182,6 +184,7 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 |------|--------|
 | 2026-10-07 | Tagger admin Google login locally. Prod droplet deploy is the next step. |
 | 2026-10-08 | Package manager is pnpm. `package-lock.json` is gone. |
+| 2026-10-08 | `/admin` catalog mock. Edits stay in the tab. Tagger header links to it. |
 
 ## Authoritative files
 

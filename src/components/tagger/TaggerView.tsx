@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router"
 import { useMachine } from "@xstate/react"
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type PointerEvent as ReactPointerEvent, type ReactNode } from "react"
 import { appMachine } from "../../appMachine"
@@ -842,6 +843,9 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
       </dialog>
 
       <div className="mb-3 flex gap-3">
+        <Link to="/admin" className="text-muted text-[11px] uppercase tracking-wider">
+          Catalog
+        </Link>
         {([
           ["edit", "Edit"],
           ["train", "Train"],

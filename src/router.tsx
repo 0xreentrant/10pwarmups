@@ -12,6 +12,7 @@ import { useSelector } from "@xstate/react"
 import ScheduleHomeScreen from "./components/ScheduleHomeScreen"
 import BetaTestScreen from "./components/BetaTestScreen"
 import ProgressScreen from "./components/ProgressScreen"
+import CatalogMockView from "./components/admin/CatalogMockView"
 import TaggerView from "./components/tagger/TaggerView"
 import type { TaggerTab } from "./components/tagger/taggerTypes"
 import CinemaReviewView from "./components/training/CinemaReviewView"
@@ -164,6 +165,12 @@ const betaTestCompletedRoute = createRoute({
   component: BetaTestCompletedRoute,
 })
 
+const adminRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admin",
+  component: CatalogMockView,
+})
+
 const taggerRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/tagger",
@@ -294,6 +301,7 @@ export const routeTree = rootRoute.addChildren([
     betaTestReviewRoute,
     betaTestCompletedRoute,
   ]),
+  adminRoute,
   taggerRoute.addChildren([
     taggerIndexRoute,
     taggerWarmupRoute.addChildren([taggerWarmupIndexRoute, taggerModeRoute]),

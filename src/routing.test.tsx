@@ -354,6 +354,28 @@ describe("routing", () => {
     })
   }, 60000)
 
+  it("edits a warmup title and adds a section on the catalog mock", async () => {
+    await renderWithRouter("/admin")
+
+    const title = await screen.findByLabelText("A1 title")
+    fireEvent.change(title, { target: { value: "Kneeling Roll" } })
+    expect(screen.getByLabelText("A1 title")).toHaveValue("Kneeling Roll")
+
+    fireEvent.change(screen.getByLabelText("A1 section"), { target: { value: "B" } })
+    expect(screen.getByLabelText("A1 section")).toHaveValue("B")
+
+    fireEvent.change(screen.getByLabelText("New section id"), { target: { value: "I" } })
+    fireEvent.change(screen.getByLabelText("New section name"), { target: { value: "Rubber Guard" } })
+    fireEvent.click(screen.getByRole("button", { name: "Add section" }))
+    expect(screen.getByLabelText("Section I name")).toHaveValue("Rubber Guard")
+
+    const addButtons = screen.getAllByRole("button", { name: "Add entry" })
+    fireEvent.click(addButtons[addButtons.length - 1])
+    fireEvent.change(screen.getByLabelText("New entry title"), { target: { value: "New Wave" } })
+    fireEvent.click(screen.getByRole("button", { name: "Add" }))
+    expect(screen.getByLabelText("I1 title")).toHaveValue("New Wave")
+  })
+
   it("redirects /tagger to the first video warmup in edit mode", async () => {
     const { router } = await renderWithRouter("/tagger")
 
