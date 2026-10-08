@@ -30,6 +30,13 @@ import {
   saveMoveNamesForDeck,
 } from "../../hooks/usePersistedTaggerMoveNames"
 import { deckHasTaggedMoves } from "../../utils/deckTimestamps"
+import {
+  captureAdminHash,
+  committedSaveNotice,
+  googleSignInHref,
+  postTaggerApi,
+  readAdminToken,
+} from "../../utils/taggerApi"
 import { nextDeckId, precomputeDeckOptions } from "../../utils/deckUtils"
 import { listVideoDeckIds, videoSrcForDeck } from "../../utils/deckVideo"
 import { markerDotAppearance, normalizePlayers, togglePlayerDraft } from "../../utils/movePlayers"
@@ -54,18 +61,6 @@ import type { TaggerTab } from "./taggerTypes"
 const VIDEO_IDS = listVideoDeckIds()
 
 type SavedTarget = "json" | "note"
-
-async function postTaggerApi(path: string, body: unknown): Promise<void> {
-  const res = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  })
-  if (!res.ok) {
-    const data = (await res.json().catch(() => null)) as { error?: string } | null
-    throw new Error(data?.error ?? "Save failed")
-  }
-}
 
 type TaggerViewProps = {
   warmup: string
@@ -114,6 +109,21 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const [saving, setSaving] = useState<SavedTarget | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [saveNotice, setSaveNotice] = useState<string | null>(null)
+  const [signedIn, setSignedIn] = useState(() => Boolean(readAdminToken()))
+  useEffect(() => {
+    const captured = captureAdminHash()
+    if (captured === "token") setSignedIn(true)
+    if (captured === "not_admin") {
+      setSignedIn(false)
+      setSaveError("This Google account is not an admin.")
+    }
+    if (captured === "not_verified") {
+      setSignedIn(false)
+      setSaveError("Google email is not verified.")
+    }
+  }, [])
+
   const videoRef = useRef<HTMLVideoElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -550,10 +560,13 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
     void postTaggerApi("/api/tagger/save-json", { jsonText: jsonDraft })
       .then(() => {
         setSaved("json")
+        setSaveNotice(committedSaveNotice())
         window.setTimeout(() => setSaved(null), 1200)
       })
       .catch(err => {
-        setSaveError(err instanceof Error ? err.message : "Save failed")
+        const message = err instanceof Error ? err.message : "Save failed"
+        if (message === "Sign in with Google") setSignedIn(false)
+        setSaveError(message)
       })
       .finally(() => setSaving(null))
   }
@@ -567,10 +580,13 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
         setSavedNoteByDeck(prev => ({ ...prev, [deckId]: notesDraft }))
         clearNoteDraftForDeck(deckId)
         setSaved("note")
+        setSaveNotice(committedSaveNotice())
         window.setTimeout(() => setSaved(null), 1200)
       })
       .catch(err => {
-        setSaveError(err instanceof Error ? err.message : "Save failed")
+        const message = err instanceof Error ? err.message : "Save failed"
+        if (message === "Sign in with Google") setSignedIn(false)
+        setSaveError(message)
       })
       .finally(() => setSaving(null))
   }
@@ -645,7 +661,20 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       className="relative left-1/2 w-[80vw] max-w-[80vw] -translate-x-1/2 py-4 outline-none"
     >
       <div className="relative mb-3 flex items-start justify-between gap-3">
-        <h1 className="text-xl">Video Tagger</h1>
+        <div>
+          <h1 className="text-xl">Video Tagger</h1>
+          {!signedIn && (
+            <a
+              className="text-accent text-[11px] uppercase tracking-wider"
+              href={googleSignInHref(
+                `${window.location.pathname}${window.location.search}`,
+                window.location.origin,
+              )}
+            >
+              Sign in with Google
+            </a>
+          )}
+        </div>
         <div ref={settingsRef} className="relative shrink-0">
           <button
             type="button"
@@ -1083,6 +1112,7 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
           />
           {loadError && <p className="mt-1 text-[11px] text-accent">{loadError}</p>}
           {saveError && <p className="mt-1 text-[11px] text-accent">{saveError}</p>}
+          {saveNotice && <p className="mt-1 text-[11px] text-muted">{saveNotice}</p>}
 
           <div className="mt-4 mb-1 flex items-baseline justify-between gap-3">
             <p className="text-muted text-[11px] uppercase tracking-wider">

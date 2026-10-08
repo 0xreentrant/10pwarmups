@@ -4,6 +4,7 @@
 
 interface ImportMetaEnv {
   readonly VITEST?: string
+  readonly VITE_TAGGER_API_URL?: string
 }
 
 interface Window {

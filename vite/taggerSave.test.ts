@@ -8,6 +8,7 @@ import {
   replaceDeckMoves,
   replaceDeckTimestamps,
   upsertDeckTimestamps,
+  applyTaggerJson,
   saveTaggerNote,
 } from "./taggerSave"
 
@@ -73,6 +74,29 @@ export function resolveMoveTimestamps() {}`
     expect(out).toContain('id: "A2"')
     expect(out).toContain('m("New", "B"),')
     expect(out).toContain('m("Old", "A"),')
+  })
+})
+
+describe("applyTaggerJson", () => {
+  it("rewrites timestamps and leaves decks alone when the json has no names", () => {
+    const timestampsText = `export const MOVE_TIMESTAMPS = {
+  A1: [
+    0,
+  ],
+}
+`
+    const decksText = `id: "A1",
+    moves: [
+      m("Old", "A"),
+    ]
+`
+    const out = applyTaggerJson(
+      JSON.stringify({ deckId: "A1", timestamps: [1.5] }),
+      { timestampsText, decksText },
+    )
+    expect(out.deckId).toBe("A1")
+    expect(out.timestampsText).toContain("1.5")
+    expect(out.decksText).toBeNull()
   })
 })
 

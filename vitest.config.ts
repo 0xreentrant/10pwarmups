@@ -25,7 +25,7 @@ export default defineConfig({
         test: {
           name: "node",
           environment: "node",
-          include: ["vite/**/*.{test,spec}.{ts,tsx}"],
+          include: ["vite/**/*.{test,spec}.{ts,tsx}", "server/**/*.{test,spec}.{ts,tsx}"],
         },
       },
     ],

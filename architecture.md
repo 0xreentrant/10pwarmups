@@ -1,6 +1,6 @@
 # Architecture
 
-Client-only Vite/React PWA for 10th Planet warmup recall training. No accounts, no progress backend. Train quizzes a deck over local video; Review watches the same video without a quiz.
+Client-only Vite/React PWA for 10th Planet warmup recall training. No trainee accounts and no progress backend. Train quizzes a deck over local video; Review watches the same video without a quiz. The tagger is the exception: an admin Google login gates saves.
 
 ## Stack
 
@@ -12,7 +12,7 @@ Client-only Vite/React PWA for 10th Planet warmup recall training. No accounts, 
 | Persistence | `localStorage` key `tp_progress` (and other `tp_*` prefs) |
 | Analytics | gtag + `src/utils/analytics.ts` |
 | Media | `/videos/{deckId}.mp4` under `public/videos/`, PWA CacheFirst |
-| Dev-only | Vite `taggerApiPlugin` writes `moveTimestamps.ts` / notes |
+| Tagger API | `server/main.ts` on :3101. Google OAuth, HMAC bearer. `TAGGER_SAVE=fs` locally, `github` on prod |
 
 ## Entry
 
@@ -161,7 +161,25 @@ flowchart LR
   Machine --> Video
 ```
 
-No server for train/review progress. Tagger save API is Vite-dev filesystem write only.
+No server for train/review progress. Tagger saves go through `server/main.ts`.
+
+## Tagger admin
+
+Google login uses the same arctic authorization-code flow as Qalm (`server/main.ts`). Only emails in `ADMIN_EMAILS` get a token. The token is an HMAC bearer (`tp_admin_token` in localStorage), not a cookie, because prod Pages (`https://openthesystem.app`) and the API (`https://10p-api.qalm.work`) are different sites.
+
+| Place | Browser | Callback | Save |
+|-------|---------|----------|------|
+| Local | `http://localhost:5173` | same origin, Vite proxies `/auth` and `/api/tagger` to `:3101` | `TAGGER_SAVE=fs` |
+| Tailscale | `https://<machine>.ts.net` | same origin via `tailscale serve` | `TAGGER_SAVE=fs` |
+| Prod | `https://openthesystem.app` | `https://10p-api.qalm.work/auth/google/callback` | `TAGGER_SAVE=github` commits via the Contents API, which redeploys Pages |
+
+Local: `npm run server` bundles `server/main.ts`, then `node --env-file=.env` listens on :3101. Then `npm run dev`. See `.env.example`. Prod will inject the same variables from systemd and will not use `--env-file`. Prod host setup is not done yet.
+
+## Changelog
+
+| Date | Change |
+|------|--------|
+| 2026-10-07 | Tagger admin Google login locally. Prod droplet deploy is the next step. |
 
 ## Authoritative files
 

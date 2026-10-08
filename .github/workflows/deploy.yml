@@ -26,6 +26,8 @@ jobs:
       - run: npm ci
       - run: npm run test:run
       - run: npm run build
+        env:
+          VITE_TAGGER_API_URL: https://10p-api.qalm.work
       - run: npm run test:pwa
       - run: npm run test:e2e
       - uses: actions/upload-pages-artifact@v3

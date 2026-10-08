@@ -2,7 +2,6 @@ import { defineConfig } from "vite"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 import { VitePWA } from "vite-plugin-pwa"
-import { taggerApiPlugin } from "./vite/taggerApiPlugin"
 
 const base = "/"
 const tailscaleHost = process.env.TAILSCALE_HOST
@@ -24,6 +23,10 @@ export default defineConfig({
         clientPort: Number(process.env.TAILSCALE_SERVE_PORT ?? 443),
       },
     }),
+    proxy: {
+      "/auth": "http://127.0.0.1:3101",
+      "/api/tagger": "http://127.0.0.1:3101",
+    },
     watch: {
       ignored: [
         "**/src/data/warmup-notes/**",
@@ -33,7 +36,6 @@ export default defineConfig({
     },
   },
   plugins: [
-    taggerApiPlugin(),
     react(),
     tailwindcss(),
     VitePWA({

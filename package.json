@@ -4,6 +4,8 @@
   "description": "",
   "scripts": {
     "dev": "vite",
+    "server": "npm run build:server && node --env-file=.env dist-server/main.js",
+    "build:server": "vite build --config vite.server.config.ts",
     "dev:tailscale": "node scripts/tailscale-dev.mjs",
     "tailscale:serve": "node scripts/tailscale-serve.mjs",
     "tailscale:reset": "tailscale serve reset",
@@ -45,6 +47,7 @@
     "@statelyai/inspect": "^0.7.1",
     "@tanstack/react-router": "^1.170.15",
     "@xstate/react": "^6.1.0",
+    "arctic": "^3.7.0",
     "puppeteer": "^25.1.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",

@@ -93,7 +93,10 @@ export function replaceDeckMoves(fileText: string, deckId: string, movesBlock: s
   return `${fileText.slice(0, openBracket + 1)}\n${movesBlock}\n    ${fileText.slice(closeBracket)}`
 }
 
-export function saveTaggerJson(jsonText: string): { deckId: string } {
+export function applyTaggerJson(
+  jsonText: string,
+  files: { timestampsText: string; decksText: string },
+): { deckId: string; timestampsText: string; decksText: string | null } {
   let deckId: string | undefined
   try {
     const raw = JSON.parse(jsonText) as { deckId?: unknown }
@@ -118,26 +121,42 @@ export function saveTaggerJson(jsonText: string): { deckId: string } {
   )
   if (!result.ok) throw new Error(result.error)
 
-  const tsPath = path.join(root, "src/data/moveTimestamps.ts")
-  const tsContent = upsertDeckTimestamps(
-    fs.readFileSync(tsPath, "utf8"),
+  const timestampsText = upsertDeckTimestamps(
+    files.timestampsText,
     deckId,
     formatTimestampsBlock(result.timestamps),
   )
-  fs.writeFileSync(tsPath, tsContent, "utf8")
 
-  if (result.names || result.playerLists) {
-    const decksPath = path.join(root, "src/data/decks.ts")
-    const names = result.names ?? deck.moves.map(m => m.text)
-    const playerLists = result.playerLists ?? deck.moves.map(m => m.players)
-    const movesBlock = names
-      .map((name, i) => formatMoveLine(name, playerLists[i] ?? ["A"]))
-      .join("\n")
-    const decksContent = replaceDeckMoves(fs.readFileSync(decksPath, "utf8"), deckId, movesBlock)
-    fs.writeFileSync(decksPath, decksContent, "utf8")
+  if (!result.names && !result.playerLists) {
+    return { deckId, timestampsText, decksText: null }
   }
 
-  return { deckId }
+  const names = result.names ?? deck.moves.map(m => m.text)
+  const playerLists = result.playerLists ?? deck.moves.map(m => m.players)
+  const movesBlock = names
+    .map((name, i) => formatMoveLine(name, playerLists[i] ?? ["A"]))
+    .join("\n")
+  return {
+    deckId,
+    timestampsText,
+    decksText: replaceDeckMoves(files.decksText, deckId, movesBlock),
+  }
+}
+
+export function saveTaggerJson(jsonText: string): { deckId: string } {
+  const tsPath = path.join(root, "src/data/moveTimestamps.ts")
+  const decksPath = path.join(root, "src/data/decks.ts")
+  const applied = applyTaggerJson(jsonText, {
+    timestampsText: fs.readFileSync(tsPath, "utf8"),
+    decksText: fs.readFileSync(decksPath, "utf8"),
+  })
+  fs.writeFileSync(tsPath, applied.timestampsText, "utf8")
+  if (applied.decksText) fs.writeFileSync(decksPath, applied.decksText, "utf8")
+  return { deckId: applied.deckId }
+}
+
+export function assertKnownDeck(deckId: string) {
+  if (!DECKS.some(d => d.id === deckId)) throw new Error(`Unknown deck ${deckId}`)
 }
 
 export function saveTaggerNote(
@@ -145,7 +164,7 @@ export function saveTaggerNote(
   noteText: string,
   options?: { root?: string },
 ): void {
-  if (!DECKS.some(d => d.id === deckId)) throw new Error(`Unknown deck ${deckId}`)
+  assertKnownDeck(deckId)
   const base = options?.root ?? root
   const notesDir = path.join(base, "src/data/warmup-notes")
   fs.mkdirSync(notesDir, { recursive: true })
