@@ -1,0 +1,13 @@
+{
+  "totalHoursProxy": 491.0,
+  "medianMinutes": 93.0,
+  "videoCount": 260,
+  "note": "TOC last-chapter proxy; MM:SS:frames corrected when hours>4. Actual Vimeo HQ requires cookies.",
+  "estimatesGB": {
+    "720p ~3 Mbps": 647,
+    "1080p ~6 Mbps": 1295,
+    "1080p high ~8 Mbps": 1726,
+    "1080p high ~10 Mbps": 2158
+  },
+  "hqGuessTB": "0.9-1.6"
+}
