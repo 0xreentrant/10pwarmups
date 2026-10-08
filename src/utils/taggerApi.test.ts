@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest"
-import { captureAdminHash, googleSignInHref, readAdminToken } from "./taggerApi"
+import { captureAdminHash, clearAdminToken, googleSignInHref, readAdminToken } from "./taggerApi"
 
 describe("tagger admin session", () => {
   afterEach(() => {
@@ -12,6 +12,12 @@ describe("tagger admin session", () => {
     expect(captureAdminHash()).toBe("token")
     expect(readAdminToken()).toBe("abc.def")
     expect(window.location.hash).toBe("")
+  })
+
+  it("clears the stored admin token", () => {
+    localStorage.setItem("tp_admin_token", "abc.def")
+    clearAdminToken()
+    expect(readAdminToken()).toBeNull()
   })
 
   it("builds a same-origin sign-in link when the api base is unset", () => {

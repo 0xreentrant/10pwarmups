@@ -32,6 +32,7 @@ import {
 import { deckHasTaggedMoves } from "../../utils/deckTimestamps"
 import {
   captureAdminHash,
+  clearAdminToken,
   committedSaveNotice,
   googleSignInHref,
   postTaggerApi,
@@ -69,6 +70,39 @@ type TaggerViewProps = {
   onModeChange: (mode: TaggerTab) => void
 }
 
+type TaggerEditorProps = TaggerViewProps & {
+  onSignedOut: () => void
+}
+
+function initialAdminSession(): { signedIn: boolean; error: string | null } {
+  const captured = captureAdminHash()
+  if (captured === "not_admin") {
+    return { signedIn: false, error: "This Google account is not an admin." }
+  }
+  if (captured === "not_verified") {
+    return { signedIn: false, error: "Google email is not verified." }
+  }
+  return { signedIn: Boolean(readAdminToken()), error: null }
+}
+
+function TaggerSignIn({ error }: { error: string | null }) {
+  return (
+    <div className="mx-auto max-w-sm py-16 text-center">
+      <h1 className="text-xl">Video Tagger</h1>
+      {error && <p className="mt-3 text-[11px] text-accent">{error}</p>}
+      <a
+        className="mt-6 inline-block text-accent text-[11px] uppercase tracking-wider"
+        href={googleSignInHref(
+          `${window.location.pathname}${window.location.search}`,
+          window.location.origin,
+        )}
+      >
+        Sign in with Google
+      </a>
+    </div>
+  )
+}
+
 function deckMoveNames(deckId: string, defaultNames: string[]): string[] {
   return resolveMoveNames(deckId, defaultNames, loadMoveNamesByDeck())
 }
@@ -84,7 +118,7 @@ function PhonePreviewFrame({ children }: { children: ReactNode }) {
   )
 }
 
-export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange }: TaggerViewProps) {
+function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut }: TaggerEditorProps) {
   const [tagger, send] = useMachine(taggerMachine)
   const {
     deckId,
@@ -110,19 +144,6 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
   const [loadError, setLoadError] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [saveNotice, setSaveNotice] = useState<string | null>(null)
-  const [signedIn, setSignedIn] = useState(() => Boolean(readAdminToken()))
-  useEffect(() => {
-    const captured = captureAdminHash()
-    if (captured === "token") setSignedIn(true)
-    if (captured === "not_admin") {
-      setSignedIn(false)
-      setSaveError("This Google account is not an admin.")
-    }
-    if (captured === "not_verified") {
-      setSignedIn(false)
-      setSaveError("Google email is not verified.")
-    }
-  }, [])
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -565,8 +586,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       })
       .catch(err => {
         const message = err instanceof Error ? err.message : "Save failed"
-        if (message === "Sign in with Google") setSignedIn(false)
-        setSaveError(message)
+        if (message === "Sign in with Google") onSignedOut()
+        else setSaveError(message)
       })
       .finally(() => setSaving(null))
   }
@@ -585,8 +606,8 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       })
       .catch(err => {
         const message = err instanceof Error ? err.message : "Save failed"
-        if (message === "Sign in with Google") setSignedIn(false)
-        setSaveError(message)
+        if (message === "Sign in with Google") onSignedOut()
+        else setSaveError(message)
       })
       .finally(() => setSaving(null))
   }
@@ -661,19 +682,18 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       className="relative left-1/2 w-[80vw] max-w-[80vw] -translate-x-1/2 py-4 outline-none"
     >
       <div className="relative mb-3 flex items-start justify-between gap-3">
-        <div>
+        <div className="flex items-baseline gap-3">
           <h1 className="text-xl">Video Tagger</h1>
-          {!signedIn && (
-            <a
-              className="text-accent text-[11px] uppercase tracking-wider"
-              href={googleSignInHref(
-                `${window.location.pathname}${window.location.search}`,
-                window.location.origin,
-              )}
-            >
-              Sign in with Google
-            </a>
-          )}
+          <button
+            type="button"
+            className="text-muted text-[11px] uppercase tracking-wider"
+            onClick={() => {
+              clearAdminToken()
+              onSignedOut()
+            }}
+          >
+            Log out
+          </button>
         </div>
         <div ref={settingsRef} className="relative shrink-0">
           <button
@@ -1186,4 +1206,10 @@ export default function TaggerView({ warmup, mode, onWarmupChange, onModeChange 
       )}
     </div>
   )
+}
+
+export default function TaggerView(props: TaggerViewProps) {
+  const [session, setSession] = useState(initialAdminSession)
+  if (!session.signedIn) return <TaggerSignIn error={session.error} />
+  return <TaggerEditor {...props} onSignedOut={() => setSession({ signedIn: false, error: null })} />
 }
