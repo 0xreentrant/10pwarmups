@@ -30,6 +30,7 @@ jobs:
         env:
           VITE_TAGGER_API_URL: https://10p-api.qalm.work
       - run: pnpm run test:pwa
+      - run: pnpm exec puppeteer browsers install chrome
       - run: pnpm run test:e2e
       - uses: actions/upload-pages-artifact@v3
         with:
