@@ -1,6 +1,6 @@
 /** Per-deck move start times (seconds), from /tagger. null = not tagged yet. */
 
-export const MOVE_TIMESTAMPS: Record<string, (number | null)[]> = {
+export let MOVE_TIMESTAMPS: Record<string, (number | null)[]> = {
   A1: [
     0,
     11.12784969140625,
@@ -405,6 +405,10 @@ export const MOVE_TIMESTAMPS: Record<string, (number | null)[]> = {
     21.507388000000002,
     22.807388000000003,
   ]
+}
+
+export function applyMoveTimestamps(next: Record<string, (number | null)[]>) {
+  MOVE_TIMESTAMPS = next
 }
 
 function alignTaggedTimestamps(

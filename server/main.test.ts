@@ -1,4 +1,6 @@
 import type { AddressInfo } from "node:net"
+import os from "node:os"
+import path from "node:path"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { ServerEnv } from "./env"
 import { startServer } from "./main"
@@ -6,16 +8,13 @@ import { signAdminToken } from "./token"
 
 const env: ServerEnv = {
   port: 0,
-  taggerSave: "fs",
   allowedOrigins: ["http://localhost:5173", "https://openthesystem.app"],
   googleClientId: "test-client",
   googleClientSecret: "test-secret",
   adminEmails: new Set(["alexanderlperez@gmail.com"]),
   adminTokenSecret: "test-secret",
   authRedirectUri: "https://10p-api.qalm.work/auth/google/callback",
-  githubToken: null,
-  githubRepo: "0xreentrant/10pwarmups",
-  githubBranch: "main",
+  warmupDb: path.join(os.tmpdir(), `10p-main-${process.pid}.sqlite`),
 }
 
 let base = ""

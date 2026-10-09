@@ -6,3 +6,5 @@ dist-server
 .lighthouseci/
 public/videos/backup/
 public/videos/backups/
+data/*.sqlite
+

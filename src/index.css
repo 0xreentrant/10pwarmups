@@ -305,3 +305,409 @@
     color: var(--color-muted);
   }
 }
+
+.catalog-admin {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f0f0f1;
+  color: #1d2327;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.catalog-admin h1,
+.catalog-admin h2,
+.catalog-admin h3 {
+  font-family: inherit;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.3;
+  color: #1d2327;
+  margin: 0;
+}
+
+.catalog-admin h1 {
+  font-size: 23px;
+}
+
+.catalog-admin h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.catalog-admin p {
+  margin: 0;
+}
+
+.ca-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: none;
+  height: 32px;
+  background: #1d2327;
+  color: #f0f0f1;
+}
+
+.ca-bar-left,
+.ca-bar-right {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.ca-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: #2271b1;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.ca-bar-name,
+.ca-bar-right span,
+.ca-bar a {
+  padding: 0 10px;
+  color: #f0f0f1;
+  text-decoration: none;
+  line-height: 32px;
+}
+
+.ca-bar a:hover,
+.ca-bar a:focus-visible {
+  color: #72aee6;
+}
+
+.ca-body {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+}
+
+.ca-menu {
+  width: 160px;
+  flex: none;
+  overflow: auto;
+  background: #1d2327;
+  color: #f0f0f1;
+}
+
+.ca-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  color: #f0f0f1;
+}
+
+.ca-menu button:hover,
+.ca-menu button:focus-visible {
+  background: #2c3338;
+  color: #72aee6;
+}
+
+.ca-menu button[aria-current="page"] {
+  background: #2271b1;
+  color: #fff;
+}
+
+.ca-content {
+  flex: 1;
+  overflow: auto;
+  padding: 16px 20px 48px;
+}
+
+.ca-notice {
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid #c3c4c7;
+}
+
+.ca-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.ca-title-action {
+  padding: 4px 8px;
+  border: 1px solid #2271b1;
+  border-radius: 2px;
+  background: #f6f7f7;
+  color: #135e96;
+}
+
+.ca-title-action:hover,
+.ca-title-action:focus-visible {
+  background: #f0f0f1;
+  color: #0a4b78;
+}
+
+.ca-list-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ca-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ca-filters li {
+  display: flex;
+  align-items: center;
+}
+
+.ca-filters li:not(:last-child)::after {
+  content: "|";
+  margin: 0 8px;
+  color: #c3c4c7;
+}
+
+.ca-filters button {
+  color: #135e96;
+}
+
+.ca-filters button[aria-current="page"] {
+  color: #1d2327;
+  font-weight: 600;
+}
+
+.ca-filters button:hover,
+.ca-filters button:focus-visible,
+.ca-row-title:hover,
+.ca-row-title:focus-visible,
+.ca-link:hover,
+.ca-link:focus-visible {
+  color: #0a4b78;
+  text-decoration: underline;
+}
+
+.ca-search .ca-input {
+  width: 200px;
+}
+
+.ca-table-wrap {
+  overflow-x: auto;
+}
+
+.ca-table {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #c3c4c7;
+  text-align: left;
+}
+
+.ca-table th,
+.ca-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #c3c4c7;
+  vertical-align: middle;
+}
+
+.ca-table th {
+  font-weight: 400;
+}
+
+.ca-table tbody tr:nth-child(odd) {
+  background: #f6f7f7;
+}
+
+.ca-table tbody tr:hover {
+  background: #f0f6fc;
+}
+
+.ca-row-title,
+.ca-link {
+  color: #135e96;
+  text-align: left;
+}
+
+.ca-editor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 20px;
+  align-items: start;
+}
+
+.ca-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ca-box {
+  background: #fff;
+  border: 1px solid #c3c4c7;
+}
+
+.ca-box h2 {
+  padding: 8px 12px;
+  border-bottom: 1px solid #c3c4c7;
+}
+
+.ca-inside {
+  padding: 12px;
+}
+
+.ca-publish {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.ca-permalink {
+  margin-top: 8px;
+  color: #3c434a;
+}
+
+.ca-split {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.ca-add-section h2 {
+  margin-bottom: 12px;
+}
+
+.ca-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.ca-input,
+.ca-select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid #8c8f94;
+  border-radius: 0;
+  background: #fff;
+  color: #1d2327;
+  font: inherit;
+  font-weight: 400;
+}
+
+.ca-input::placeholder {
+  color: #3c434a;
+}
+
+.ca-title-input {
+  min-height: 46px;
+  padding: 3px 8px;
+  font-size: 1.7em;
+}
+
+.ca-input:focus,
+.ca-select:focus {
+  border-color: #2271b1;
+  box-shadow: 0 0 0 1px #2271b1;
+  outline: 2px solid transparent;
+}
+
+.ca-btn {
+  min-height: 30px;
+  padding: 0 12px;
+  border: 1px solid #2271b1;
+  border-radius: 3px;
+  background: #f6f7f7;
+  color: #135e96;
+}
+
+.ca-btn:hover,
+.ca-btn:focus-visible {
+  background: #f0f0f1;
+  color: #0a4b78;
+}
+
+.ca-btn-primary {
+  background: #2271b1;
+  border-color: #2271b1;
+  color: #fff;
+}
+
+.ca-btn-primary:hover,
+.ca-btn-primary:focus-visible {
+  background: #135e96;
+  border-color: #135e96;
+  color: #fff;
+}
+
+.ca-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ca-help {
+  margin: -4px 0 12px;
+  color: #3c434a;
+  font-weight: 400;
+}
+
+.ca-error {
+  margin: 0 0 12px;
+  color: #8a2424;
+}
+
+.ca-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 782px) {
+  .ca-body {
+    flex-direction: column;
+  }
+
+  .ca-menu {
+    display: flex;
+    width: auto;
+    overflow-x: auto;
+  }
+
+  .ca-menu button {
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .ca-editor,
+  .ca-split {
+    grid-template-columns: 1fr;
+  }
+
+  .ca-search .ca-input {
+    width: 100%;
+  }
+}

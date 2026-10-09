@@ -3,9 +3,10 @@ export function isAdminEmail(email: string, allowlist: Set<string>): boolean {
 }
 
 export function safeReturnPath(value: string | null): string | null {
-  if (!value || !value.startsWith("/tagger") || value.startsWith("//")) return null
+  if (!value || value.startsWith("//")) return null
   if (value.includes("\\") || value.includes("://")) return null
-  return value
+  if (value === "/admin" || value.startsWith("/admin/") || value.startsWith("/tagger")) return value
+  return null
 }
 
 export function sameOriginCallback(origin: string): boolean {

@@ -4,7 +4,9 @@ import { DECKS, SERIES } from "../data/decks"
 import type { ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
 
-const NAMED_FLOWS = DECKS.filter(d => !d.series)
+function unsectionedDecks() {
+  return DECKS.filter(d => !d.series)
+}
 
 const SERIES_NAV_LINK = "font-disp font-bold text-[0.85rem] tracking-widest uppercase text-muted no-underline transition-colors hover:text-accent"
 
@@ -49,6 +51,8 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
     return () => window.removeEventListener("scroll", updateScrollTopVisibility)
   }, [])
 
+  const namedFlows = unsectionedDecks()
+
   return (
     <div className="pt-7 pb-12">
       <h1 className="mb-1">10th Planet</h1>
@@ -60,7 +64,7 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
         {SERIES.map(series => (
           <a key={series.id} href={`#series-${series.id}`} className={SERIES_NAV_LINK}>{series.id}</a>
         ))}
-        {NAMED_FLOWS.length > 0 && <a href="#named-flows" className={SERIES_NAV_LINK}>Named Flows</a>}
+        {namedFlows.length > 0 && <a href="#named-flows" className={SERIES_NAV_LINK}>Named Flows</a>}
       </nav>
 
       {SERIES.map(series => {
@@ -81,14 +85,14 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
         )
       })}
 
-      {NAMED_FLOWS.length > 0 && (
+      {namedFlows.length > 0 && (
         <div id="named-flows" className="scroll-mt-3 mb-7">
           <div className="font-disp font-bold text-[0.7rem] tracking-[0.18em] uppercase text-muted pt-1 pb-1.5 border-b border-border mb-1">
             Named Flows
           </div>
           <table className="w-full table-fixed border-collapse">
             <tbody>
-              {NAMED_FLOWS.map(d => (
+              {namedFlows.map(d => (
                 <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} onReviewClick={onReviewClick} />
               ))}
             </tbody>

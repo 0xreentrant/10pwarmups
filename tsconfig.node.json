@@ -10,7 +10,7 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
+    "types": ["node", "vite/client"]
   },
   "include": ["vite.config.ts", "vite.server.config.ts", "vitest.config.ts", "vitest.pwa.config.ts", "tests/**/*.test.ts", "vite/**/*.ts", "server/**/*.ts"]
 }

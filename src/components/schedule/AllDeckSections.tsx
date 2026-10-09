@@ -5,7 +5,9 @@ import type { SeriesId } from "../../data/warmupSchedule"
 import type { ProgressMap } from "../../types/domain"
 import SeriesDeckSection from "./SeriesDeckSection"
 
-const NAMED_FLOWS = DECKS.filter(d => !d.series)
+function unsectionedDecks() {
+  return DECKS.filter(d => !d.series)
+}
 
 function EmptyDeckList() {
   return (
@@ -24,7 +26,7 @@ export default function AllDeckSections({
   onDeckClick,
   onReviewClick,
 }: AllDeckSectionsProps) {
-  const namedFlows = NAMED_FLOWS.filter(d => deckHasTaggedMoves(d.id, d.moves.length))
+  const namedFlows = unsectionedDecks().filter(d => deckHasTaggedMoves(d.id, d.moves.length))
 
   return (
     <>

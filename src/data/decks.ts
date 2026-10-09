@@ -7,7 +7,7 @@
 import type { Deck, Move, Partner, Series } from "../types/domain"
 import { normalizePlayers } from "../utils/movePlayers"
 
-const SERIES: Series[] = [
+export let SERIES: Series[] = [
   { id: "A", name: "Granbys" },
   { id: "B", name: "Sit-Ups & Takedowns" },
   { id: "C", name: "Guard Passing" },
@@ -22,7 +22,7 @@ function m(text: string, players: Partner | readonly Partner[]): Move {
   return { text, players: normalizePlayers(players) }
 }
 
-const DECKS: Deck[] = [
+export let DECKS: Deck[] = [
   {
     id: "A1", series: "A", name: "Kneeling",
     link: "https://www.instagram.com/10thplanetdenver/reel/CyeMgsQJ_Cn/",
@@ -909,4 +909,9 @@ const DECKS: Deck[] = [
     ]
   },
 ];
-export { SERIES, DECKS, m }
+export { m }
+
+export function applyDeckCatalog(nextSeries: Series[], nextDecks: Deck[]) {
+  SERIES = nextSeries
+  DECKS = nextDecks
+}

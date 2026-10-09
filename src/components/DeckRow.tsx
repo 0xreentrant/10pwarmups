@@ -57,17 +57,19 @@ export default function DeckRow({
         <HeatGradientCrownBar value={prog.bestStreak} max={total} animation={animation} />
       </td>
       <td className="py-2 pl-2 align-middle w-[13rem]">
-        <div className="flex gap-1 items-center justify-end">
-          <button className="btn" onClick={goReview} data-beta-demo={demoReview ? "review" : undefined}>Review</button>
-          <button className="btn btn-primary" onClick={() => {
-            analytics.event({
-              action: 'deck_selected',
-              category: 'Training',
-              label: `${deck.id} - ${deck.name}`
-            })
-            onDeckClick(deck.id)
-          }} data-beta-demo={demoTrain ? "train" : undefined}>Train</button>
-        </div>
+        {total > 0 && (
+          <div className="flex gap-1 items-center justify-end">
+            <button className="btn" onClick={goReview} data-beta-demo={demoReview ? "review" : undefined}>Review</button>
+            <button className="btn btn-primary" onClick={() => {
+              analytics.event({
+                action: 'deck_selected',
+                category: 'Training',
+                label: `${deck.id} - ${deck.name}`
+              })
+              onDeckClick(deck.id)
+            }} data-beta-demo={demoTrain ? "train" : undefined}>Train</button>
+          </div>
+        )}
       </td>
     </tr>
   )

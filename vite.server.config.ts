@@ -6,5 +6,8 @@ export default defineConfig({
     ssr: "server/main.ts",
     outDir: "dist-server",
     emptyOutDir: true,
+    rollupOptions: {
+      external: ["node:sqlite"],
+    },
   },
 })

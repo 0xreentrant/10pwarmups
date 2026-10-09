@@ -21,8 +21,9 @@ describe("tagger origins", () => {
     expect(() => redirectUriForOrigin("https://openthesystem.app", null)).toThrow(/AUTH_REDIRECT_URI/)
   })
 
-  it("allows only tagger return paths", () => {
+  it("allows tagger and admin return paths", () => {
     expect(safeReturnPath("/tagger/A1/edit")).toBe("/tagger/A1/edit")
+    expect(safeReturnPath("/admin")).toBe("/admin")
     expect(safeReturnPath("https://evil.example/tagger")).toBeNull()
     expect(safeReturnPath("//evil.example")).toBeNull()
     expect(safeReturnPath("/progress")).toBeNull()

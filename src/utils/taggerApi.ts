@@ -35,7 +35,7 @@ export function googleSignInHref(returnPath: string, origin: string): string {
 
 export function committedSaveNotice(): string | null {
   if (!taggerApiBase()) return null
-  return "Committed. Live site updates after the Pages deploy finishes."
+  return "Saved."
 }
 
 export async function postTaggerApi(path: string, body: unknown): Promise<void> {

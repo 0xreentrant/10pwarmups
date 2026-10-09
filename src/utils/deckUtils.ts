@@ -1,8 +1,6 @@
 import { DECKS } from "../data/decks"
 import type { Deck, Move, QuestionOption } from "../types/domain"
 
-const SERIES_DECKS = DECKS.filter(d => d.series)
-
 const NAMED_FLOW_CODES: Record<string, string> = {
   "attack-series": "AS",
   "ramey-flow": "RF",
@@ -98,7 +96,8 @@ export function formatDuration(secs: number): string {
 }
 
 export function nextDeckId(deckId: string): string | null {
-  const idx = SERIES_DECKS.findIndex(d => d.id === deckId)
-  if (idx === -1 || idx === SERIES_DECKS.length - 1) return null
-  return SERIES_DECKS[idx + 1].id
+  const seriesDecks = DECKS.filter(d => d.series)
+  const idx = seriesDecks.findIndex(d => d.id === deckId)
+  if (idx === -1 || idx === seriesDecks.length - 1) return null
+  return seriesDecks[idx + 1].id
 }

@@ -2,11 +2,20 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { generateCodeVerifier, generateState, Google } from "arctic"
-import { readRepoFile, putRepoFile } from "./github"
+import { DatabaseSync } from "node:sqlite"
+import {
+  createSection,
+  createWarmup,
+  openCatalog,
+  readCatalog,
+  renameSection,
+  saveTaggerJson,
+  saveTaggerNote,
+  updateWarmup,
+} from "./catalogDb"
 import { readServerEnv, type ServerEnv } from "./env"
 import { isAdminEmail, redirectUriForOrigin, safeReturnPath } from "./origins"
 import { signAdminToken, verifyAdminToken } from "./token"
-import { applyTaggerJson, assertKnownDeck, saveTaggerJson, saveTaggerNote } from "../vite/taggerSave"
 
 const OAUTH_COOKIE = "tp_oauth"
 const TOKEN_TTL_SEC = 600
@@ -80,7 +89,7 @@ function applyCors(req: IncomingMessage, res: ServerResponse, env: ServerEnv): b
     res.setHeader("Access-Control-Allow-Origin", origin)
     res.setHeader("Vary", "Origin")
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization")
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
   }
   if (req.method === "OPTIONS") {
     res.statusCode = 204
@@ -124,53 +133,16 @@ async function fetchGoogleProfile(accessToken: string): Promise<GoogleProfile> {
   return (await response.json()) as GoogleProfile
 }
 
-async function saveJson(env: ServerEnv, jsonText: string): Promise<{ deckId: string }> {
-  if (env.taggerSave === "fs") return saveTaggerJson(jsonText)
-  if (!env.githubToken) throw new Error("GITHUB_TOKEN is required")
-  const repo = { repo: env.githubRepo, branch: env.githubBranch, token: env.githubToken }
-  const timestampsText = await readRepoFile({ ...repo, path: "src/data/moveTimestamps.ts" })
-  const decksText = await readRepoFile({ ...repo, path: "src/data/decks.ts" })
-  const applied = applyTaggerJson(jsonText, { timestampsText, decksText })
-  // ponytail: two Contents API commits. Pages cancel-in-progress absorbs the extra run. Upgrade path is one Git Data API tree commit.
-  await putRepoFile({
-    ...repo,
-    path: "src/data/moveTimestamps.ts",
-    content: applied.timestampsText,
-    message: `tagger: update ${applied.deckId} timestamps`,
-  })
-  if (applied.decksText) {
-    await putRepoFile({
-      ...repo,
-      path: "src/data/decks.ts",
-      content: applied.decksText,
-      message: `tagger: update ${applied.deckId} moves`,
-    })
-  }
-  return { deckId: applied.deckId }
-}
-
-async function saveNote(env: ServerEnv, deckId: string, noteText: string): Promise<void> {
-  if (env.taggerSave === "fs") {
-    saveTaggerNote(deckId, noteText)
-    return
-  }
-  if (!env.githubToken) throw new Error("GITHUB_TOKEN is required")
-  assertKnownDeck(deckId)
-  await putRepoFile({
-    repo: env.githubRepo,
-    branch: env.githubBranch,
-    token: env.githubToken,
-    path: `src/data/warmup-notes/${deckId}.txt`,
-    content: noteText,
-    message: `tagger: update ${deckId} notes`,
-  })
+function requireText(value: unknown, message: string): string {
+  if (typeof value !== "string") throw new Error(message)
+  return value
 }
 
 async function handleAuthGoogle(reqUrl: URL, res: ServerResponse, env: ServerEnv) {
   const returnPath = safeReturnPath(reqUrl.searchParams.get("return"))
   const origin = reqUrl.searchParams.get("origin")?.replace(/\/$/, "") ?? ""
   if (!returnPath) {
-    sendJson(res, 400, { error: "return must be a /tagger path" })
+    sendJson(res, 400, { error: "return path is not allowed" })
     return
   }
   if (!env.allowedOrigins.includes(origin)) {
@@ -234,7 +206,7 @@ async function handleAuthCallback(req: IncomingMessage, reqUrl: URL, res: Server
   redirect(res, `${stored.returnOrigin}${stored.returnPath}#admin_token=${encodeURIComponent(token)}`)
 }
 
-export async function handleRequest(req: IncomingMessage, res: ServerResponse, env: ServerEnv) {
+export async function handleRequest(req: IncomingMessage, res: ServerResponse, env: ServerEnv, db: DatabaseSync) {
   if (applyCors(req, res, env)) return
   const reqUrl = new URL(req.url ?? "/", "http://127.0.0.1")
   try {
@@ -246,20 +218,57 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse, e
       await handleAuthCallback(req, reqUrl, res, env)
       return
     }
+    if (req.method === "GET" && reqUrl.pathname === "/api/catalog") {
+      sendJson(res, 200, readCatalog(db))
+      return
+    }
+    const sectionPatch = reqUrl.pathname.match(/^\/api\/catalog\/sections\/([^/]+)$/)
+    const warmupPatch = reqUrl.pathname.match(/^\/api\/catalog\/warmups\/([^/]+)$/)
+    if (req.method === "POST" && reqUrl.pathname === "/api/catalog/sections") {
+      if (!requireAdmin(req, res, env)) return
+      const body = JSON.parse(await readBody(req)) as { id?: unknown; name?: unknown }
+      createSection(db, requireText(body.id, "Missing id"), requireText(body.name, "Missing name"))
+      sendJson(res, 200, readCatalog(db))
+      return
+    }
+    if (req.method === "PATCH" && sectionPatch) {
+      if (!requireAdmin(req, res, env)) return
+      const body = JSON.parse(await readBody(req)) as { name?: unknown }
+      renameSection(db, decodeURIComponent(sectionPatch[1]), requireText(body.name, "Missing name"))
+      sendJson(res, 200, readCatalog(db))
+      return
+    }
+    if (req.method === "POST" && reqUrl.pathname === "/api/catalog/warmups") {
+      if (!requireAdmin(req, res, env)) return
+      const body = JSON.parse(await readBody(req)) as { title?: unknown; sectionId?: unknown }
+      createWarmup(db, requireText(body.title, "Missing title"), requireText(body.sectionId, "Missing sectionId"))
+      sendJson(res, 200, readCatalog(db))
+      return
+    }
+    if (req.method === "PATCH" && warmupPatch) {
+      if (!requireAdmin(req, res, env)) return
+      const body = JSON.parse(await readBody(req)) as { title?: unknown; sectionId?: unknown }
+      updateWarmup(
+        db,
+        decodeURIComponent(warmupPatch[1]),
+        requireText(body.title, "Missing title"),
+        requireText(body.sectionId, "Missing sectionId"),
+      )
+      sendJson(res, 200, readCatalog(db))
+      return
+    }
     if (req.method === "POST" && reqUrl.pathname === "/api/tagger/save-json") {
       if (!requireAdmin(req, res, env)) return
       const body = JSON.parse(await readBody(req)) as { jsonText?: unknown }
-      if (typeof body.jsonText !== "string") throw new Error("Missing jsonText")
-      sendJson(res, 200, await saveJson(env, body.jsonText))
+      sendJson(res, 200, saveTaggerJson(db, requireText(body.jsonText, "Missing jsonText")))
       return
     }
     if (req.method === "POST" && reqUrl.pathname === "/api/tagger/save-note") {
       if (!requireAdmin(req, res, env)) return
       const body = JSON.parse(await readBody(req)) as { deckId?: unknown; noteText?: unknown }
-      if (typeof body.deckId !== "string") throw new Error("Missing deckId")
-      if (typeof body.noteText !== "string") throw new Error("Missing noteText")
-      await saveNote(env, body.deckId, body.noteText)
-      sendJson(res, 200, { deckId: body.deckId })
+      const deckId = requireText(body.deckId, "Missing deckId")
+      saveTaggerNote(db, deckId, requireText(body.noteText, "Missing noteText"))
+      sendJson(res, 200, { deckId })
       return
     }
     sendJson(res, 404, { error: "Not found" })
@@ -271,8 +280,9 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse, e
 }
 
 export function startServer(env: ServerEnv) {
+  const db = openCatalog(env.warmupDb)
   return createServer((req, res) => {
-    void handleRequest(req, res, env)
+    void handleRequest(req, res, env, db)
   })
 }
 
@@ -280,6 +290,6 @@ const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPat
 if (isMain) {
   const env = readServerEnv()
   startServer(env).listen(env.port, "127.0.0.1", () => {
-    console.log(`tagger api http://127.0.0.1:${env.port} save=${env.taggerSave}`)
+    console.log(`tagger api http://127.0.0.1:${env.port} db=${env.warmupDb}`)
   })
 }

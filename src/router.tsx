@@ -329,6 +329,7 @@ function RootLayout() {
   const routerInstance = useRouter()
   const pathname = useRouterState({ select: s => s.location.pathname })
   const onBetaTest = pathname.startsWith("/beta-test")
+  const onAdmin = pathname.startsWith("/admin")
   const { open: whatsNewOpen, dismiss: dismissWhatsNew } = useWhatsNew()
 
   useEffect(() => {
@@ -365,12 +366,14 @@ function RootLayout() {
   }, [routerInstance])
 
   return (
-    <div className="mx-auto max-w-[520px] px-4">
+    <div className={onAdmin ? undefined : "mx-auto max-w-[520px] px-4"}>
       <Outlet />
-      <div className="mb-4 text-muted">
-        (c) 0xreentrant 2026 · <a href="updates.html" className="text-muted no-underline">Latest Updates</a>
-      </div>
-      <WhatsNewPopover open={whatsNewOpen && !onBetaTest} onDismiss={dismissWhatsNew} />
+      {!onAdmin && (
+        <div className="mb-4 text-muted">
+          (c) 0xreentrant 2026 · <a href="updates.html" className="text-muted no-underline">Latest Updates</a>
+        </div>
+      )}
+      <WhatsNewPopover open={whatsNewOpen && !onBetaTest && !onAdmin} onDismiss={dismissWhatsNew} />
     </div>
   )
 }

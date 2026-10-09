@@ -9,7 +9,6 @@ const tailscaleServeHost = process.env.TAILSCALE_SERVE_HOST?.replace(/\.$/, "")
 
 export default defineConfig({
   base,
-  // ponytail: tagger API writes these files; ignore so saves do not trigger a dev reload.
   server: {
     ...(tailscaleHost && {
       host: tailscaleHost,
@@ -25,14 +24,7 @@ export default defineConfig({
     }),
     proxy: {
       "/auth": "http://127.0.0.1:3101",
-      "/api/tagger": "http://127.0.0.1:3101",
-    },
-    watch: {
-      ignored: [
-        "**/src/data/warmup-notes/**",
-        "**/src/data/moveTimestamps.ts",
-        "**/src/data/decks.ts",
-      ],
+      "/api": "http://127.0.0.1:3101",
     },
   },
   plugins: [
@@ -74,6 +66,13 @@ export default defineConfig({
         navigateFallback: "index.html",
         // Warmup mp4s are large; cache on first play so train/review works offline after a visit.
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname === "/api/catalog",
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "warmup-catalog",
+            },
+          },
           {
             urlPattern: ({ url }) => url.pathname.startsWith("/videos/") && url.pathname.endsWith(".mp4"),
             handler: "CacheFirst",

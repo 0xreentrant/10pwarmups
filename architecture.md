@@ -13,7 +13,7 @@ Client-only Vite/React PWA for 10th Planet warmup recall training. No trainee ac
 | Persistence | `localStorage` key `tp_progress` (and other `tp_*` prefs) |
 | Analytics | gtag + `src/utils/analytics.ts` |
 | Media | `/videos/{deckId}.mp4` under `public/videos/`, PWA CacheFirst |
-| Tagger API | `server/main.ts` on :3101. Google OAuth, HMAC bearer. `TAGGER_SAVE=fs` locally, `github` on prod |
+| Tagger API | `server/main.ts` on :3101. Google OAuth, HMAC bearer. Warmup catalog in SQLite (`WARMUP_DB`) |
 
 ## Entry
 
@@ -82,7 +82,7 @@ stateDiagram-v2
 | `/beta-test/$warmup/train` | train + `tapDemo` |
 | `/beta-test/$warmup/review` | review + `tapDemo` |
 | `/beta-test/$warmup/completed` | completed |
-| `/admin` | `CatalogMockView` (local mock: titles, sections, new entries) |
+| `/admin` | `CatalogMockView` (WordPress-style catalog editor backed by SQLite) |
 | `/tagger/$warmup/$mode` | `TaggerView` (`edit` \| `train` \| `review`) |
 
 Train/review routes guard on `appActor` state + matching deck. URL alone is not enough.
@@ -96,7 +96,7 @@ Train/review routes guard on `appActor` state + matching deck. URL alone is not 
 | Completed | `completed` | locked + `finalAttempt` | already written | `Dusk2CompleteOverlay` |
 | Preview | `training` + `preview` | yes | no | same train UI inside tagger (isolated machine) |
 | Tagger | `taggerMachine` (+ local preview machine) | N/A for edit | not global `tp_progress` | edit tags; train/review phone frames |
-| Catalog mock | `/admin` local React state | N/A | no | edit entry title and section; add sections and entries |
+| Catalog | `/admin` SQLite via the API | N/A | admin bearer | edit entry title and section; add sections and entries |
 
 Train → Review confirms via `ReviewConfirmPopover` and drops the in-flight attempt. Review → Train is immediate `START_DECK`.
 
@@ -125,9 +125,9 @@ sequenceDiagram
 
 | Concern | Source |
 |---------|--------|
-| Series / decks / moves | `src/data/decks.ts` |
+| Series / decks / moves | SQLite via `GET /api/catalog`. `src/data/decks.ts` is the offline seed |
 | Week rotation | `src/data/warmupSchedule.ts` |
-| Move timestamps | `src/data/moveTimestamps.ts` (`null` = untagged) |
+| Move timestamps | SQLite `moves.start_sec`. `src/data/moveTimestamps.ts` is the offline seed (`null` = untagged) |
 | Video URL | `src/utils/deckVideo.ts` → `/videos/{id}.mp4` |
 | Domain types | `src/types/domain.ts` |
 | Progress key | `tp_progress` |
@@ -164,7 +164,7 @@ flowchart LR
   Machine --> Video
 ```
 
-No server for train/review progress. Tagger saves go through `server/main.ts`.
+No server for train/review progress. Warmup content (sections, titles, moves, timestamps, notes) is SQLite on the API. The trainer loads `GET /api/catalog` at boot and keeps `decks.ts` / `moveTimestamps.ts` as the offline seed.
 
 ## Tagger admin
 
@@ -172,9 +172,11 @@ Google login uses the same arctic authorization-code flow as Qalm (`server/main.
 
 | Place | Browser | Callback | Save |
 |-------|---------|----------|------|
-| Local | `http://localhost:5173` | same origin, Vite proxies `/auth` and `/api/tagger` to `:3101` | `TAGGER_SAVE=fs` |
-| Tailscale | `https://<machine>.ts.net` | same origin via `tailscale serve` | `TAGGER_SAVE=fs` |
-| Prod | `https://openthesystem.app` | `https://10p-api.qalm.work/auth/google/callback` | `TAGGER_SAVE=github` commits via the Contents API, which redeploys Pages |
+| Local | `http://localhost:5173` | same origin, Vite proxies `/auth` and `/api` to `:3101` | SQLite `WARMUP_DB` |
+| Tailscale | `https://<machine>.ts.net` | same origin via `tailscale serve` | SQLite `WARMUP_DB` |
+| Prod | `https://openthesystem.app` | `https://10p-api.qalm.work/auth/google/callback` | SQLite on the API host |
+
+`/admin` uses the same bearer for catalog writes. `GET /api/catalog` is public. The GitHub Contents API is not used.
 
 Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` listens on :3101. Then `pnpm run dev`. See `.env.example`. Prod will inject the same variables from systemd and will not use `--env-file`. Prod host setup is not done yet.
 
@@ -185,6 +187,8 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | 2026-10-07 | Tagger admin Google login locally. Prod droplet deploy is the next step. |
 | 2026-10-08 | Package manager is pnpm. `package-lock.json` is gone. |
 | 2026-10-08 | `/admin` catalog mock. Edits stay in the tab. Tagger header links to it. |
+| 2026-10-08 | `/admin` catalog mock uses a WordPress admin layout (list, edit, sections). |
+| 2026-10-09 | Warmup catalog is SQLite on the API. Contents API and file rewrites are gone. |
 
 ## Authoritative files
 
@@ -195,7 +199,8 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | Machine | `src/appMachine.ts` |
 | Actor | `src/appActor.ts` |
 | Types | `src/types/domain.ts` |
-| Decks | `src/data/decks.ts` |
+| Decks | `src/data/decks.ts` (offline seed; live data is SQLite) |
+| Catalog | `server/catalogDb.ts` |
 | Schedule | `src/data/warmupSchedule.ts` |
 | Timestamps | `src/data/moveTimestamps.ts` |
 | Video helper | `src/utils/deckVideo.ts` |

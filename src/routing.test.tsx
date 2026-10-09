@@ -355,25 +355,81 @@ describe("routing", () => {
   }, 60000)
 
   it("edits a warmup title and adds a section on the catalog mock", async () => {
-    await renderWithRouter("/admin")
+    type Warmup = { id: string; sectionId: string; title: string; link: null; note: string; moves: [] }
+    type Section = { id: string; name: string }
+    let sections: Section[] = [
+      { id: "A", name: "Granbys" },
+      { id: "B", name: "Sit-Ups & Takedowns" },
+    ]
+    let warmups: Warmup[] = [
+      { id: "A1", sectionId: "A", title: "Kneeling", link: null, note: "", moves: [] },
+    ]
+    const payload = () => ({ sections, warmups })
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      const method = init?.method ?? "GET"
+      const body = init?.body ? JSON.parse(String(init.body)) as { id?: string; name?: string; title?: string; sectionId?: string } : {}
+      if (url.endsWith("/api/catalog") && method === "GET") {
+        return new Response(JSON.stringify(payload()), { status: 200 })
+      }
+      if (url.endsWith("/api/catalog/sections") && method === "POST") {
+        sections = [...sections, { id: String(body.id).toUpperCase(), name: body.name ?? "" }]
+        return new Response(JSON.stringify(payload()), { status: 200 })
+      }
+      if (url.includes("/api/catalog/warmups/") && method === "PATCH") {
+        const id = decodeURIComponent(url.split("/").pop() ?? "")
+        warmups = warmups.map(warmup => warmup.id === id
+          ? { ...warmup, title: body.title ?? warmup.title, sectionId: body.sectionId ?? warmup.sectionId }
+          : warmup)
+        return new Response(JSON.stringify(payload()), { status: 200 })
+      }
+      if (url.endsWith("/api/catalog/warmups") && method === "POST") {
+        const sectionId = body.sectionId ?? "A"
+        warmups = [...warmups, {
+          id: `${sectionId}1`,
+          sectionId,
+          title: body.title ?? "",
+          link: null,
+          note: "",
+          moves: [],
+        }]
+        return new Response(JSON.stringify(payload()), { status: 200 })
+      }
+      return new Response(JSON.stringify({ error: "not found" }), { status: 404 })
+    }))
 
-    const title = await screen.findByLabelText("A1 title")
-    fireEvent.change(title, { target: { value: "Kneeling Roll" } })
-    expect(screen.getByLabelText("A1 title")).toHaveValue("Kneeling Roll")
+    try {
+      await renderWithRouter("/admin")
 
-    fireEvent.change(screen.getByLabelText("A1 section"), { target: { value: "B" } })
-    expect(screen.getByLabelText("A1 section")).toHaveValue("B")
+      await screen.findByRole("heading", { name: "Warmups" })
+      fireEvent.click(screen.getByRole("button", { name: "Kneeling" }))
 
-    fireEvent.change(screen.getByLabelText("New section id"), { target: { value: "I" } })
-    fireEvent.change(screen.getByLabelText("New section name"), { target: { value: "Rubber Guard" } })
-    fireEvent.click(screen.getByRole("button", { name: "Add section" }))
-    expect(screen.getByLabelText("Section I name")).toHaveValue("Rubber Guard")
+      const title = await screen.findByLabelText("A1 title")
+      fireEvent.change(title, { target: { value: "Kneeling Roll" } })
+      fireEvent.change(screen.getByLabelText("A1 section"), { target: { value: "B" } })
+      fireEvent.click(screen.getByRole("button", { name: "Update" }))
 
-    const addButtons = screen.getAllByRole("button", { name: "Add entry" })
-    fireEvent.click(addButtons[addButtons.length - 1])
-    fireEvent.change(screen.getByLabelText("New entry title"), { target: { value: "New Wave" } })
-    fireEvent.click(screen.getByRole("button", { name: "Add" }))
-    expect(screen.getByLabelText("I1 title")).toHaveValue("New Wave")
+      const row = await screen.findByRole("row", { name: /Kneeling Roll/ })
+      expect(row).toHaveTextContent("Sit-Ups & Takedowns")
+      expect(row).toHaveTextContent("A1")
+
+      fireEvent.click(screen.getByRole("button", { name: "Sections" }))
+      fireEvent.change(screen.getByLabelText("New section id"), { target: { value: "I" } })
+      fireEvent.change(screen.getByLabelText("New section name"), { target: { value: "Rubber Guard" } })
+      fireEvent.click(screen.getByRole("button", { name: "Add section" }))
+      expect(await screen.findByLabelText("Section I name")).toHaveValue("Rubber Guard")
+
+      fireEvent.click(screen.getByRole("button", { name: "Add New" }))
+      fireEvent.change(await screen.findByLabelText("New entry title"), { target: { value: "New Wave" } })
+      fireEvent.change(screen.getByLabelText("Section"), { target: { value: "I" } })
+      fireEvent.click(screen.getByRole("button", { name: "Publish" }))
+
+      const created = await screen.findByRole("row", { name: /New Wave/ })
+      expect(created).toHaveTextContent("I1")
+      expect(created).toHaveTextContent("Rubber Guard")
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 
   it("redirects /tagger to the first video warmup in edit mode", async () => {
