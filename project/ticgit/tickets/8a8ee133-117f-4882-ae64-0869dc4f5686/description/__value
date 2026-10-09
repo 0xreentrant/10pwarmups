@@ -1,0 +1,1 @@
+Google OAuth (arctic, same flow as Qalm) for the tagger on localhost, Tailscale, and later prod. Admin allowlist is alexanderlperez@gmail.com. Local saves write repo files; prod commits via GitHub Contents API. Prod deploy is a follow-up.

@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"SQLite catalog is the warmup store. Admin and tagger writes hit the API; GET /api/catalog is public. Contents API and file rewrites are gone. Verified with tsc, catalog/API/routing tests, and a temp server (GET 200, unsigned POST 401, admin section create 200)."}

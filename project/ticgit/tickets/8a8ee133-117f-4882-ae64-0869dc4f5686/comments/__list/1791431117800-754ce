@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"Local API is up on :3101. Google authorize redirect for http://localhost:5173/auth/google/callback returns the Google sign-in page with no redirect_uri_mismatch. Saves without a token are 401. Next step: deploy 10p-api.qalm.work and test prod login."}

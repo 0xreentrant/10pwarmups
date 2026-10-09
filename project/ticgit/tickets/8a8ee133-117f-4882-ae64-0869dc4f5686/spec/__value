@@ -1,0 +1,10 @@
+## Behavior
+
+- Tagger saves require a Google admin session for alexanderlperez@gmail.com.
+- Local and Tailscale: Vite proxies /auth and /api/tagger to the API on :3101. TAGGER_SAVE=fs writes repo files.
+- Prod (not this pass): TAGGER_SAVE=github commits via the GitHub Contents API. Droplet deploy is the next step after local login works.
+- Session is an HMAC bearer token in localStorage (tp_admin_token), delivered in the URL fragment after OAuth.
+
+## Out of scope
+
+- DNS, nginx, certbot, systemd, and a live prod login test.

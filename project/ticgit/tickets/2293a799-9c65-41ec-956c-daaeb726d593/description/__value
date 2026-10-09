@@ -1,0 +1,1 @@
+WordPress-style /admin edits sections and warmup titles against SQLite on the existing API. Tagger saves write rows instead of GitHub Contents or local file rewrites. The public trainer loads GET /api/catalog and keeps decks.ts as the offline seed.

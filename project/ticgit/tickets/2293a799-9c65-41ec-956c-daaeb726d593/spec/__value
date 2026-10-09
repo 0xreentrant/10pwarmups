@@ -1,0 +1,14 @@
+SQLite on the API (node:sqlite, WARMUP_DB) is the warmup source of truth.
+
+Schema: sections, warmups (note body), moves (players JSON, per-move note, start_sec).
+Empty db seeds from decks.ts, moveTimestamps.ts, and warmup-notes.
+
+Public GET /api/catalog. Admin bearer for POST/PATCH sections and warmups.
+Tagger save-json and save-note write rows. Remove github.ts, TAGGER_SAVE, and fs file rewrites.
+
+Admin UI keeps the WordPress layout and calls those endpoints. 401 shows Google sign-in back to /admin.
+New warmups have no moves; public train/review stays hidden until moves exist.
+
+Boot fetches catalog (localStorage then network, short timeout) and applyCatalog() updates live DECKS, SERIES, MOVE_TIMESTAMPS, and notes. Workbox StaleWhileRevalidate caches GET /api/catalog. Week schedule unchanged.
+
+Tests: temp sqlite seed/rename/create/tagger json/note. Admin routing test mocks fetch.
