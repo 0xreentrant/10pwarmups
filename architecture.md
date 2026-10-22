@@ -170,6 +170,8 @@ No server for train/review progress. Warmup content (sections, titles, moves, ti
 
 Google login uses the same arctic authorization-code flow as Qalm (`server/main.ts`). A tagger route with no `tp_admin_token` and no OAuth hash (`admin_token` or `admin_error`) reloads to `/auth/google` before `TaggerView` mounts. The callback hash stays on the page so the token can be stored. `not_admin` and `not_verified` stay on the sign-in screen. Log out and a 401 clear the token and stay on the sign-in link (`tp_tagger_signed_out` in sessionStorage). A reload in that tab does not start Google again until Sign in is clicked. Only emails in `ADMIN_EMAILS` get a token. The token is an HMAC bearer (`tp_admin_token` in localStorage), not a cookie, because prod Pages (`https://openthesystem.app`) and the API (`https://10p-api.qalm.work`) are different sites.
 
+Unsaved tagger JSON stays in `tp_tagger_json_drafts` (one string per deck) until the parsed moves match the live catalog, Save succeeds, or Reset. A Save response clears only the JSON that was sent, so a later edit made while that request is in flight stays in the draft. Warmup note drafts stay in `tp_tagger_note_drafts`. `tp_tagger_move_names` is no longer written.
+
 | Place | Browser | Callback | Save |
 |-------|---------|----------|------|
 | Local | `http://localhost:5173` | same origin, Vite proxies `/auth` and `/api` to `:3101` | SQLite `WARMUP_DB` |
@@ -197,6 +199,8 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | 2026-10-22 | Tagged clips have a keyframe at each move mark. A1 keeps the original pictures except the groups of pictures that contain a tag. |
 | 2026-10-22 | The service worker no longer caches `/videos/*.mp4`. |
 | 2026-10-22 | Review and train show a still and a spinner until the video frame is presented. |
+| 2026-10-22 | Unsaved tagger edits stay in `tp_tagger_json_drafts` until they match the catalog, Save, or Reset. |
+| 2026-10-22 | A late tagger Save clears only the JSON that was sent. A newer unsaved edit stays in the draft. |
 
 ## Authoritative files
 

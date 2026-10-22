@@ -20,16 +20,19 @@ import {
   usePersistedNudgeMs,
 } from "../../hooks/usePersistedNudgeMs"
 import {
+  clearJsonDraftForDeck,
+  patchCatalogFromTaggerJson,
+  resolveJsonDraft,
+  saveJsonDraftForDeck,
+  taggerJsonDocument,
+  taggerJsonLoadError,
+  taggerJsonMatchesCatalog,
+} from "../../hooks/usePersistedTaggerJsonDrafts"
+import {
   clearNoteDraftForDeck,
   resolveNoteDraft,
   saveNoteDraftForDeck,
 } from "../../hooks/usePersistedTaggerNoteDrafts"
-import {
-  clearMoveNamesForDeck,
-  loadMoveNamesByDeck,
-  resolveMoveNames,
-  saveMoveNamesForDeck,
-} from "../../hooks/usePersistedTaggerMoveNames"
 import { deckHasTaggedMoves } from "../../utils/deckTimestamps"
 import {
   captureAdminHash,
@@ -110,10 +113,6 @@ function TaggerSignIn({ error }: { error: string | null }) {
   )
 }
 
-function deckMoveNames(deckId: string, defaultNames: string[]): string[] {
-  return resolveMoveNames(deckId, defaultNames, loadMoveNamesByDeck())
-}
-
 /** iPhone 13 Pro Max CSS viewport (428×926). transform contains fixed cinema overlays. */
 function PhonePreviewFrame({ children }: { children: ReactNode }) {
   return (
@@ -172,6 +171,8 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
   const [jsonFuture, setJsonFuture] = useState<string[]>([])
 
   const appliedJsonRef = useRef("")
+  const pendingJsonRef = useRef<{ deckId: string; text: string; invalid: boolean } | null>(null)
+  const holdInvalidDraftRef = useRef(false)
   const jsonPastRef = useRef<string[]>([])
   const jsonFutureRef = useRef<string[]>([])
   const skipHistoryCommitRef = useRef(false)
@@ -199,16 +200,36 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
 
   useEffect(() => {
     const d = DECKS.find(x => x.id === warmup)
-    const moves = d?.moves.length ?? 0
-    const names = deckMoveNames(warmup, d?.moves.map(m => m.text) ?? [])
-    const playerLists = d?.moves.map(m => m.players) ?? []
-    send({ type: "SET_DECK", deckId: warmup, moveCount: moves, moveNames: names, movePlayers: playerLists })
+    const catalogNames = d?.moves.map(m => m.text) ?? []
+    const catalogPlayers = d?.moves.map(m => m.players) ?? []
+    const stored = resolveJsonDraft(warmup, "")
+    const doc = stored ? taggerJsonDocument(stored) : null
+    if (stored && doc) {
+      pendingJsonRef.current = { deckId: warmup, text: stored, invalid: false }
+      send({
+        type: "SET_DECK",
+        deckId: warmup,
+        moveCount: doc.names.length,
+        moveNames: doc.names,
+        movePlayers: doc.players,
+      })
+      send({
+        type: "LOAD",
+        timestamps: doc.timestamps,
+        names: doc.names,
+        playerLists: doc.players,
+      })
+      return
+    }
+    pendingJsonRef.current = stored ? { deckId: warmup, text: stored, invalid: true } : null
+    send({
+      type: "SET_DECK",
+      deckId: warmup,
+      moveCount: catalogNames.length,
+      moveNames: catalogNames,
+      movePlayers: catalogPlayers,
+    })
   }, [warmup, send])
-
-  useEffect(() => {
-    if (!deckId || moveNames.length !== moveCount) return
-    saveMoveNamesForDeck(deckId, moveNames)
-  }, [deckId, moveCount, moveNames])
 
   useEffect(() => {
     setEditVideoEl(mode === "edit" && videoSrc ? videoRef.current : null)
@@ -273,15 +294,34 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
   }
 
   useEffect(() => {
+    const pending = pendingJsonRef.current
+    const applyPending = pending !== null && pending.deckId === deckId
     if (skipHistoryCommitRef.current) {
       appliedJsonRef.current = onDiskJson
       skipHistoryCommitRef.current = false
+      if (applyPending && pending) {
+        pendingJsonRef.current = null
+        holdInvalidDraftRef.current = pending.invalid
+        if (pending.invalid) setLoadError(taggerJsonLoadError(pending.text))
+        setJsonDraft(pending.text)
+        return
+      }
+      holdInvalidDraftRef.current = false
       setJsonDraft(onDiskJson)
       return
     }
+    if (holdInvalidDraftRef.current) return
     commitDocumentJson(onDiskJson)
     setJsonDraft(onDiskJson)
   }, [deckId, onDiskJson])
+
+  useEffect(() => {
+    if (!deckId || !jsonDraft) return
+    const doc = taggerJsonDocument(jsonDraft)
+    if (doc?.deckId && doc.deckId !== deckId) return
+    if (doc && taggerJsonMatchesCatalog(jsonDraft, deckId)) clearJsonDraftForDeck(deckId)
+    else saveJsonDraftForDeck(deckId, jsonDraft)
+  }, [deckId, jsonDraft])
 
   useEffect(() => {
     const onDisk = savedNoteByDeck[deckId] ?? warmupNoteForDeck(deckId)
@@ -557,36 +597,53 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
 
   function loadJson() {
     if (!applyJsonToMachine(jsonDraft)) return
+    holdInvalidDraftRef.current = false
   }
 
   function resetTimestamps() {
     if (
       !window.confirm(
-        "Discard timestamps and move names, restoring the moveset from decks.ts for this deck?",
+        "Discard timestamps and move names, restoring this deck from the catalog?",
       )
     ) {
       return
     }
+    const names = deck?.moves.map(m => m.text) ?? []
+    const players = deck?.moves.map(m => m.players) ?? []
+    const stamps = taggerSeedTimestamps(
+      deckId,
+      names.length,
+      duration > 0 ? duration : Number.POSITIVE_INFINITY,
+    )
     setLoadError(null)
-    clearMoveNamesForDeck(deckId)
+    holdInvalidDraftRef.current = false
+    clearJsonDraftForDeck(deckId)
+    send({
+      type: "SET_DECK",
+      deckId,
+      moveCount: names.length,
+      moveNames: names,
+      movePlayers: players,
+    })
     send({
       type: "RESET",
-      timestamps: taggerSeedTimestamps(
-        deckId,
-        moveCount,
-        duration > 0 ? duration : Number.POSITIVE_INFINITY,
-      ),
-      moveNames: defaultMoveNames,
-      movePlayers: deck?.moves.map(m => m.players) ?? [],
+      timestamps: stamps,
+      moveNames: names,
+      movePlayers: players,
     })
+    setJsonDraft(buildJsonText(deckId, stamps, names, players))
   }
 
   function saveJson() {
     if (saving) return
+    const sent = jsonDraft
+    const savedDeckId = deckId
     setSaveError(null)
     setSaving("json")
-    void postTaggerApi("/api/tagger/save-json", { jsonText: jsonDraft })
+    void postTaggerApi("/api/tagger/save-json", { jsonText: sent })
       .then(() => {
+        patchCatalogFromTaggerJson(sent)
+        if (resolveJsonDraft(savedDeckId, "") === sent) clearJsonDraftForDeck(savedDeckId)
         setSaved("json")
         setSaveNotice(committedSaveNotice())
         window.setTimeout(() => setSaved(null), 1200)
