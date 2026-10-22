@@ -1,4 +1,5 @@
 const ADMIN_TOKEN_KEY = "tp_admin_token"
+const SIGNED_OUT_KEY = "tp_tagger_signed_out"
 
 export function taggerApiBase(): string {
   const raw = import.meta.env.VITE_TAGGER_API_URL
@@ -9,8 +10,26 @@ export function readAdminToken(): string | null {
   return localStorage.getItem(ADMIN_TOKEN_KEY)
 }
 
+export function taggerNeedsGoogleLogin(hash: string): boolean {
+  const params = new URLSearchParams(hash.replace(/^#/, ""))
+  if (params.get("admin_token") || params.get("admin_error")) return false
+  return readAdminToken() === null
+}
+
 export function clearAdminToken() {
   localStorage.removeItem(ADMIN_TOKEN_KEY)
+}
+
+export function markTaggerSignedOut() {
+  sessionStorage.setItem(SIGNED_OUT_KEY, "1")
+}
+
+export function taggerSignedOut(): boolean {
+  return sessionStorage.getItem(SIGNED_OUT_KEY) === "1"
+}
+
+export function clearTaggerSignedOut() {
+  sessionStorage.removeItem(SIGNED_OUT_KEY)
 }
 
 export function captureAdminHash(): "token" | "not_admin" | "not_verified" | null {
@@ -18,7 +37,10 @@ export function captureAdminHash(): "token" | "not_admin" | "not_verified" | nul
   const token = params.get("admin_token")
   const error = params.get("admin_error")
   if (!token && !error) return null
-  if (token) localStorage.setItem(ADMIN_TOKEN_KEY, token)
+  if (token) {
+    localStorage.setItem(ADMIN_TOKEN_KEY, token)
+    clearTaggerSignedOut()
+  }
   const url = new URL(window.location.href)
   url.hash = ""
   window.history.replaceState(null, "", `${url.pathname}${url.search}`)

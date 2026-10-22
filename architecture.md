@@ -83,7 +83,7 @@ stateDiagram-v2
 | `/beta-test/$warmup/review` | review + `tapDemo` |
 | `/beta-test/$warmup/completed` | completed |
 | `/admin` | `CatalogMockView` (WordPress-style catalog editor backed by SQLite) |
-| `/tagger/$warmup/$mode` | `TaggerView` (`edit` \| `train` \| `review`) |
+| `/tagger/$warmup/$mode` | `TaggerView` (`edit` \| `train` \| `review`). No admin token reloads to Google before the view mounts, unless this tab just logged out |
 
 Train/review routes guard on `appActor` state + matching deck. URL alone is not enough.
 
@@ -168,7 +168,7 @@ No server for train/review progress. Warmup content (sections, titles, moves, ti
 
 ## Tagger admin
 
-Google login uses the same arctic authorization-code flow as Qalm (`server/main.ts`). The tagger UI mounts only after a token is stored. Only emails in `ADMIN_EMAILS` get a token. The token is an HMAC bearer (`tp_admin_token` in localStorage), not a cookie, because prod Pages (`https://openthesystem.app`) and the API (`https://10p-api.qalm.work`) are different sites.
+Google login uses the same arctic authorization-code flow as Qalm (`server/main.ts`). A tagger route with no `tp_admin_token` and no OAuth hash (`admin_token` or `admin_error`) reloads to `/auth/google` before `TaggerView` mounts. The callback hash stays on the page so the token can be stored. `not_admin` and `not_verified` stay on the sign-in screen. Log out and a 401 clear the token and stay on the sign-in link (`tp_tagger_signed_out` in sessionStorage). A reload in that tab does not start Google again until Sign in is clicked. Only emails in `ADMIN_EMAILS` get a token. The token is an HMAC bearer (`tp_admin_token` in localStorage), not a cookie, because prod Pages (`https://openthesystem.app`) and the API (`https://10p-api.qalm.work`) are different sites.
 
 | Place | Browser | Callback | Save |
 |-------|---------|----------|------|
@@ -189,6 +189,9 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | 2026-10-08 | `/admin` catalog mock. Edits stay in the tab. Tagger header links to it. |
 | 2026-10-08 | `/admin` catalog mock uses a WordPress admin layout (list, edit, sections). |
 | 2026-10-09 | Warmup catalog is SQLite on the API. Contents API and file rewrites are gone. |
+| 2026-10-21 | Tagger routes reload to Google sign-in before the view mounts when no admin token is stored. |
+| 2026-10-22 | Tagger log out stays on the sign-in link. It does not start Google, which was signing the same account straight back in. |
+| 2026-10-22 | Review no longer samples a second copy of the clip for an ambient wash. The wash sat behind the full-bleed video. |
 
 ## Authoritative files
 

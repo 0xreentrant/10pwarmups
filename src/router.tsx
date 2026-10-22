@@ -34,6 +34,7 @@ import {
 } from "./utils/menuReturn"
 import { defaultWeekSeriesLetter, isSeriesLetter } from "./utils/seriesRoute"
 import { listVideoDeckIds } from "./utils/deckVideo"
+import { googleSignInHref, taggerNeedsGoogleLogin, taggerSignedOut } from "./utils/taggerApi"
 
 const TAGGER_MODES: readonly TaggerTab[] = ["edit", "train", "review"]
 
@@ -210,13 +211,21 @@ const taggerWarmupIndexRoute = createRoute({
 const taggerModeRoute = createRoute({
   getParentRoute: () => taggerWarmupRoute,
   path: "/$mode",
-  beforeLoad: ({ params }) => {
+  beforeLoad: ({ params, location }) => {
     if (!isTaggerMode(params.mode)) {
       throw redirect({
         to: "/tagger/$warmup/$mode",
         params: { warmup: params.warmup, mode: "edit" },
       })
     }
+    const hash = location.hash || window.location.hash
+    if (!taggerNeedsGoogleLogin(hash)) return
+    if (taggerSignedOut()) return
+    throw redirect({
+      href: googleSignInHref(`${location.pathname}${location.searchStr}`, window.location.origin),
+      reloadDocument: true,
+      replace: true,
+    })
   },
   component: TaggerRoute,
 })

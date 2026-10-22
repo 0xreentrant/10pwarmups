@@ -36,6 +36,7 @@ import {
   clearAdminToken,
   committedSaveNotice,
   googleSignInHref,
+  markTaggerSignedOut,
   postTaggerApi,
   readAdminToken,
 } from "../../utils/taggerApi"
@@ -77,13 +78,21 @@ type TaggerEditorProps = TaggerViewProps & {
 
 function initialAdminSession(): { signedIn: boolean; error: string | null } {
   const captured = captureAdminHash()
+  const hasToken = Boolean(readAdminToken())
   if (captured === "not_admin") {
     return { signedIn: false, error: "This Google account is not an admin." }
   }
   if (captured === "not_verified") {
     return { signedIn: false, error: "Google email is not verified." }
   }
-  return { signedIn: Boolean(readAdminToken()), error: null }
+  return { signedIn: hasToken, error: null }
+}
+
+function googleSignInReturnHref(): string {
+  return googleSignInHref(
+    `${window.location.pathname}${window.location.search}`,
+    window.location.origin,
+  )
 }
 
 function TaggerSignIn({ error }: { error: string | null }) {
@@ -93,10 +102,7 @@ function TaggerSignIn({ error }: { error: string | null }) {
       {error && <p className="mt-3 text-[11px] text-accent">{error}</p>}
       <a
         className="mt-6 inline-block text-accent text-[11px] uppercase tracking-wider"
-        href={googleSignInHref(
-          `${window.location.pathname}${window.location.search}`,
-          window.location.origin,
-        )}
+        href={googleSignInReturnHref()}
       >
         Sign in with Google
       </a>
@@ -1215,5 +1221,8 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
 export default function TaggerView(props: TaggerViewProps) {
   const [session, setSession] = useState(initialAdminSession)
   if (!session.signedIn) return <TaggerSignIn error={session.error} />
-  return <TaggerEditor {...props} onSignedOut={() => setSession({ signedIn: false, error: null })} />
+  return <TaggerEditor {...props} onSignedOut={() => {
+    markTaggerSignedOut()
+    setSession({ signedIn: false, error: null })
+  }} />
 }
