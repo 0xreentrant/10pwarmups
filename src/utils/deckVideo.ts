@@ -24,4 +24,13 @@ export function videoSrcForDeck(deckId: string): string | null {
   return `/videos/${deckId}.mp4`
 }
 
+export type PosterRole = "open" | number
+
+/** Still for the open frame or a move index. Null when the deck has no clip. */
+export function posterSrcForDeck(deckId: string, role: PosterRole): string | null {
+  if (!videoSrcForDeck(deckId)) return null
+  const name = role === "open" ? "open" : String(role)
+  return `/posters/${deckId}/${name}.webp`
+}
+
 export const FALLBACK_TIMELINE_SEC = 30

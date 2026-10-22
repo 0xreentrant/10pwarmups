@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { getLongestStreak } from "../../../appMachine"
-import { isFiniteTimestamp } from "../../../data/moveTimestamps"
+import { isFiniteTimestamp, resolveMoveTimestamps } from "../../../data/moveTimestamps"
 import type { Deck, QuestionOption, Session } from "../../../types/domain"
 import { logTrainMode, publishTrain } from "../../../utils/trainModeLog"
 import { useMoveTimeline } from "../useMoveTimeline"
@@ -77,6 +77,9 @@ export interface AnteRound {
   togglePause: () => void
   segmentActive: boolean
   segmentPaused: boolean
+  /** Move whose start the tape is holding or revealing. Null seeks to 0. */
+  cueMoveIdx: number | null
+  cueSec: number
 }
 
 interface FrozenAsk {
@@ -473,6 +476,13 @@ export function useAnteRound({
     onRestart?.()
   }
 
+  const cueStamps =
+    timeline?.timestamps ??
+    (timestampOverrides && timestampOverrides.length === deck.moves.length
+      ? timestampOverrides
+      : resolveMoveTimestamps(deck.id, deck.moves.length, 0))
+  const cueRaw = cueStamps[deckMoveIdx]
+  const cueTagged = isFiniteTimestamp(cueRaw)
   const elapsed = ANTE_CLOCK_MS - remaining
   const settled = phase === "correct" ? paid : phase === "wrong" ? 0 : null
   const card: AnteMark[] = history.map((result, i) => marks[i] ?? (result === "hit" ? 1 : "miss"))
@@ -495,5 +505,7 @@ export function useAnteRound({
     togglePause,
     segmentActive,
     segmentPaused,
+    cueMoveIdx: cueTagged ? deckMoveIdx : null,
+    cueSec: cueTagged ? cueRaw : 0,
   }
 }

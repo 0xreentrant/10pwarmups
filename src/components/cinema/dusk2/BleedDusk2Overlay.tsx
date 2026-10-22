@@ -9,6 +9,9 @@ import type { BleedVariant } from "./bleedVariant"
 import Dusk2CompleteOverlay from "./Dusk2CompleteOverlay"
 import TrainingZonesDemo from "./TrainingZonesDemo"
 import PartnerTags from "../../PartnerTags"
+import { posterSrcForDeck } from "../../../utils/deckVideo"
+import { useAwaitingVideoFrame, useSnapMediaOpacity } from "../useAwaitingVideoFrame"
+import { VideoFrameCover, clipPosterCss } from "../VideoFrameCover"
 
 const CORRECT_HOLD_MS = 300
 
@@ -136,6 +139,13 @@ export default function BleedDusk2Overlay({
   }, [onClose, showTapDemo])
 
   const finale = showComplete || drill.phase === "done" || session.locked
+  const awaitingFrame = useAwaitingVideoFrame(
+    videoEl,
+    !videoSrc || finale ? null : round.cueSec,
+    round.cueMoveIdx == null ? "open" : String(round.cueMoveIdx),
+  )
+  useSnapMediaOpacity(videoEl, awaitingFrame)
+  const posterSrc = posterSrcForDeck(deck.id, round.cueMoveIdx ?? "open")
   const clockOpen = live || paused
   const canPauseClock = !finale && drill.phase === "asking" && ready && clockOpen
   const canPauseSegment = !finale && (drill.phase === "correct" || drill.phase === "wrong") && segmentActive
@@ -182,12 +192,17 @@ export default function BleedDusk2Overlay({
       )}
 
       <div className={`bl-stage ${buzzed ? "bl-stage--slap-buzz" : ""}`}>
+        <VideoFrameCover show={awaitingFrame} src={posterSrc} />
         {videoSrc ? (
           <video
             ref={videoRef}
             src={videoSrc}
             className={`bl-video ${sharp ? "bl2-video--sharp" : ""}`}
-            style={{ filter: videoFilter, opacity: videoOpacity, cursor: canTapVideo ? "pointer" : undefined }}
+            style={{
+              filter: videoFilter,
+              opacity: awaitingFrame ? 0 : videoOpacity,
+              cursor: canTapVideo ? "pointer" : undefined,
+            }}
             muted
             playsInline
             preload="auto"
@@ -743,6 +758,7 @@ function BleedDusk2Styles() {
         100% { opacity: 1; transform: scale(1); filter: blur(0); }
       }
 
+      ${clipPosterCss}
       @media (prefers-reduced-motion: reduce) {
         .bl-stake { animation: none; }
         .bl-stage--slap-buzz .bl-video { transition-duration: 90ms; }

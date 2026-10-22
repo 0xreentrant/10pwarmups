@@ -12,7 +12,7 @@ Client-only Vite/React PWA for 10th Planet warmup recall training. No trainee ac
 | State | XState 5 `appMachine` + singleton `appActor` |
 | Persistence | `localStorage` key `tp_progress` (and other `tp_*` prefs) |
 | Analytics | gtag + `src/utils/analytics.ts` |
-| Media | `/videos/{deckId}.mp4` under `public/videos/`, PWA CacheFirst |
+| Media | `/videos/{deckId}.mp4` under `public/videos/`. The service worker does not cache them. Stills are `/posters/{deckId}/`. |
 | Tagger API | `server/main.ts` on :3101. Google OAuth, HMAC bearer. Warmup catalog in SQLite (`WARMUP_DB`) |
 
 ## Entry
@@ -128,7 +128,7 @@ sequenceDiagram
 | Series / decks / moves | SQLite via `GET /api/catalog`. `src/data/decks.ts` is the offline seed |
 | Week rotation | `src/data/warmupSchedule.ts` |
 | Move timestamps | SQLite `moves.start_sec`. `src/data/moveTimestamps.ts` is the offline seed (`null` = untagged) |
-| Video URL | `src/utils/deckVideo.ts` → `/videos/{id}.mp4` |
+| Video URL | `src/utils/deckVideo.ts` → `/videos/{id}.mp4` and `/posters/{id}/{open or move}.webp` |
 | Domain types | `src/types/domain.ts` |
 | Progress key | `tp_progress` |
 
@@ -190,9 +190,13 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | 2026-10-08 | `/admin` catalog mock uses a WordPress admin layout (list, edit, sections). |
 | 2026-10-09 | Warmup catalog is SQLite on the API. Contents API and file rewrites are gone. |
 | 2026-10-21 | Tagger routes reload to Google sign-in before the view mounts when no admin token is stored. |
+| 2026-10-22 | D4 local clip is the original collected 10pwarmups post `DXI6R7JE4d1`, not the later Denver reel. |
 | 2026-10-22 | Tagger log out stays on the sign-in link. It does not start Google, which was signing the same account straight back in. |
 | 2026-10-22 | Review no longer samples a second copy of the clip for an ambient wash. The wash sat behind the full-bleed video. |
-| 2026-10-22 | D4 local clip is the original collected 10pwarmups post `DXI6R7JE4d1`, not the later Denver reel. |
+| 2026-10-22 | C4 move times are in the offline seed, copied from SQLite. |
+| 2026-10-22 | Tagged clips have a keyframe at each move mark. A1 keeps the original pictures except the groups of pictures that contain a tag. |
+| 2026-10-22 | The service worker no longer caches `/videos/*.mp4`. |
+| 2026-10-22 | Review and train show a still and a spinner until the video frame is presented. |
 
 ## Authoritative files
 

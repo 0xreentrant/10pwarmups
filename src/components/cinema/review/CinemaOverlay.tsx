@@ -11,6 +11,9 @@ import {
   playableIndicesFromTimestamps,
 } from "../../../data/moveTimestamps"
 import { useMoveTimeline } from "../useMoveTimeline"
+import { useAwaitingVideoFrame, useSnapMediaOpacity } from "../useAwaitingVideoFrame"
+import { VideoFrameCover, clipPosterCss } from "../VideoFrameCover"
+import { posterSrcForDeck } from "../../../utils/deckVideo"
 import ReviewTapDemo from "./ReviewTapDemo"
 
 interface CinemaOverlayProps {
@@ -42,7 +45,21 @@ export default function CinemaOverlay({
   const [movesOpen, setMovesOpen] = useState(false)
   const [reviewEnded, setReviewEnded] = useState(false)
   const [demoComplete, setDemoComplete] = useState(!tapDemo)
+  const [cue, setCue] = useState<{ role: "open" | number, sec: number }>({ role: "open", sec: 0 })
+  const deckKey = `${deck.id}:${videoSrc ?? ""}`
+  const [cueDeck, setCueDeck] = useState(deckKey)
+  if (cueDeck !== deckKey) {
+    setCueDeck(deckKey)
+    setCue({ role: "open", sec: 0 })
+  }
   const showTapDemo = tapDemo && !demoComplete
+  const awaitingFrame = useAwaitingVideoFrame(
+    videoEl,
+    videoSrc ? cue.sec : null,
+    String(cue.role),
+  )
+  useSnapMediaOpacity(videoEl, awaitingFrame)
+  const posterSrc = posterSrcForDeck(deck.id, cue.role)
   const timeline = useMoveTimeline(deck.id, deck.moves.length, videoEl, undefined, timestampOverrides)
   const currentIndex = timeline ? timeline.moveIndexAt(time) : 0
   const playableIndices = timeline
@@ -96,12 +113,14 @@ export default function CinemaOverlay({
     const t = timeline.timestamps[clamped]
     if (!isFiniteTimestamp(t)) return
     const video = videoRef.current
+    const near = !!video && video.readyState >= 2 && Math.abs(video.currentTime - t) < 0.05
+    if (!near) setCue({ role: clamped, sec: t })
     if (!video) {
       setTime(t)
       return
     }
     const resume = !video.paused
-    if (Math.abs(video.currentTime - t) < 0.05) {
+    if (near) {
       setTime(t)
       if (resume) video.play().catch(() => {})
       return
@@ -179,11 +198,13 @@ export default function CinemaOverlay({
     <div className="ct-overlay">
       <CinemaStyles />
 
+      <VideoFrameCover show={awaitingFrame && !!videoSrc} src={posterSrc} />
       {videoSrc ? (
         <video
           ref={videoRef}
           src={videoSrc}
           className="ct-video"
+          style={awaitingFrame ? { opacity: 0 } : undefined}
           autoPlay={!tapDemo}
           preload="auto"
           playsInline
@@ -734,6 +755,7 @@ function CinemaStyles() {
         .ct-play-again { animation: none; }
         .ct-ripple { animation: none; opacity: 0; }
       }
+      ${clipPosterCss}
     `}</style>
   )
 }
