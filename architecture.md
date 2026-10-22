@@ -192,6 +192,7 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | 2026-10-21 | Tagger routes reload to Google sign-in before the view mounts when no admin token is stored. |
 | 2026-10-22 | Tagger log out stays on the sign-in link. It does not start Google, which was signing the same account straight back in. |
 | 2026-10-22 | Review no longer samples a second copy of the clip for an ambient wash. The wash sat behind the full-bleed video. |
+| 2026-10-22 | D4 local clip is the original collected 10pwarmups post `DXI6R7JE4d1`, not the later Denver reel. |
 
 ## Authoritative files
 

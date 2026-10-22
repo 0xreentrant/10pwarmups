@@ -421,7 +421,7 @@ export let DECKS: Deck[] = [
   },
   {
     id: "D4", series: "D", name: "Double Ankle Toss",
-    link: "https://www.instagram.com/10thplanetdenver/reel/C4te3ITpbuz/",
+    link: "https://www.instagram.com/p/DXI6R7JE4d1/",
     moves: [
       m("Double Ankle Toss", "A"),
       m("Snap Back", "A"),
