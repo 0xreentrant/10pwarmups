@@ -4,7 +4,6 @@ import MoveList from "../../MoveList"
 import PartnerTags from "../../PartnerTags"
 import { usePersistedMediaVolume } from "../../../hooks/usePersistedMediaVolume"
 import type { Deck } from "../../../types/domain"
-import { captureAmbientColor } from "../frameCapture"
 import {
   clampNextPlayable,
   clampPrevPlayable,
@@ -40,7 +39,6 @@ export default function CinemaOverlay({
   const seekSyncRef = useRef({ active: false, resume: false })
   const [videoEl, setVideoEl] = useState<HTMLVideoElement | null>(null)
   const [time, setTime] = useState(0)
-  const [glow, setGlow] = useState("rgb(192, 57, 43)")
   const [movesOpen, setMovesOpen] = useState(false)
   const [reviewEnded, setReviewEnded] = useState(false)
   const [demoComplete, setDemoComplete] = useState(!tapDemo)
@@ -72,12 +70,6 @@ export default function CinemaOverlay({
     document.body.style.overflow = "hidden"
     return () => { document.body.style.overflow = previous }
   }, [])
-
-  useEffect(() => {
-    if (!timeline || !videoSrc) return
-    const t = timeline.timestamps[Math.max(0, currentIndex)]
-    captureAmbientColor(videoSrc, isFiniteTimestamp(t) ? t : 0).then(setGlow).catch(() => {})
-  }, [timeline, currentIndex, videoSrc])
 
   useEffect(() => {
     if (!movesOpen) return
@@ -186,7 +178,6 @@ export default function CinemaOverlay({
   return (
     <div className="ct-overlay">
       <CinemaStyles />
-      <div className="ct-glow" style={{ background: `radial-gradient(circle at 50% 30%, ${glow}, transparent 65%)` }} />
 
       {videoSrc ? (
         <video
@@ -336,14 +327,6 @@ function CinemaStyles() {
         z-index: 500;
         background: #000;
         overflow: hidden;
-      }
-
-      .ct-glow {
-        position: absolute;
-        inset: -20%;
-        filter: blur(60px);
-        opacity: 0.55;
-        transition: background 0.6s ease-out;
       }
 
       .ct-video {
