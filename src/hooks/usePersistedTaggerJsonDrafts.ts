@@ -69,9 +69,7 @@ export function taggerJsonDocument(text: string): TaggerJsonDocument | null {
   if (!Array.isArray(list) || list.length === 0) return null
   const result = parseTimestampsJson(text, list.length)
   if (!result.ok) return null
-  const deckId = typeof (raw as { deckId?: unknown }).deckId === "string"
-    ? (raw as { deckId: string }).deckId
-    : ""
+  const deckId = "deckId" in raw && typeof raw.deckId === "string" ? raw.deckId : ""
   const names = result.names ?? Array.from({ length: list.length }, (_, i) => `Move ${i + 1}`)
   const players = (result.playerLists ?? names.map(() => ["A"] as Partner[])).map(row => normalizePlayers(row))
   const timestamps = result.timestamps.slice(0, names.length)
