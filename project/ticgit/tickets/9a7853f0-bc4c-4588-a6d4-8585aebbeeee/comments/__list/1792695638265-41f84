@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"JSON drafts persist per deck in tp_tagger_json_drafts. Move-name storage removed. Reset restores the catalog count. Verified: vitest 72 passed; browser add-move survived reload, Reset cleared it."}

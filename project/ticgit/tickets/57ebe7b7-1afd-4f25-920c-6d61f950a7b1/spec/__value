@@ -1,0 +1,9 @@
+Empty databases load server/seed.sql via import ?raw inside seedIfEmpty. Existing databases are left alone.
+
+Client SERIES, DECKS, and MOVE_TIMESTAMPS start empty. applyCatalog fills them. Warmup notes come only from applyWarmupNotes. The note text files and seedNotes.ts are deleted.
+
+loadCatalog returns whether a catalog was applied. main.tsx restarts the app actor only when one was. Schedule home shows "Catalog unavailable" when nothing was applied.
+
+Unit tests apply src/test/catalogFixture.json before imports. CI offline e2e asserts the unavailable message on a fresh profile, then writes a minimal tp_catalog before the offline reload and still expects the A1 Train row.
+
+Backup data/warmups.sqlite to data/warmups-2026-10-22.sqlite before touching the catalog. Do not touch the prod database.

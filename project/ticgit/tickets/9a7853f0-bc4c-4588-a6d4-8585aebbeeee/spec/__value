@@ -1,0 +1,26 @@
+## Storage
+
+Add src/hooks/usePersistedTaggerJsonDrafts.ts matching usePersistedTaggerNoteDrafts.ts.
+
+- Key tp_tagger_json_drafts: { [deckId]: jsonText }
+- load / save / clear / resolve (stored string wins when the deck key exists)
+- Contract test like the note-draft tests, plus non-string values ignored on read
+
+Delete usePersistedTaggerMoveNames.ts, its test, deckMoveNames, and the save-move-names effect in TaggerView. Leave stale tp_tagger_move_names keys.
+
+## TaggerView
+
+- Baseline is the live catalog row (DECKS and MOVE_TIMESTAMPS). Compare parsed names, players, and timestamps (padded with null), not JSON text.
+- Restore in the SET_DECK effect. If a stored draft parses, parseTimestampsJson with the draft's own timestamp count. SET_DECK with that count and the draft's own names and players, then LOAD those timestamps. Do not use applyJsonToMachine.
+- If the stored text does not parse, SET_DECK from the catalog and put the stored text back in the textarea so the load error shows.
+- After the deck-change history reset, set jsonDraft from the stored text when present.
+- When jsonDraft is non-empty, save it for the current deck, or clear the key when the parsed document matches the baseline. Skip the empty string. Skip a write whose parsed deckId is not the deck on screen.
+- On a successful Save, patch that deck in the in-memory catalog from the JSON just sent, then clear its local draft.
+- resetTimestamps sends SET_DECK with the catalog count, names, and players, then RESET with catalog timestamps, then clears the JSON draft. Confirm copy says the catalog.
+
+Undo/redo stays session-only.
+
+## Docs
+
+architecture.md: tp_tagger_json_drafts and removal of tp_tagger_move_names, changelog dated the ship day.
+vault/manual-tests.md: move a marker and reload; add a move, reload, then Reset; Save, then reload.

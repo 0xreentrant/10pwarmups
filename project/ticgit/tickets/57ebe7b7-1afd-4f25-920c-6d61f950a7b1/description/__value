@@ -1,0 +1,1 @@
+Move baked-in deck, timestamp, and note data into server/seed.sql. Client modules become caches filled by applyCatalog. First visit with no cache and no API shows catalog unavailable. CI offline e2e seeds tp_catalog before going offline.
