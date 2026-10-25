@@ -125,9 +125,9 @@ sequenceDiagram
 
 | Concern | Source |
 |---------|--------|
-| Series / decks / moves | SQLite via `GET /api/catalog`. `src/data/decks.ts` is the offline seed |
+| Series / decks / moves | SQLite via `GET /api/catalog`. Empty databases load `server/seed.sql`. `src/data/decks.ts` is a cache `applyCatalog` fills |
 | Week rotation | `src/data/warmupSchedule.ts` |
-| Move timestamps | SQLite `moves.start_sec`. `src/data/moveTimestamps.ts` is the offline seed (`null` = untagged) |
+| Move timestamps | SQLite `moves.start_sec`. `src/data/moveTimestamps.ts` is a cache `applyCatalog` fills (`null` = untagged) |
 | Video URL | `src/utils/deckVideo.ts` → `/videos/{id}.mp4` and `/posters/{id}/{open or move}.webp` |
 | Domain types | `src/types/domain.ts` |
 | Progress key | `tp_progress` |
@@ -164,7 +164,7 @@ flowchart LR
   Machine --> Video
 ```
 
-No server for train/review progress. Warmup content (sections, titles, moves, timestamps, notes) is SQLite on the API. The trainer loads `GET /api/catalog` at boot and keeps `decks.ts` / `moveTimestamps.ts` as the offline seed.
+No server for train/review progress. Warmup content (sections, titles, moves, timestamps, notes) is SQLite on the API. The trainer fills `decks.ts`, `moveTimestamps.ts`, and `warmupNotes.ts` from `GET /api/catalog`. A saved `tp_catalog` cache is applied and shown before that fetch. A failed or aborted fetch leaves the cache in place. A first visit with no cache and no API shows catalog unavailable.
 
 ## Tagger admin
 
@@ -180,7 +180,7 @@ Unsaved tagger JSON stays in `tp_tagger_json_drafts` (one string per deck) until
 
 `/admin` uses the same bearer for catalog writes. `GET /api/catalog` is public. The GitHub Contents API is not used.
 
-Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` listens on :3101. Then `pnpm run dev`. See `.env.example`. Prod will inject the same variables from systemd and will not use `--env-file`. Prod host setup is not done yet.
+Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` listens on :3101. Then `pnpm run dev`. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections are left as they are.
 
 ## Changelog
 
@@ -191,6 +191,7 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | 2026-10-08 | `/admin` catalog mock. Edits stay in the tab. Tagger header links to it. |
 | 2026-10-08 | `/admin` catalog mock uses a WordPress admin layout (list, edit, sections). |
 | 2026-10-09 | Warmup catalog is SQLite on the API. Contents API and file rewrites are gone. |
+| 2026-10-09 | Prod API is live at `https://10p-api.qalm.work` (systemd `10p-api` on the Qalm droplet). |
 | 2026-10-21 | Tagger routes reload to Google sign-in before the view mounts when no admin token is stored. |
 | 2026-10-22 | D4 local clip is the original collected 10pwarmups post `DXI6R7JE4d1`, not the later Denver reel. |
 | 2026-10-22 | Tagger log out stays on the sign-in link. It does not start Google, which was signing the same account straight back in. |
@@ -201,6 +202,7 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | 2026-10-22 | Review and train show a still and a spinner until the video frame is presented. |
 | 2026-10-22 | Unsaved tagger edits stay in `tp_tagger_json_drafts` until they match the catalog, Save, or Reset. |
 | 2026-10-22 | A late tagger Save clears only the JSON that was sent. A newer unsaved edit stays in the draft. |
+| 2026-10-22 | Empty catalog databases load `server/seed.sql`. Client deck, timestamp, and note modules are caches. A first visit with no cache and no API shows catalog unavailable. |
 
 ## Authoritative files
 
@@ -211,7 +213,7 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | Machine | `src/appMachine.ts` |
 | Actor | `src/appActor.ts` |
 | Types | `src/types/domain.ts` |
-| Decks | `src/data/decks.ts` (offline seed; live data is SQLite) |
+| Decks | `src/data/decks.ts` (cache filled by `applyCatalog`; live data is SQLite) |
 | Catalog | `server/catalogDb.ts` |
 | Schedule | `src/data/warmupSchedule.ts` |
 | Timestamps | `src/data/moveTimestamps.ts` |

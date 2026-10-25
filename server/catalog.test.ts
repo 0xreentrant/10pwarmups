@@ -2,6 +2,7 @@ import fs from "node:fs"
 import os from "node:os"
 import path from "node:path"
 import { afterEach, describe, expect, it } from "vitest"
+import seedSql from "./seed.sql?raw"
 import {
   createSection,
   createWarmup,
@@ -35,8 +36,9 @@ describe("warmup catalog", () => {
     expect(a1?.sectionId).toBe("A")
     expect(a1?.moves.length).toBeGreaterThan(0)
 
-    const seededNote = fs.readFileSync(path.join(process.cwd(), "src/data/warmup-notes/A1.txt"), "utf8")
-    expect(a1?.note).toBe(seededNote)
+    expect(a1?.note.length).toBeGreaterThan(0)
+    const escapedNote = a1!.note.replaceAll("'", "''").replaceAll("\n", "\\n")
+    expect(seedSql.includes(escapedNote)).toBe(true)
 
     renameSection(db, "A", "Granby Rolls")
     updateWarmup(db, "A1", "Kneeling Roll", "B")

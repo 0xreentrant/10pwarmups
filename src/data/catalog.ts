@@ -29,7 +29,10 @@ export type CatalogPayload = {
 
 const CATALOG_KEY = "tp_catalog"
 
+export let catalogApplied = false
+
 export function applyCatalog(payload: CatalogPayload) {
+  catalogApplied = true
   applyDeckCatalog(
     payload.sections.map(section => ({ id: section.id, name: section.name })),
     payload.warmups.map(warmup => {
@@ -81,23 +84,29 @@ export async function writeCatalog(path: string, method: string, body: unknown):
   return data
 }
 
-export async function loadCatalog(): Promise<void> {
+export function applyCachedCatalog(): boolean {
   try {
     const cached = localStorage.getItem(CATALOG_KEY)
-    if (cached) applyCatalog(JSON.parse(cached) as CatalogPayload)
+    if (!cached) return false
+    applyCatalog(JSON.parse(cached) as CatalogPayload)
+    return true
   } catch {
-    // Seed stays in place when the cache is missing or unreadable.
+    return false
   }
+}
+
+export async function refreshCatalog(): Promise<boolean> {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 2000)
   try {
     const res = await fetch(`${taggerApiBase()}/api/catalog`, { signal: ctrl.signal })
-    if (!res.ok) return
+    if (!res.ok) return catalogApplied
     const payload = (await res.json()) as CatalogPayload
     applyCatalog(payload)
     localStorage.setItem(CATALOG_KEY, JSON.stringify(payload))
+    return true
   } catch {
-    // Seed or the last cache stays in place when the API is down.
+    return catalogApplied
   } finally {
     clearTimeout(timer)
   }

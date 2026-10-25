@@ -7,6 +7,7 @@ import SeriesIndexNav from "./schedule/SeriesIndexNav"
 import WarmupScheduleTracker from "./schedule/WarmupScheduleTracker"
 import { useScheduleOnboarding } from "../hooks/useScheduleOnboarding"
 import { SERIES } from "../data/decks"
+import { catalogApplied } from "../data/catalog"
 import {
   formatWeekGroupsSummary,
   getScheduleState,
@@ -103,6 +104,16 @@ export default function ScheduleHomeScreen({
       document.removeEventListener("keydown", onKeyDown)
     }
   }, [weekMenuOpen])
+
+  if (!catalogApplied) {
+    return (
+      <div className="pt-7 pb-12">
+        <h1 className="mb-1">10th Planet</h1>
+        <h1 className="mb-1.5 text-accent">Warmup Trainer</h1>
+        <p className="text-[11px] text-muted mt-0.5 tracking-widest uppercase">Catalog unavailable</p>
+      </div>
+    )
+  }
 
   return (
     <div className="pt-7 pb-12">

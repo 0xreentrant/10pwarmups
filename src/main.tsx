@@ -11,15 +11,23 @@ import { StrictMode } from "react"
 import { createRoot } from "react-dom/client"
 import { RouterProvider } from "@tanstack/react-router"
 import { router } from "./router"
-import { loadCatalog } from "./data/catalog"
+import { restartAppActor } from "./appActor"
+import { applyCachedCatalog, refreshCatalog } from "./data/catalog"
 
 async function boot() {
-  await loadCatalog()
+  const cached = applyCachedCatalog()
+  if (cached) restartAppActor()
+  const refresh = refreshCatalog()
+  if (!cached) {
+    const applied = await refresh
+    if (applied) restartAppActor()
+  }
   createRoot(document.getElementById("root")!).render(
     <StrictMode>
       <RouterProvider router={router} />
     </StrictMode>
   )
+  if (cached) void refresh
 }
 
 void boot()

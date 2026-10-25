@@ -1,11 +1,9 @@
 import fs from "node:fs"
 import path from "node:path"
 import { DatabaseSync } from "node:sqlite"
-import { DECKS, SERIES } from "../src/data/decks"
-import { MOVE_TIMESTAMPS } from "../src/data/moveTimestamps"
+import seedSql from "./seed.sql?raw"
 import { parseTimestampsJson } from "../src/components/tagger/taggerTimestamps"
 import type { Partner } from "../src/types/domain"
-import { seedNoteMap } from "./seedNotes"
 
 export type CatalogMove = {
   text: string
@@ -101,38 +99,9 @@ export function openCatalog(dbPath: string): DatabaseSync {
 function seedIfEmpty(db: DatabaseSync) {
   const row = db.prepare("SELECT COUNT(*) AS n FROM sections").get() as { n: number }
   if (row.n > 0) return
-  const notes = seedNoteMap()
-  const insertSection = db.prepare("INSERT INTO sections (id, name, position) VALUES (?, ?, ?)")
-  const insertWarmup = db.prepare(
-    "INSERT INTO warmups (id, section_id, title, link, position, note) VALUES (?, ?, ?, ?, ?, ?)",
-  )
-  const insertMove = db.prepare(
-    "INSERT INTO moves (warmup_id, position, text, players, note, start_sec) VALUES (?, ?, ?, ?, ?, ?)",
-  )
-  const positionBySection = new Map<string, number>()
   db.exec("BEGIN")
   try {
-    SERIES.forEach((section, index) => {
-      insertSection.run(section.id, section.name, index)
-    })
-    for (const deck of DECKS) {
-      const sectionId = deck.series ?? "A"
-      const position = positionBySection.get(sectionId) ?? 0
-      positionBySection.set(sectionId, position + 1)
-      insertWarmup.run(deck.id, sectionId, deck.name, deck.link ?? null, position, notes[deck.id] ?? "")
-      const stamps = MOVE_TIMESTAMPS[deck.id] ?? []
-      deck.moves.forEach((move, index) => {
-        const start = stamps[index]
-        insertMove.run(
-          deck.id,
-          index,
-          move.text,
-          JSON.stringify(move.players),
-          deck.notes?.[index] ?? null,
-          typeof start === "number" ? start : null,
-        )
-      })
-    }
+    db.exec(seedSql)
     db.exec("COMMIT")
   } catch (err) {
     db.exec("ROLLBACK")

@@ -1,4 +1,8 @@
 import '@testing-library/jest-dom'
+import { applyCatalog, type CatalogPayload } from '../data/catalog'
+import fixture from './catalogFixture.json'
+
+applyCatalog(fixture as CatalogPayload)
 
 // jsdom stubs these as notImplemented; TanStack Router calls scrollTo on every
 // onRendered navigation, which floods stderr without a real implementation.

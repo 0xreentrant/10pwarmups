@@ -85,12 +85,25 @@ async function setOffline(page, offline) {
   })
 }
 
+const CACHED_CATALOG = {
+  sections: [{ id: "A", name: "Granbys" }],
+  warmups: [{
+    id: "A1",
+    sectionId: "A",
+    title: "Kneeling",
+    link: null,
+    note: "",
+    moves: [{ text: "Seated Granby", players: ["A"], note: null, startSec: 0 }],
+  }],
+}
+
 /** Skip intro overlays so the offline schedule is visible. */
 async function skipHomeOverlays(page) {
-  await page.evaluate(() => {
+  await page.evaluate(catalog => {
+    localStorage.setItem("tp_catalog", JSON.stringify(catalog))
     localStorage.setItem("tp_schedule_onboarding_seen", "2026-08-26T00:00:00.000Z")
     localStorage.setItem("tp_whats_new_seen", "2026-07-24T18:00:00.000Z")
-  })
+  }, CACHED_CATALOG)
 }
 
 async function runOfflineE2E() {
@@ -105,9 +118,25 @@ async function runOfflineE2E() {
       args: ["--no-sandbox", "--disable-dev-shm-usage"],
     })
     const page = await browser.newPage()
+    await page.setRequestInterception(true)
+    page.on("request", async req => {
+      try {
+        if (req.url().includes("/api/catalog")) {
+          await req.respond({ status: 500, contentType: "application/json", body: "nope" })
+          return
+        }
+        await req.continue()
+      } catch {
+        // The navigation that this request belonged to was already finished.
+      }
+    })
 
     await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 60000 })
     await waitForServiceWorker(page)
+    await page.waitForFunction(
+      () => document.body.textContent.includes("Catalog unavailable"),
+      { timeout: 15000 },
+    )
     await skipHomeOverlays(page)
     await page.goto(`${baseUrl}series/A/`, { waitUntil: "domcontentloaded", timeout: 60000 })
     await waitForServiceWorker(page)

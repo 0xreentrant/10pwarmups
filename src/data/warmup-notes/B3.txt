@@ -1,2 +1,0 @@
-- missing the standup sequence at start
-- need to confirm the player A/B for all of the moves here
