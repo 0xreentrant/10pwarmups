@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process"
 
-const port = process.env.PORT ?? "5173"
+const port = "5174"
 const httpsPort = process.env.TAILSCALE_SERVE_PORT ?? "443"
 const httpsFlag = httpsPort === "443" ? "" : ` --https=${httpsPort}`
 

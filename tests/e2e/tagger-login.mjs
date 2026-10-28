@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer"
 
-const BASE = "http://127.0.0.1:5173"
+const BASE = "http://127.0.0.1:5174"
 // loadCatalog aborts /api/catalog at 2000ms. The scripted tail stays under that ceiling.
 const CATALOG_TAIL_MS = 1500
 

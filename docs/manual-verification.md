@@ -20,7 +20,7 @@ cp .env.example .env
 |----------|----------|-------|
 | `DATABASE_URL` | Yes | Default: `postgresql://postgres:postgres@127.0.0.1:5432/warmups` |
 | `BETTER_AUTH_SECRET` | Yes | Long random string (≥32 chars) |
-| `BETTER_AUTH_URL` | Yes | `http://localhost:5173` (browser origin) |
+| `BETTER_AUTH_URL` | Yes | `http://localhost:5174` (browser origin) |
 | `GOOGLE_CLIENT_ID` | Yes | From Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | Yes | From Google Cloud Console |
 | `E2E_GOOGLE_EMAIL` | Optional | For `npm run test:e2e:auth` only |
@@ -32,7 +32,7 @@ cp .env.example .env
 2. Create an **OAuth 2.0 Client ID** (Web application).
 3. Add **Authorized redirect URI**:
    ```
-   http://localhost:5173/api/auth/callback/google
+   http://localhost:5174/api/auth/callback/google
    ```
 4. If you use `127.0.0.1` instead of `localhost`, add matching redirect URIs and set `BETTER_AUTH_URL` to that origin.
 
@@ -44,15 +44,15 @@ npm run db:migrate
 npm run dev:all
 ```
 
-- Vite: `http://localhost:5173`
-- API (proxied): `http://localhost:5173/api/*` → Hono on `:3001`
+- Vite: `http://localhost:5174`
+- API (proxied): `http://localhost:5174/api/*` → Hono on `:3001`
 
 Use **`npm run dev:all`**, not `npm run dev` alone — auth and sync require the API.
 
 ### 4. Quick health check
 
 ```bash
-curl http://localhost:5173/api/health
+curl http://localhost:5174/api/health
 ```
 
 Expected: `{"ok":true,"service":"10pwarmups-api"}`
@@ -63,7 +63,7 @@ Expected: `{"ok":true,"service":"10pwarmups-api"}`
 
 ### Step 1 — First visit shows login (online)
 
-1. Open `http://localhost:5173` in a clean profile or after clearing site data.
+1. Open `http://localhost:5174` in a clean profile or after clearing site data.
 2. **Expected:** Login screen with **Sign in with Google**.
 3. **Not expected:** Deck list / Train buttons before sign-in.
 
@@ -174,7 +174,7 @@ Use an account that **already has** attempts in DB (from Step 3).
 
 1. Clear site data (or use a fresh profile).
 2. Go offline **before** any login.
-3. Open `http://localhost:5173`.
+3. Open `http://localhost:5174`.
 4. **Expected:** “Connect to the internet to sign in” (or equivalent offline login message).
 5. **Not expected:** Train buttons or anonymous training.
 
@@ -215,7 +215,7 @@ If time is limited, verify only:
 | Symptom | Likely cause |
 |---------|----------------|
 | Sign in does nothing | Missing `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`; restart `dev:server` |
-| Redirect URI mismatch | Google console URI ≠ `http://localhost:5173/api/auth/callback/google` |
+| Redirect URI mismatch | Google console URI ≠ `http://localhost:5174/api/auth/callback/google` |
 | `/api/*` 404 or network error | Only Vite running; use `npm run dev:all` |
 | Stuck on login after Google | `BETTER_AUTH_URL` wrong origin; check API logs |
 | Offline shows login only | No prior login on device; `tp_active_user` missing |
@@ -226,7 +226,7 @@ If time is limited, verify only:
 ## Architecture reference
 
 ```text
-Browser (localhost:5173)
+Browser (localhost:5174)
   ├── AppShell + bootstrapMachine → login | loading | RouterProvider
   ├── tp_progress:<userId>  +  tp_outbox:<userId>
   └── /api/* (proxied) → Hono :3001

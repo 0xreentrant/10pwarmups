@@ -432,34 +432,19 @@ describe("routing", () => {
     }
   })
 
-  it("reloads to Google before showing the tagger when signed out", async () => {
-    const calls: string[] = []
-    const saved = window.location
-    Object.defineProperty(window, "location", {
-      configurable: true,
-      value: {
-        origin: saved.origin,
-        pathname: saved.pathname,
-        search: saved.search,
-        hash: saved.hash,
-        href: saved.href,
-        replace: (url: string) => {
-          calls.push(String(url))
-        },
-      },
-    })
-    try {
-      await renderWithRouter("/tagger/C4/edit")
-      await waitFor(() => {
-        expect(calls.length).toBe(1)
-      })
-      const url = new URL(calls[0], saved.origin)
-      expect(url.pathname).toBe("/auth/google")
-      expect(url.searchParams.get("return")).toBe("/tagger/C4/edit")
-      expect(screen.queryByRole("heading", { name: "Video Tagger" })).not.toBeInTheDocument()
-    } finally {
-      Object.defineProperty(window, "location", { configurable: true, value: saved })
-    }
+  it("shows the tagger sign-in screen when there is no usable token", async () => {
+    const payload = btoa(JSON.stringify({ email: "a@b.c", exp: Date.now() - 1000 }))
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/=+$/, "")
+    localStorage.setItem("tp_admin_token", `${payload}.sig`)
+
+    await renderWithRouter("/tagger/C4/edit")
+
+    expect(await screen.findByRole("heading", { name: "Video Tagger" })).toBeInTheDocument()
+    const link = screen.getByRole("link", { name: "Sign in with Google" })
+    expect(link.getAttribute("href") ?? "").toContain("/auth/google")
+    expect(localStorage.getItem("tp_admin_token")).toBeNull()
   })
 
   it("redirects /tagger to the first video warmup in edit mode", async () => {

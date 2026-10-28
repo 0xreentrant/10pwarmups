@@ -168,19 +168,19 @@ No server for train/review progress. Warmup content (sections, titles, moves, ti
 
 ## Tagger admin
 
-Google login uses the same arctic authorization-code flow as Qalm (`server/main.ts`). A tagger route with no `tp_admin_token` and no OAuth hash (`admin_token` or `admin_error`) reloads to `/auth/google` before `TaggerView` mounts. The callback hash stays on the page so the token can be stored. `not_admin` and `not_verified` stay on the sign-in screen. Log out and a 401 clear the token and stay on the sign-in link (`tp_tagger_signed_out` in sessionStorage). A reload in that tab does not start Google again until Sign in is clicked. Only emails in `ADMIN_EMAILS` get a token. The token is an HMAC bearer (`tp_admin_token` in localStorage), not a cookie, because prod Pages (`https://openthesystem.app`) and the API (`https://10p-api.qalm.work`) are different sites.
+Google login uses the same arctic authorization-code flow as Qalm (`server/main.ts`). A tagger route with no usable `tp_admin_token` (missing or past `exp`) shows the sign-in screen. Google starts only when Sign in with Google is clicked. An OAuth hash (`admin_token` or `admin_error`) stays on the page so the token can be stored. `not_admin` and `not_verified` stay on the sign-in screen. Log out and a 401 clear the token and stay on the sign-in link (`tp_tagger_signed_out` in sessionStorage). Only emails in `ADMIN_EMAILS` get a token. The token is an HMAC bearer (`tp_admin_token` in localStorage), not a cookie, because prod Pages (`https://openthesystem.app`) and the API (`https://10p-api.qalm.work`) are different sites.
 
 Unsaved tagger JSON stays in `tp_tagger_json_drafts` (one string per deck) until the parsed moves match the live catalog, Save succeeds, or Reset. A Save response clears only the JSON that was sent, so a later edit made while that request is in flight stays in the draft. Warmup note drafts stay in `tp_tagger_note_drafts`. `tp_tagger_move_names` is no longer written.
 
 | Place | Browser | Callback | Save |
 |-------|---------|----------|------|
-| Local | `http://localhost:5173` | same origin, Vite proxies `/auth` and `/api` to `:3101` | SQLite `WARMUP_DB` |
+| Local | `http://localhost:5174` | same origin, Vite proxies `/auth` and `/api` to `:3101` | SQLite `WARMUP_DB` |
 | Tailscale | `https://<machine>.ts.net` | same origin via `tailscale serve` | SQLite `WARMUP_DB` |
 | Prod | `https://openthesystem.app` | `https://10p-api.qalm.work/auth/google/callback` | SQLite on the API host |
 
 `/admin` uses the same bearer for catalog writes. `GET /api/catalog` is public. The GitHub Contents API is not used.
 
-Local: `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when that port is closed (`scripts/dev.mjs` runs `pnpm run server` and waits until it accepts connections). A process already listening there is left running, including a stale bundle. `pnpm run server` still starts the API alone. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections are left as they are.
+Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview and Tailscale serve). `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when that port is closed (`scripts/dev.mjs` runs `pnpm run server` and waits until it accepts connections). A process already listening there is left running, including a stale bundle. `pnpm run server` still starts the API alone. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections are left as they are.
 
 ## Changelog
 
@@ -204,6 +204,8 @@ Local: `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when t
 | 2026-10-22 | A late tagger Save clears only the JSON that was sent. A newer unsaved edit stays in the draft. |
 | 2026-10-22 | Empty catalog databases load `server/seed.sql`. Client deck, timestamp, and note modules are caches. A first visit with no cache and no API shows catalog unavailable. |
 | 2026-10-28 | `dev` and `dev:tailscale` start the API on :3101 when nothing is listening. An API that is already up is left running. |
+| 2026-10-28 | Tagger shows the sign-in screen when the admin token is missing or expired. It does not open Google until Sign in is clicked. |
+| 2026-10-28 | Vite dev, preview, and Tailscale serve stay on port 5174. |
 
 ## Authoritative files
 

@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer"
 
-const base = "http://127.0.0.1:5173"
+const base = "http://127.0.0.1:5174"
 // Give-up ceiling for a held clip plus the frame that follows. A real phone
 // on a slow link can sit longer; this only bounds the scripted tail.
 const TAIL_CEILING_MS = 15000

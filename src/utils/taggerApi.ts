@@ -6,8 +6,25 @@ export function taggerApiBase(): string {
   return typeof raw === "string" ? raw.replace(/\/$/, "") : ""
 }
 
+function adminTokenExpired(token: string, now = Date.now()): boolean {
+  const dot = token.indexOf(".")
+  if (dot <= 0) return false
+  const payload = token.slice(0, dot).replace(/-/g, "+").replace(/_/g, "/")
+  const padded = payload.padEnd(payload.length + ((4 - (payload.length % 4)) % 4), "=")
+  try {
+    const body = JSON.parse(atob(padded)) as { exp?: unknown }
+    return typeof body.exp === "number" && body.exp <= now
+  } catch {
+    return false
+  }
+}
+
 export function readAdminToken(): string | null {
-  return localStorage.getItem(ADMIN_TOKEN_KEY)
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY)
+  if (!token) return null
+  if (!adminTokenExpired(token)) return token
+  localStorage.removeItem(ADMIN_TOKEN_KEY)
+  return null
 }
 
 export function taggerNeedsGoogleLogin(hash: string): boolean {

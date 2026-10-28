@@ -1,6 +1,6 @@
 import puppeteer from "puppeteer"
 
-const BASE = "http://127.0.0.1:5173"
+const BASE = "http://127.0.0.1:5174"
 // Give-up ceiling for a held save-json. A real save can sit longer; this only
 // bounds the scripted tail, and it stays under loadCatalog's 2s abort.
 const SAVE_TAIL_MS = 1500

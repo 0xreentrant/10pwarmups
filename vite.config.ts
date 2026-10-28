@@ -10,6 +10,8 @@ const tailscaleServeHost = process.env.TAILSCALE_SERVE_HOST?.replace(/\.$/, "")
 export default defineConfig({
   base,
   server: {
+    port: 5174,
+    strictPort: true,
     ...(tailscaleHost && {
       host: tailscaleHost,
       hmr: { host: tailscaleHost },
@@ -26,6 +28,10 @@ export default defineConfig({
       "/auth": "http://127.0.0.1:3101",
       "/api": "http://127.0.0.1:3101",
     },
+  },
+  preview: {
+    port: 5174,
+    strictPort: true,
   },
   plugins: [
     react(),
