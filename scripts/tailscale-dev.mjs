@@ -1,5 +1,8 @@
 import { execSync, spawn } from "node:child_process"
 
+const VITE_PORT = "5174"
+const SERVICE = "warmups"
+
 function tailscaleIPv4() {
   const self = JSON.parse(execSync("tailscale status --json", { encoding: "utf8" })).Self
   const ip = self.TailscaleIPs?.find((addr) => addr.includes("."))
@@ -7,10 +10,22 @@ function tailscaleIPv4() {
   return { ip, dns: self.DNSName?.replace(/\.$/, "") ?? ip }
 }
 
-const { ip, dns } = tailscaleIPv4()
+function serviceHost(machineDns) {
+  const tailnet = machineDns.split(".").slice(1).join(".")
+  if (!tailnet) throw new Error("No Tailscale MagicDNS name")
+  return `${SERVICE}.${tailnet}`
+}
 
-console.log(`Phone URL: http://${ip}:5174`)
-console.log(`Tailnet DNS: https://${dns} (needs tailscale serve; run pnpm run tailscale:serve)`)
+const { ip, dns } = tailscaleIPv4()
+const host = serviceHost(dns)
+
+try {
+  execSync(`tailscale serve --service=svc:${SERVICE} --https=443 http://${ip}:${VITE_PORT}`, { stdio: "inherit" })
+} catch (err) {
+  process.exit(typeof err.status === "number" ? err.status : 1)
+}
+
+console.log(`Warmups: https://${host}`)
 
 const child = spawn("pnpm", ["exec", "vite", "--strictPort"], {
   stdio: "inherit",
@@ -18,7 +33,7 @@ const child = spawn("pnpm", ["exec", "vite", "--strictPort"], {
     ...process.env,
     TAILSCALE_HOST: ip,
     // MagicDNS Host header (via tailscale serve) must pass Vite allowedHosts.
-    TAILSCALE_SERVE_HOST: dns,
+    TAILSCALE_SERVE_HOST: host,
   },
 })
 

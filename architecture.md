@@ -175,7 +175,7 @@ Unsaved tagger JSON stays in `tp_tagger_json_drafts` (one string per deck) until
 | Place | Browser | Callback | Save |
 |-------|---------|----------|------|
 | Local | `http://localhost:5174` | same origin, Vite proxies `/auth` and `/api` to `:3101` | SQLite `WARMUP_DB` |
-| Tailscale | `https://<machine>.ts.net` | same origin via `tailscale serve` | SQLite `WARMUP_DB` |
+| Tailscale | `https://warmups.<tailnet>.ts.net` | same origin. `dev:tailscale` runs `tailscale serve --service=svc:warmups --https=443` and proxies to Vite on `:5174` | SQLite `WARMUP_DB` |
 | Prod | `https://openthesystem.app` | `https://10p-api.qalm.work/auth/google/callback` | SQLite on the API host |
 
 `/admin` uses the same bearer for catalog writes. `GET /api/catalog` is public. The GitHub Contents API is not used.
@@ -206,6 +206,7 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-28 | `dev` and `dev:tailscale` start the API on :3101 when nothing is listening. An API that is already up is left running. |
 | 2026-10-28 | Tagger shows the sign-in screen when the admin token is missing or expired. It does not open Google until Sign in is clicked. |
 | 2026-10-28 | Vite dev, preview, and Tailscale serve stay on port 5174. |
+| 2026-10-28 | `dev:tailscale` advertises `svc:warmups` on HTTPS 443. The MagicDNS URL has no port. |
 
 ## Authoritative files
 
