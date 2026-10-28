@@ -7,4 +7,5 @@ dist-server
 public/videos/backup/
 public/videos/backups/
 data/*.sqlite
+.cursor/debug-*.log
 
