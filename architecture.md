@@ -180,7 +180,7 @@ Unsaved tagger JSON stays in `tp_tagger_json_drafts` (one string per deck) until
 
 `/admin` uses the same bearer for catalog writes. `GET /api/catalog` is public. The GitHub Contents API is not used.
 
-Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` listens on :3101. Then `pnpm run dev`. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections are left as they are.
+Local: `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when that port is closed (`scripts/dev.mjs` runs `pnpm run server` and waits until it accepts connections). A process already listening there is left running, including a stale bundle. `pnpm run server` still starts the API alone. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections are left as they are.
 
 ## Changelog
 
@@ -203,6 +203,7 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | 2026-10-22 | Unsaved tagger edits stay in `tp_tagger_json_drafts` until they match the catalog, Save, or Reset. |
 | 2026-10-22 | A late tagger Save clears only the JSON that was sent. A newer unsaved edit stays in the draft. |
 | 2026-10-22 | Empty catalog databases load `server/seed.sql`. Client deck, timestamp, and note modules are caches. A first visit with no cache and no API shows catalog unavailable. |
+| 2026-10-28 | `dev` and `dev:tailscale` start the API on :3101 when nothing is listening. An API that is already up is left running. |
 
 ## Authoritative files
 
@@ -215,6 +216,7 @@ Local: `pnpm run server` bundles `server/main.ts`, then `node --env-file=.env` l
 | Types | `src/types/domain.ts` |
 | Decks | `src/data/decks.ts` (cache filled by `applyCatalog`; live data is SQLite) |
 | Catalog | `server/catalogDb.ts` |
+| Dev entry | `scripts/dev.mjs` |
 | Schedule | `src/data/warmupSchedule.ts` |
 | Timestamps | `src/data/moveTimestamps.ts` |
 | Video helper | `src/utils/deckVideo.ts` |

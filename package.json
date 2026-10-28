@@ -3,10 +3,10 @@
   "version": "1.0.1",
   "description": "",
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.mjs",
     "server": "pnpm run build:server && node --env-file=.env dist-server/main.js",
     "build:server": "vite build --config vite.server.config.ts",
-    "dev:tailscale": "node scripts/tailscale-dev.mjs",
+    "dev:tailscale": "node scripts/dev.mjs --tailscale",
     "tailscale:serve": "node scripts/tailscale-serve.mjs",
     "tailscale:reset": "tailscale serve reset",
     "build": "tsc -b --noEmit && vite build && cp dist/index.html dist/404.html",
