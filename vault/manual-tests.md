@@ -9,3 +9,5 @@
 - [ ] Add a move, reload, and the added move is still there. Reset, and the catalog move count and timestamps are back.
 - [ ] Save the tagger JSON, reload, and the saved values show with no leftover draft.
 - [ ] Start a Save, add another move before it finishes, and reload. The newer move is still there.
+- [ ] In a fresh profile with the network off, the home screen says Catalog unavailable.
+- [ ] Load the app once online, then reload with the network off. The schedule is still there, including an A1 Train row.
