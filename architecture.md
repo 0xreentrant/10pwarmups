@@ -210,6 +210,7 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-29 | Tagger keyboard nudge can be cleared while typing. An empty field keeps the last value until a number is entered. |
 | 2026-10-29 | Escape closes the tagger settings menu. |
 | 2026-10-29 | F1 local clip is the original collected 10pwarmups post `DVD4UfLkxJC`, not the later Denver reel. |
+| 2026-10-29 | G3 local clip is the original collected 10pwarmups post `DYdXgXKTu0K`, not the later Denver reel. |
 
 ## Authoritative files
 
