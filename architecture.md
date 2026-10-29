@@ -193,7 +193,6 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-09 | Warmup catalog is SQLite on the API. Contents API and file rewrites are gone. |
 | 2026-10-09 | Prod API is live at `https://10p-api.qalm.work` (systemd `10p-api` on the Qalm droplet). |
 | 2026-10-21 | Tagger routes reload to Google sign-in before the view mounts when no admin token is stored. |
-| 2026-10-22 | D4 local clip is the original collected 10pwarmups post `DXI6R7JE4d1`, not the later Denver reel. |
 | 2026-10-22 | Tagger log out stays on the sign-in link. It does not start Google, which was signing the same account straight back in. |
 | 2026-10-22 | Review no longer samples a second copy of the clip for an ambient wash. The wash sat behind the full-bleed video. |
 | 2026-10-22 | C4 move times are in the offline seed, copied from SQLite. |
@@ -209,8 +208,6 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-28 | `dev:tailscale` advertises `svc:warmups` on HTTPS 443. The MagicDNS URL has no port. |
 | 2026-10-29 | Tagger keyboard nudge can be cleared while typing. An empty field keeps the last value until a number is entered. |
 | 2026-10-29 | Escape closes the tagger settings menu. |
-| 2026-10-29 | F1 local clip is the original collected 10pwarmups post `DVD4UfLkxJC`, not the later Denver reel. |
-| 2026-10-29 | G3 local clip is the original collected 10pwarmups post `DYdXgXKTu0K`, not the later Denver reel. |
 
 ## Authoritative files
 
