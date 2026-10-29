@@ -100,6 +100,8 @@ Train/review routes guard on `appActor` state + matching deck. URL alone is not 
 
 Train → Review confirms via `ReviewConfirmPopover` and drops the in-flight attempt. Review → Train is immediate `START_DECK`.
 
+Untagged decks stay on the schedule. Review plays the clip. Train stays disabled on the row and in review until at least one move has a start time.
+
 ```mermaid
 sequenceDiagram
   participant User
@@ -180,7 +182,7 @@ Unsaved tagger JSON stays in `tp_tagger_json_drafts` (one string per deck) until
 
 `/admin` uses the same bearer for catalog writes. `GET /api/catalog` is public. The GitHub Contents API is not used.
 
-Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview and Tailscale serve). `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when that port is closed (`scripts/dev.mjs` runs `pnpm run server` and waits until it accepts connections). A process already listening there is left running, including a stale bundle. `pnpm run server` still starts the API alone. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections are left as they are.
+Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview and Tailscale serve). `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when that port is closed (`scripts/dev.mjs` runs `pnpm run server` and waits until it accepts connections). A process already listening there is left running, including a stale bundle. `pnpm run server` still starts the API alone. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections are left as they are. `server/seed.sql` is regenerated from the local catalog when tags are published. Owner copies of `data/warmups.sqlite` go to the private repo `0xreentrant/10pwarmups-db` via `scripts/backup-db.sh` (`DB_BACKUP_REPO` overrides the remote). A clone does not need that repo.
 
 ## Changelog
 
@@ -208,6 +210,8 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-28 | `dev:tailscale` advertises `svc:warmups` on HTTPS 443. The MagicDNS URL has no port. |
 | 2026-10-29 | Tagger keyboard nudge can be cleared while typing. An empty field keeps the last value until a number is entered. |
 | 2026-10-29 | Escape closes the tagger settings menu. |
+| 2026-10-29 | Untagged decks stay on the schedule for review. Train stays disabled until a move is tagged. |
+| 2026-10-29 | Current catalog tags are in `server/seed.sql`. Owner SQLite backups go to private `0xreentrant/10pwarmups-db`. |
 
 ## Authoritative files
 

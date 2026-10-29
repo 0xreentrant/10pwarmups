@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import { act, screen, fireEvent, waitFor } from "@testing-library/react"
+import { act, screen, fireEvent, waitFor, within } from "@testing-library/react"
 import { DECKS } from "./data/decks"
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from "./data/whatsNew"
 import { SCHEDULE_ONBOARDING_STORAGE_KEY, SCHEDULE_ONBOARDING_VERSION } from "./data/scheduleOnboarding"
@@ -166,6 +166,21 @@ describe("routing", () => {
       expect(router.state.location.pathname).toBe("/all")
       expect(screen.getByText("10th Planet")).toBeInTheDocument()
     })
+  })
+
+  it("shows an untagged deck for review and disables Train", async () => {
+    const { router } = await renderWithRouter(HOME_ALL)
+    await dismissScheduleOnboarding()
+    const row = (await screen.findByText("D1")).closest("tr")!
+    expect(within(row).getByRole("button", { name: "Review" })).toBeEnabled()
+    expect(within(row).getByRole("button", { name: "Train" })).toBeDisabled()
+
+    fireEvent.click(within(row).getByRole("button", { name: "Review" }))
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/D1/review")
+    })
+    expect(screen.getByRole("button", { name: "Train" })).toBeDisabled()
+    expect(document.querySelector("video")?.getAttribute("src")).toBe("/videos/D1.mp4")
   })
 
   it("navigates to review URL when Review is clicked", async () => {

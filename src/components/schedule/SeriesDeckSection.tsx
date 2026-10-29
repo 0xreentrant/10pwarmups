@@ -26,9 +26,8 @@ export default function SeriesDeckSection({
   demoFirstRow = false,
 }: SeriesDeckSectionProps) {
   const series = SERIES.find(s => s.id === letter)!
-  const seriesDecks = DECKS
-    .filter(d => d.series === letter)
-    .filter(d => deckHasTaggedMoves(d.id, d.moves.length))
+  const seriesDecks = DECKS.filter(d => d.series === letter)
+  const demoTrainIndex = seriesDecks.findIndex(d => deckHasTaggedMoves(d.id, d.moves.length))
 
   return (
     <div id={`series-${letter}`} className="scroll-mt-3 mb-5">
@@ -48,7 +47,7 @@ export default function SeriesDeckSection({
                 onDeckClick={onDeckClick}
                 onReviewClick={onReviewClick}
                 demoReview={demoFirstRow && index === 0}
-                demoTrain={demoFirstRow && index === 0}
+                demoTrain={demoFirstRow && index === demoTrainIndex}
               />
             ))}
           </tbody>

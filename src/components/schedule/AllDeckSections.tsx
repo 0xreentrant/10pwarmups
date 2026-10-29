@@ -1,6 +1,5 @@
 import DeckRow from "../DeckRow"
 import { DECKS, SERIES } from "../../data/decks"
-import { deckHasTaggedMoves } from "../../utils/deckTimestamps"
 import type { SeriesId } from "../../data/warmupSchedule"
 import type { ProgressMap } from "../../types/domain"
 import SeriesDeckSection from "./SeriesDeckSection"
@@ -26,7 +25,7 @@ export default function AllDeckSections({
   onDeckClick,
   onReviewClick,
 }: AllDeckSectionsProps) {
-  const namedFlows = unsectionedDecks().filter(d => deckHasTaggedMoves(d.id, d.moves.length))
+  const namedFlows = unsectionedDecks()
 
   return (
     <>

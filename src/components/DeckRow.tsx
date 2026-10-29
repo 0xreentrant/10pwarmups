@@ -1,6 +1,7 @@
 import HeatGradientCrownBar from "./HeatGradientCrownBar"
 import type { Deck, ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
+import { deckHasTaggedMoves } from "../utils/deckTimestamps"
 import { homeDeckRowLabel } from "../utils/deckUtils"
 
 interface DeckRowProps {
@@ -32,6 +33,7 @@ export default function DeckRow({
     : label === "incomplete" ? "pulse-edge"
     : "none"
   const rowLabel = homeDeckRowLabel(deck)
+  const canTrain = deckHasTaggedMoves(deck.id, deck.moves.length)
 
   const goReview = () => {
     analytics.event({
@@ -60,7 +62,7 @@ export default function DeckRow({
         {total > 0 && (
           <div className="flex gap-1 items-center justify-end">
             <button className="btn" onClick={goReview} data-beta-demo={demoReview ? "review" : undefined}>Review</button>
-            <button className="btn btn-primary" onClick={() => {
+            <button className="btn btn-primary" disabled={!canTrain} onClick={() => {
               analytics.event({
                 action: 'deck_selected',
                 category: 'Training',

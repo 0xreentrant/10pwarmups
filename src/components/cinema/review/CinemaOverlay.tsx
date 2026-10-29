@@ -9,6 +9,7 @@ import {
   clampPrevPlayable,
   isFiniteTimestamp,
   playableIndicesFromTimestamps,
+  resolveMoveTimestamps,
 } from "../../../data/moveTimestamps"
 import { useMoveTimeline } from "../useMoveTimeline"
 import { useAwaitingVideoFrame, useSnapMediaOpacity } from "../useAwaitingVideoFrame"
@@ -65,6 +66,11 @@ export default function CinemaOverlay({
   const playableIndices = timeline
     ? playableIndicesFromTimestamps(timeline.timestamps)
     : Array.from({ length: deck.moves.length }, (_, i) => i)
+  const canTrain = playableIndicesFromTimestamps(
+    timeline?.timestamps
+      ?? timestampOverrides
+      ?? resolveMoveTimestamps(deck.id, deck.moves.length, 0),
+  ).length > 0
 
   useEffect(() => {
     setVideoEl(videoSrc ? videoRef.current : null)
@@ -234,7 +240,7 @@ export default function CinemaOverlay({
               >
                 Show moves
               </button>
-              <button type="button" className="ct-review-train" onClick={handleTrain}>Train</button>
+              <button type="button" className="ct-review-train" onClick={handleTrain} disabled={!canTrain}>Train</button>
             </div>
           </div>
         </div>
@@ -460,6 +466,11 @@ function CinemaStyles() {
         border: 1px solid var(--color-accent);
         padding: 7px 12px;
         line-height: 1;
+      }
+
+      .ct-review-train:disabled {
+        opacity: 0.42;
+        cursor: default;
       }
 
       .ct-review-moves-btn {
