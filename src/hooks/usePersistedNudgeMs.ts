@@ -11,6 +11,14 @@ export function clampNudgeMs(n: number): number {
   return Math.min(MAX_NUDGE_MS, Math.max(MIN_NUDGE_MS, Math.round(n)))
 }
 
+/** null keeps the previous nudge so the field can be cleared while typing. */
+export function nudgeMsFromInput(raw: string): number | null {
+  if (raw.trim() === "") return null
+  const n = Number(raw)
+  if (!Number.isFinite(n)) return null
+  return clampNudgeMs(n)
+}
+
 export function loadNudgeMs(): number {
   if (typeof window === "undefined") return DEFAULT_NUDGE_MS
   try {

@@ -207,6 +207,8 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-28 | Tagger shows the sign-in screen when the admin token is missing or expired. It does not open Google until Sign in is clicked. |
 | 2026-10-28 | Vite dev, preview, and Tailscale serve stay on port 5174. |
 | 2026-10-28 | `dev:tailscale` advertises `svc:warmups` on HTTPS 443. The MagicDNS URL has no port. |
+| 2026-10-29 | Tagger keyboard nudge can be cleared while typing. An empty field keeps the last value until a number is entered. |
+| 2026-10-29 | Escape closes the tagger settings menu. |
 
 ## Authoritative files
 

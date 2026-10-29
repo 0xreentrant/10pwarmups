@@ -6,6 +6,7 @@ import {
   NUDGE_MS_STORAGE_KEY,
   clampNudgeMs,
   loadNudgeMs,
+  nudgeMsFromInput,
   saveNudgeMs,
 } from "./usePersistedNudgeMs"
 
@@ -28,5 +29,13 @@ describe("usePersistedNudgeMs storage", () => {
     saveNudgeMs(250)
     expect(loadNudgeMs()).toBe(250)
     expect(localStorage.getItem(NUDGE_MS_STORAGE_KEY)).toBe("250")
+  })
+
+  it("leaves an empty field uncommitted", () => {
+    expect(nudgeMsFromInput("")).toBeNull()
+    expect(nudgeMsFromInput("  ")).toBeNull()
+    expect(nudgeMsFromInput("nope")).toBeNull()
+    expect(nudgeMsFromInput("250")).toBe(250)
+    expect(nudgeMsFromInput("0")).toBe(MIN_NUDGE_MS)
   })
 })

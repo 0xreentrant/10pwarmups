@@ -17,6 +17,8 @@ import {
   MAX_NUDGE_MS,
   MIN_NUDGE_MS,
   NUDGE_MS_STEP,
+  clampNudgeMs,
+  nudgeMsFromInput,
   usePersistedNudgeMs,
 } from "../../hooks/usePersistedNudgeMs"
 import {
@@ -159,6 +161,7 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
   const [editVideoEl, setEditVideoEl] = useState<HTMLVideoElement | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [nudgeMs, setNudgeMs] = usePersistedNudgeMs()
+  const [nudgeText, setNudgeText] = useState(() => String(nudgeMs))
   const [playbackSpeed, setPlaybackSpeed] = usePersistedPlaybackSpeed(editVideoEl)
   const [editingMoveIndex, setEditingMoveIndex] = useState<number | null>(null)
   const [moveNameDraft, setMoveNameDraft] = useState("")
@@ -243,8 +246,17 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
       if (settingsRef.current?.contains(e.target as Node)) return
       setSettingsOpen(false)
     }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      e.preventDefault()
+      setSettingsOpen(false)
+    }
     window.addEventListener("pointerdown", onPointerDown)
-    return () => window.removeEventListener("pointerdown", onPointerDown)
+    window.addEventListener("keydown", onKeyDown)
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown)
+      window.removeEventListener("keydown", onKeyDown)
+    }
   }, [settingsOpen])
 
   useEffect(() => {
@@ -254,11 +266,15 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       e.stopPropagation()
-      setNudgeMs(Number(el.value) + (e.deltaY < 0 ? NUDGE_MS_STEP : -NUDGE_MS_STEP))
+      const typed = Number(el.value)
+      const base = el.value.trim() === "" || !Number.isFinite(typed) ? nudgeMs : typed
+      const next = clampNudgeMs(base + (e.deltaY < 0 ? NUDGE_MS_STEP : -NUDGE_MS_STEP))
+      setNudgeMs(next)
+      setNudgeText(String(next))
     }
     el.addEventListener("wheel", onWheel, { passive: false })
     return () => el.removeEventListener("wheel", onWheel)
-  }, [settingsOpen, setNudgeMs])
+  }, [settingsOpen, setNudgeMs, nudgeMs])
 
   useEffect(() => {
     setLoadError(null)
@@ -819,8 +835,22 @@ function TaggerEditor({ warmup, mode, onWarmupChange, onModeChange, onSignedOut 
                       min={MIN_NUDGE_MS}
                       max={MAX_NUDGE_MS}
                       step={NUDGE_MS_STEP}
-                      value={nudgeMs}
-                      onChange={e => setNudgeMs(Number(e.target.value))}
+                      value={nudgeText}
+                      onChange={e => {
+                        const raw = e.target.value
+                        setNudgeText(raw)
+                        const next = nudgeMsFromInput(raw)
+                        if (next != null) setNudgeMs(next)
+                      }}
+                      onBlur={() => {
+                        const next = nudgeMsFromInput(nudgeText)
+                        if (next == null) {
+                          setNudgeText(String(nudgeMs))
+                          return
+                        }
+                        setNudgeMs(next)
+                        setNudgeText(String(next))
+                      }}
                       className="min-w-0 flex-1 border border-border bg-black px-2 py-1.5 text-sm tabular-nums"
                     />
                     <span className="shrink-0 text-xs text-muted">ms</span>

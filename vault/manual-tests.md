@@ -6,6 +6,8 @@
 - [ ] Open D4 review. The clip is the 10pwarmups post (about 65s), and the Instagram link is `https://www.instagram.com/p/DXI6R7JE4d1/`.
 - [ ] Open A1 review and a train round. A still of the frame shows with a spinner, then the video replaces it and the spinner is gone.
 - [ ] Scrub a warmup in train or review. Seeking uses a normal network response. The service worker does not cache the mp4.
+- [ ] In the tagger settings, clear Keyboard nudge and type 250. The field stays empty while you delete, then shows 250.
+- [ ] Open tagger settings and press Escape. The menu closes.
 - [ ] In the tagger, move a marker and reload. The marker is still where you left it.
 - [ ] Add a move, reload, and the added move is still there. Reset, and the catalog move count and timestamps are back.
 - [ ] Save the tagger JSON, reload, and the saved values show with no leftover draft.
