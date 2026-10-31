@@ -14,7 +14,7 @@ export type CatalogMove = {
 
 export type CatalogWarmup = {
   id: string
-  sectionId: string
+  sectionId: string | null
   title: string
   link: string | null
   note: string
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS sections (
 );
 CREATE TABLE IF NOT EXISTS warmups (
   id TEXT PRIMARY KEY,
-  section_id TEXT NOT NULL REFERENCES sections(id),
+  section_id TEXT REFERENCES sections(id),
   title TEXT NOT NULL,
   link TEXT,
   position INTEGER NOT NULL,
@@ -54,9 +54,11 @@ CREATE TABLE IF NOT EXISTS moves (
 `
 
 type SectionRow = { id: string; name: string; position: number }
+const NAMED_FLOW_IDS = ["attack-series", "ramey-flow", "marvin-flow"]
+
 type WarmupRow = {
   id: string
-  section_id: string
+  section_id: string | null
   title: string
   link: string | null
   position: number
@@ -93,7 +95,45 @@ export function openCatalog(dbPath: string): DatabaseSync {
   db.exec("PRAGMA foreign_keys = ON")
   db.exec(SCHEMA)
   seedIfEmpty(db)
+  detachNamedFlows(db)
   return db
+}
+
+function detachNamedFlows(db: DatabaseSync) {
+  const cols = db.prepare("PRAGMA table_info(warmups)").all() as { name: string; notnull: number }[]
+  const section = cols.find(col => col.name === "section_id")
+  const named = NAMED_FLOW_IDS.map(id => `'${id}'`).join(", ")
+  if (section?.notnull) {
+    db.exec("PRAGMA foreign_keys = OFF")
+    db.exec("BEGIN")
+    try {
+      db.exec(`
+        CREATE TABLE warmups_next (
+          id TEXT PRIMARY KEY,
+          section_id TEXT REFERENCES sections(id),
+          title TEXT NOT NULL,
+          link TEXT,
+          position INTEGER NOT NULL,
+          note TEXT NOT NULL DEFAULT ''
+        );
+        INSERT INTO warmups_next (id, section_id, title, link, position, note)
+        SELECT id,
+          CASE WHEN id IN (${named}) THEN NULL ELSE section_id END,
+          title, link, position, note
+        FROM warmups;
+        DROP TABLE warmups;
+        ALTER TABLE warmups_next RENAME TO warmups;
+      `)
+      db.exec("COMMIT")
+    } catch (err) {
+      db.exec("ROLLBACK")
+      db.exec("PRAGMA foreign_keys = ON")
+      throw err
+    }
+    db.exec("PRAGMA foreign_keys = ON")
+    return
+  }
+  db.prepare(`UPDATE warmups SET section_id = NULL WHERE id IN (${named})`).run()
 }
 
 function seedIfEmpty(db: DatabaseSync) {
@@ -129,8 +169,9 @@ export function readCatalog(db: DatabaseSync): CatalogPayload {
     movesByWarmup.set(move.warmup_id, list)
   }
   const sectionOrder = new Map(sections.map(section => [section.id, section.position]))
+  const sectionRank = (id: string | null) => (id == null ? Number.MAX_SAFE_INTEGER : (sectionOrder.get(id) ?? 0))
   const ordered = [...warmups].sort((a, b) => {
-    const sectionDiff = (sectionOrder.get(a.section_id) ?? 0) - (sectionOrder.get(b.section_id) ?? 0)
+    const sectionDiff = sectionRank(a.section_id) - sectionRank(b.section_id)
     if (sectionDiff !== 0) return sectionDiff
     return a.position - b.position
   })
@@ -198,8 +239,13 @@ export function updateWarmup(db: DatabaseSync, id: string, title: string, sectio
   if (!trimmed) throw new Error("Title is required")
   const warmup = db.prepare("SELECT id FROM warmups WHERE id = ?").get(id) as { id: string } | undefined
   if (!warmup) throw new Error(`Unknown warmup ${id}`)
-  requireSection(db, sectionId)
-  db.prepare("UPDATE warmups SET title = ?, section_id = ? WHERE id = ?").run(trimmed, sectionId, id)
+  const section = sectionId.trim()
+  if (!section) {
+    db.prepare("UPDATE warmups SET title = ?, section_id = NULL WHERE id = ?").run(trimmed, id)
+    return
+  }
+  requireSection(db, section)
+  db.prepare("UPDATE warmups SET title = ?, section_id = ? WHERE id = ?").run(trimmed, section, id)
 }
 
 function warmupMoves(db: DatabaseSync, warmupId: string): { text: string; note: string | null }[] {

@@ -14,7 +14,7 @@ function entriesFrom(payload: CatalogPayload): Entry[] {
   return payload.warmups.map(warmup => ({
     id: warmup.id,
     title: warmup.title,
-    sectionId: warmup.sectionId,
+    sectionId: warmup.sectionId ?? "",
   }))
 }
 
@@ -53,7 +53,7 @@ export default function CatalogMockView() {
       .finally(() => setLoaded(true))
   }, [])
 
-  const sectionName = (id: string) => sections.find(section => section.id === id)?.name ?? id
+  const sectionName = (id: string) => (id ? sections.find(section => section.id === id)?.name ?? id : "Named Flows")
 
   function openCreate() {
     setView({
@@ -421,6 +421,7 @@ function EditScreen({
                   value={draftSection}
                   onChange={event => setDraftSection(event.target.value)}
                 >
+                  {id && <option value="">Named Flows</option>}
                   {sections.map(section => (
                     <option key={section.id} value={section.id}>
                       {section.name}

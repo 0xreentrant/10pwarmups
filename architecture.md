@@ -127,7 +127,7 @@ sequenceDiagram
 
 | Concern | Source |
 |---------|--------|
-| Series / decks / moves | SQLite via `GET /api/catalog`. Empty databases load `server/seed.sql`. `src/data/decks.ts` is a cache `applyCatalog` fills |
+| Series / decks / moves | SQLite via `GET /api/catalog`. Empty databases load `server/seed.sql`. `src/data/decks.ts` is a cache `applyCatalog` fills. Attack Series, Ramey Flow, and Marvin Flow have no section and list under Named Flows. Letter decks stay on A-H |
 | Week rotation | `src/data/warmupSchedule.ts` |
 | Move timestamps | SQLite `moves.start_sec`. `src/data/moveTimestamps.ts` is a cache `applyCatalog` fills (`null` = untagged) |
 | Video URL | `src/utils/deckVideo.ts` → `/videos/{id}.mp4` and `/posters/{id}/{open or move}.webp` |
@@ -182,7 +182,7 @@ Unsaved tagger JSON stays in `tp_tagger_json_drafts` (one string per deck) until
 
 `/admin` uses the same bearer for catalog writes. `GET /api/catalog` is public. The GitHub Contents API is not used.
 
-Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview and Tailscale serve). `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when that port is closed (`scripts/dev.mjs` runs `pnpm run server` and waits until it accepts connections). A process already listening there is left running, including a stale bundle. `pnpm run server` still starts the API alone. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections are left as they are. `server/seed.sql` is regenerated from the local catalog when tags are published. Owner copies of `data/warmups.sqlite` go to the private repo `0xreentrant/10pwarmups-db` via `scripts/backup-db.sh` (`DB_BACKUP_REPO` overrides the remote). A clone does not need that repo.
+Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview and Tailscale serve). `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when that port is closed (`scripts/dev.mjs` runs `pnpm run server` and waits until it accepts connections). A process already listening there is left running, including a stale bundle. `pnpm run server` still starts the API alone. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections keep their other rows. On startup, Attack Series, Ramey Flow, and Marvin Flow are cleared off section A so they list under Named Flows. `server/seed.sql` is regenerated from the local catalog when tags are published. Owner copies of `data/warmups.sqlite` go to the private repo `0xreentrant/10pwarmups-db` via `scripts/backup-db.sh` (`DB_BACKUP_REPO` overrides the remote). A clone does not need that repo.
 
 ## Changelog
 
@@ -212,6 +212,7 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-29 | Escape closes the tagger settings menu. |
 | 2026-10-29 | Untagged decks stay on the schedule for review. Train stays disabled until a move is tagged. |
 | 2026-10-29 | Current catalog tags are in `server/seed.sql`. Owner SQLite backups go to private `0xreentrant/10pwarmups-db`. |
+| 2026-10-31 | Attack Series, Ramey Flow, and Marvin Flow have no section. They show under Named Flows. A null `warmups.section_id` is allowed. |
 
 ## Authoritative files
 

@@ -13,7 +13,7 @@ export type CatalogMove = {
 
 export type CatalogWarmup = {
   id: string
-  sectionId: string
+  sectionId: string | null
   title: string
   link: string | null
   note: string
@@ -42,7 +42,7 @@ export function applyCatalog(payload: CatalogPayload) {
       })
       return {
         id: warmup.id,
-        series: warmup.sectionId,
+        series: warmup.sectionId || undefined,
         name: warmup.title,
         link: warmup.link ?? undefined,
         moves: warmup.moves.map(move => ({ text: move.text, players: move.players })),
