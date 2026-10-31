@@ -188,6 +188,7 @@ export default function ScheduleHomeScreen({
             state={schedule}
             weekSummary={weekSummary}
             onGroupSelect={onSeriesSelect}
+            onRestSelect={onWeekSchedule}
             demo={showDemo}
           />
           <SeriesIndexNav

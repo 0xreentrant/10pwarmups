@@ -138,7 +138,7 @@ sequenceDiagram
 
 | Surface | Components |
 |---------|------------|
-| Home / schedule | `ScheduleHomeScreen`, `DeckRow`, heat bars |
+| Home / schedule | `ScheduleHomeScreen`, `DeckRow`, heat bars. Every week pill is a button. A rest pill returns to today's week home. |
 | Review cinema | `CinemaReviewView` → `CinemaOverlay` (+ optional `ReviewTapDemo`) |
 | Train cinema | `TrainingSessionView` → `Dusk2TrainingView` → `BleedDusk2Overlay` |
 | Complete | `Dusk2CompleteOverlay` when `session.locked` |
@@ -213,6 +213,7 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-29 | Untagged decks stay on the schedule for review. Train stays disabled until a move is tagged. |
 | 2026-10-29 | Current catalog tags are in `server/seed.sql`. Owner SQLite backups go to private `0xreentrant/10pwarmups-db`. |
 | 2026-10-31 | Attack Series, Ramey Flow, and Marvin Flow have no section. They show under Named Flows. A null `warmups.section_id` is allowed. |
+| 2026-10-31 | Every week pill is a button. A rest pill returns to today's week home. |
 
 ## Authoritative files
 

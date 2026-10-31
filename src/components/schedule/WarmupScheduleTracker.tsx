@@ -33,9 +33,11 @@ function TodayBanner({
 function WeekPills({
   weekDays,
   onGroupSelect,
+  onRestSelect,
 }: {
   weekDays: ScheduleState["weekDays"]
   onGroupSelect: (group: SeriesId) => void
+  onRestSelect: () => void
 }) {
   return (
     <div className="flex flex-wrap gap-1 mb-4">
@@ -43,22 +45,19 @@ function WeekPills({
         const className = [
           PILL_BASE,
           day.isToday ? "border-accent text-accent" : "border-border text-muted",
-          day.group ? "hover:text-accent transition-colors cursor-pointer" : "",
+          "hover:text-accent transition-colors cursor-pointer",
         ].join(" ")
         const label = `${day.label}${day.deckId ? ` ${day.deckId}` : day.group ? ` ${day.group}` : " rest"}`
 
-        if (day.group) {
-          return (
-            <button key={day.label} type="button" className={className} onClick={() => onGroupSelect(day.group!)}>
-              {label}
-            </button>
-          )
-        }
-
         return (
-          <div key={day.label} className={className}>
+          <button
+            key={day.label}
+            type="button"
+            className={className}
+            onClick={() => day.group ? onGroupSelect(day.group) : onRestSelect()}
+          >
             {label}
-          </div>
+          </button>
         )
       })}
     </div>
@@ -69,6 +68,7 @@ interface WarmupScheduleTrackerProps {
   state: ScheduleState
   weekSummary: string
   onGroupSelect: (group: SeriesId) => void
+  onRestSelect: () => void
   demo?: boolean
 }
 
@@ -76,12 +76,13 @@ export default function WarmupScheduleTracker({
   state,
   weekSummary,
   onGroupSelect,
+  onRestSelect,
   demo = false,
 }: WarmupScheduleTrackerProps) {
   return (
     <div data-beta-demo={demo ? "tracker" : undefined}>
       <p className="text-[0.65rem] tracking-[0.18em] uppercase text-muted mb-2">This week&apos;s schedule</p>
-      <WeekPills weekDays={state.weekDays} onGroupSelect={onGroupSelect} />
+      <WeekPills weekDays={state.weekDays} onGroupSelect={onGroupSelect} onRestSelect={onRestSelect} />
       <TodayBanner
         isTrainingDay={state.isTrainingDay}
         featuredGroup={state.featuredGroup}

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { act, screen, fireEvent, waitFor, within } from "@testing-library/react"
 import { DECKS } from "./data/decks"
 import { APP_RELEASE_VERSION, WHATS_NEW_STORAGE_KEY } from "./data/whatsNew"
@@ -66,6 +66,52 @@ describe("routing", () => {
     expect(router.state.location.pathname).toBe("/A1/training")
     expect(document.querySelector(".bl-overlay")).toBeTruthy()
     expect(document.querySelector(".bl-deck .ao-option")).toBeTruthy()
+  })
+
+  it("returns to the rest day after opening another day on the schedule", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] })
+    vi.setSystemTime(new Date(2026, 7, 29))
+    try {
+      const { router } = await renderWithRouter("/")
+      expect(router.state.location.pathname).toBe("/")
+      expect(screen.getByText(/No scheduled warmup/)).toBeInTheDocument()
+      expect(screen.getByRole("button", { name: "Sat rest" })).toBeEnabled()
+
+      fireEvent.click(screen.getByRole("button", { name: "Fri rest" }))
+      expect(router.state.location.pathname).toBe("/")
+      expect(screen.getByText(/No scheduled warmup/)).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole("button", { name: "Mon H3" }))
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe("/series/H")
+      })
+      expect(screen.getByText(/Series H/)).toBeInTheDocument()
+
+      fireEvent.click(screen.getByRole("button", { name: "Sat rest" }))
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe("/")
+      })
+      expect(screen.getByText(/No scheduled warmup/)).toBeInTheDocument()
+      expect(screen.queryByText(/Series H/)).not.toBeInTheDocument()
+
+      vi.setSystemTime(new Date(2026, 7, 26))
+      await act(async () => {
+        await router.navigate({ to: "/" })
+      })
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe("/series/F")
+      })
+      fireEvent.click(screen.getByRole("button", { name: "Mon H3" }))
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe("/series/H")
+      })
+      fireEvent.click(screen.getByRole("button", { name: "Fri rest" }))
+      await waitFor(() => {
+        expect(router.state.location.pathname).toBe("/series/F")
+      })
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it("navigates to /progress when Stats is clicked", async () => {
