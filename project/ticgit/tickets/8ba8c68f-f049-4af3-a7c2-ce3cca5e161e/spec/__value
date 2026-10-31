@@ -1,0 +1,7 @@
+Network is not cached. Remove the Workbox runtimeCaching block for /api/catalog. fetchCatalog and refreshCatalog use cache: "no-store". GET /api/catalog sets Cache-Control: no-store.
+
+A newer payload repaints the list. If fresh JSON differs from the applied snapshot, applyCatalog, store it, notify useSyncExternalStore subscribers, and send REPLACE_DECKS on the live actor. Root layout subscribes once so the schedule re-reads DECKS and SERIES. REPLACE_DECKS replaces context.decks and fills progress for new ids via loadProgress. Leave an in-progress session alone. Do not call restartAppActor after paint.
+
+tp_catalog still paints first and stays when the fetch fails or the 2s abort fires. Identical JSON does not notify.
+
+Update architecture changelog and persistence boundary. Add a manual-test checkbox. One test: mock fetch returns a different title, assert cache no-store, DECKS updated, actor context has that title, then restore the setup fixture. Assert built sw.js does not contain warmup-catalog.

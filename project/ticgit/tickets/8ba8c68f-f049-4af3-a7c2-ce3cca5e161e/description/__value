@@ -1,0 +1,1 @@
+Stop the service worker and browser from serving a stale warmup catalog, and repaint the schedule listings when a newer GET /api/catalog response arrives. Keep the localStorage tp_catalog snapshot for offline.

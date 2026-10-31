@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"Catalog GET is no-store, the service worker no longer caches it, and a different payload repaints the schedule without clearing progress or an open session. Verified with unit tests (227), the PWA artifact test, and the live schedule at :5174 (A1-A4 from a network catalog response)."}
