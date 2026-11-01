@@ -1,4 +1,5 @@
 import { setup, assign } from "xstate"
+import { DECKS } from "./data/decks"
 import { playableMoveIndices } from "./data/moveTimestamps"
 import type { Deck, MoveAnswer, ProgressMap, QuestionOption, Session } from "./types/domain"
 import { logTrainMode } from "./utils/trainModeLog"
@@ -97,6 +98,7 @@ export type AppEvent =
   | { type: "GO_HOME" }
   | { type: "RESTORE_COMPLETED" }
   | { type: "REQUEST_EXIT" }
+  | { type: "REPLACE_DECKS" }
 
 export function hasRestorableCompletion(
   snap: { value: unknown; context: AppContext },
@@ -128,6 +130,10 @@ const appMachineSetup = setup({
     resetAll: assign(({ context }) => ({
       resetConfirm: false,
       progress: getDefaultProgress(context.decks),
+    })),
+    replaceDecks: assign(() => ({
+      decks: DECKS,
+      progress: loadProgress(DECKS),
     })),
     startDeck: assign(({ context, event }) => {
       if (event.type !== "START_DECK" && event.type !== "START_PREVIEW") return {}
@@ -308,6 +314,9 @@ export const appMachine = appMachineSetup.createMachine({
     resetConfirm: false,
     preview: false,
   }),
+  on: {
+    REPLACE_DECKS: { actions: "replaceDecks" },
+  },
   initial: "home",
   states: {
     home: {

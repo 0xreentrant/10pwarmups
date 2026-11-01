@@ -19,3 +19,4 @@
 - [ ] Start a Save, add another move before it finishes, and reload. The newer move is still there.
 - [ ] In a fresh profile with the network off, the home screen says Catalog unavailable.
 - [ ] Load the app once online, then reload with the network off. The schedule is still there, including an A1 Train row.
+- [ ] Change a warmup title, reload the schedule, and the new title shows. Offline still shows the last saved list.

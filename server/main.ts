@@ -219,6 +219,7 @@ export async function handleRequest(req: IncomingMessage, res: ServerResponse, e
       return
     }
     if (req.method === "GET" && reqUrl.pathname === "/api/catalog") {
+      res.setHeader("Cache-Control", "no-store")
       sendJson(res, 200, readCatalog(db))
       return
     }

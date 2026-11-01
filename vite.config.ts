@@ -70,15 +70,6 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,woff2,woff}"],
         navigateFallback: "index.html",
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.pathname === "/api/catalog",
-            handler: "StaleWhileRevalidate",
-            options: {
-              cacheName: "warmup-catalog",
-            },
-          },
-        ],
       },
     }),
   ],

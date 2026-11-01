@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useSyncExternalStore } from "react"
 import {
   Outlet,
   createRootRoute,
@@ -20,6 +20,7 @@ import TrainingSessionView from "./components/training/TrainingSessionView"
 import WhatsNewPopover from "./components/WhatsNewPopover"
 import { appActor, getAppSnapshot } from "./appActor"
 import { hasRestorableCompletion } from "./appMachine"
+import { getCatalogRevision, subscribeCatalog } from "./data/catalog"
 import { DECKS } from "./data/decks"
 import type { SeriesId } from "./data/warmupSchedule"
 import { useWhatsNew } from "./hooks/useWhatsNew"
@@ -326,6 +327,7 @@ declare module "@tanstack/react-router" {
 }
 
 function RootLayout() {
+  useSyncExternalStore(subscribeCatalog, getCatalogRevision)
   const routerInstance = useRouter()
   const pathname = useRouterState({ select: s => s.location.pathname })
   const onBetaTest = pathname.startsWith("/beta-test")

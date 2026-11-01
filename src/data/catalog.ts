@@ -1,8 +1,9 @@
+import { appActor } from "../appActor"
+import type { Partner } from "../types/domain"
+import { clearAdminToken, readAdminToken, taggerApiBase } from "../utils/taggerApi"
 import { applyDeckCatalog } from "./decks"
 import { applyMoveTimestamps } from "./moveTimestamps"
 import { applyWarmupNotes } from "./warmupNotes"
-import type { Partner } from "../types/domain"
-import { clearAdminToken, readAdminToken, taggerApiBase } from "../utils/taggerApi"
 
 export type CatalogMove = {
   text: string
@@ -31,8 +32,27 @@ const CATALOG_KEY = "tp_catalog"
 
 export let catalogApplied = false
 
+let appliedSnapshot = ""
+let catalogRevision = 0
+const catalogListeners = new Set<() => void>()
+
+export function subscribeCatalog(listener: () => void) {
+  catalogListeners.add(listener)
+  return () => catalogListeners.delete(listener)
+}
+
+export function getCatalogRevision() {
+  return catalogRevision
+}
+
+function publishCatalog() {
+  catalogRevision += 1
+  for (const listener of catalogListeners) listener()
+}
+
 export function applyCatalog(payload: CatalogPayload) {
   catalogApplied = true
+  appliedSnapshot = JSON.stringify(payload)
   applyDeckCatalog(
     payload.sections.map(section => ({ id: section.id, name: section.name })),
     payload.warmups.map(warmup => {
@@ -61,7 +81,7 @@ export function applyCatalog(payload: CatalogPayload) {
 }
 
 export async function fetchCatalog(): Promise<CatalogPayload> {
-  const res = await fetch(`${taggerApiBase()}/api/catalog`)
+  const res = await fetch(`${taggerApiBase()}/api/catalog`, { cache: "no-store" })
   if (!res.ok) throw new Error("Could not load catalog")
   return (await res.json()) as CatalogPayload
 }
@@ -99,11 +119,15 @@ export async function refreshCatalog(): Promise<boolean> {
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 2000)
   try {
-    const res = await fetch(`${taggerApiBase()}/api/catalog`, { signal: ctrl.signal })
+    const res = await fetch(`${taggerApiBase()}/api/catalog`, { cache: "no-store", signal: ctrl.signal })
     if (!res.ok) return catalogApplied
     const payload = (await res.json()) as CatalogPayload
+    const next = JSON.stringify(payload)
+    if (next === appliedSnapshot) return true
     applyCatalog(payload)
-    localStorage.setItem(CATALOG_KEY, JSON.stringify(payload))
+    localStorage.setItem(CATALOG_KEY, next)
+    publishCatalog()
+    appActor.send({ type: "REPLACE_DECKS" })
     return true
   } catch {
     return catalogApplied

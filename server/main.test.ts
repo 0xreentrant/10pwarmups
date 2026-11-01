@@ -33,6 +33,12 @@ afterAll(async () => {
 })
 
 describe("tagger api", () => {
+  it("tells browsers not to store the catalog", async () => {
+    const res = await fetch(`${base}/api/catalog`)
+    expect(res.status).toBe(200)
+    expect(res.headers.get("cache-control")).toBe("no-store")
+  })
+
   it("starts Google login on an allowlisted localhost origin", async () => {
     const res = await fetch(
       `${base}/auth/google?return=${encodeURIComponent("/tagger/A1/edit")}&origin=${encodeURIComponent("http://localhost:5173")}`,

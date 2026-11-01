@@ -72,5 +72,6 @@ describe("PWA build artifacts", () => {
     expect(urls.some(u => u.startsWith("assets/index-") && u.endsWith(".js"))).toBe(true)
     expect(urls.some(u => u.startsWith("assets/index-") && u.endsWith(".css"))).toBe(true)
     expect(urls.some(u => u.endsWith(".woff2"))).toBe(true)
+    expect(readDist("sw.js")).not.toContain("warmup-catalog")
   })
 })

@@ -166,7 +166,7 @@ flowchart LR
   Machine --> Video
 ```
 
-No server for train/review progress. Warmup content (sections, titles, moves, timestamps, notes) is SQLite on the API. The trainer fills `decks.ts`, `moveTimestamps.ts`, and `warmupNotes.ts` from `GET /api/catalog`. A saved `tp_catalog` cache is applied and shown before that fetch. A failed or aborted fetch leaves the cache in place. A first visit with no cache and no API shows catalog unavailable.
+No server for train/review progress. Warmup content (sections, titles, moves, timestamps, notes) is SQLite on the API. The trainer fills `decks.ts`, `moveTimestamps.ts`, and `warmupNotes.ts` from `GET /api/catalog`. The service worker does not cache that response. The fetch uses `cache: "no-store"` and the response sends `Cache-Control: no-store`. A saved `tp_catalog` cache is applied and shown before that fetch. A failed or aborted fetch leaves the cache in place. When the response JSON differs, the schedule repaints and the actor deck list is replaced. An in-progress session is left as it is. A first visit with no cache and no API shows catalog unavailable.
 
 ## Tagger admin
 
@@ -182,7 +182,7 @@ Unsaved tagger JSON stays in `tp_tagger_json_drafts` (one string per deck) until
 
 `/admin` uses the same bearer for catalog writes. `GET /api/catalog` is public. The GitHub Contents API is not used.
 
-Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview and Tailscale serve). `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when that port is closed (`scripts/dev.mjs` runs `pnpm run server` and waits until it accepts connections). A process already listening there is left running, including a stale bundle. `pnpm run server` still starts the API alone. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. An empty database loads `server/seed.sql` on first start. Databases that already have sections keep their other rows. On startup, Attack Series, Ramey Flow, and Marvin Flow are cleared off section A so they list under Named Flows. `server/seed.sql` is regenerated from the local catalog when tags are published. Owner copies of `data/warmups.sqlite` go to the private repo `0xreentrant/10pwarmups-db` via `scripts/backup-db.sh` (`DB_BACKUP_REPO` overrides the remote). A clone does not need that repo.
+Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview and Tailscale serve). `pnpm run dev` and `pnpm run dev:tailscale` start the API on :3101 when that port is closed (`scripts/dev.mjs` runs `pnpm run server` and waits until it accepts connections). A process already listening there is left running, including a stale bundle. `pnpm run server` still starts the API alone. See `.env.example`. Prod is systemd unit `10p-api` on the Qalm droplet (`10p-api.qalm.work` → nginx → `127.0.0.1:3101`). Env is `/etc/10p-api.env` (no `--env-file`). The bundle lives at `/var/www/10p-api/dist-server/main.js` and the database at `/var/www/10p-api/data/warmups.sqlite`. Ship that bundle over SSH as `deploy` (`ssh -i ~/.ssh/digital_ocean_iknowai deploy@192.241.132.222`), then `sudo systemctl restart 10p-api`. `deploy` can write `dist-server` and restart that unit only. The process still runs as `tenp` (`nologin`). `deploy` has no password login. An empty database loads `server/seed.sql` on first start. Databases that already have sections keep their other rows. On startup, Attack Series, Ramey Flow, and Marvin Flow are cleared off section A so they list under Named Flows. `server/seed.sql` is regenerated from the local catalog when tags are published. Owner copies of `data/warmups.sqlite` go to the private repo `0xreentrant/10pwarmups-db` via `scripts/backup-db.sh` (`DB_BACKUP_REPO` overrides the remote). A clone does not need that repo.
 
 ## Changelog
 
@@ -214,6 +214,8 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-29 | Current catalog tags are in `server/seed.sql`. Owner SQLite backups go to private `0xreentrant/10pwarmups-db`. |
 | 2026-10-31 | Attack Series, Ramey Flow, and Marvin Flow have no section. They show under Named Flows. A null `warmups.section_id` is allowed. |
 | 2026-10-31 | Every week pill is a button. A rest pill returns to today's week home. |
+| 2026-10-31 | `GET /api/catalog` is not cached by the service worker or the browser. A newer catalog repaints the schedule. |
+| 2026-10-31 | Prod API deploys use SSH user `deploy`. The process still runs as `tenp`. |
 
 ## Authoritative files
 
