@@ -1,6 +1,7 @@
 # Manual tests
 
 - [ ] Hard-refresh the site. Tab favicon is white italic "10P" in a circle on black. Share preview (Signal/checkmyog) shows the 10TH PLANET JIU JITSU WARMUPS OG image.
+- [ ] On home, the move search field shows a "search by move" label above the input. Typing a move opens matching warmups. Selecting a result opens that warmup's review view.
 - [ ] Run `pnpm run dev:tailscale`. `https://warmups.tail965c07.ts.net` opens the app with no port in the URL.
 - [ ] Open `/tagger` with no token, or with an expired one. The sign-in screen stays up. Google opens only after Sign in with Google. After an allowed account, the editor loads. A non-admin account stays on the error screen.
 - [ ] Log out of the tagger. The sign-in link stays up. Refresh does not sign you back in. Sign in with Google still opens Google.

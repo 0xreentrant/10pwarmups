@@ -5,6 +5,7 @@ import AllDeckSections from "./schedule/AllDeckSections"
 import SeriesDeckSection from "./schedule/SeriesDeckSection"
 import SeriesIndexNav from "./schedule/SeriesIndexNav"
 import WarmupScheduleTracker from "./schedule/WarmupScheduleTracker"
+import WarmupSearchBar from "./schedule/WarmupSearchBar"
 import { useScheduleOnboarding } from "../hooks/useScheduleOnboarding"
 import { SERIES } from "../data/decks"
 import { catalogApplied } from "../data/catalog"
@@ -191,6 +192,7 @@ export default function ScheduleHomeScreen({
             onRestSelect={onWeekSchedule}
             demo={showDemo}
           />
+          <WarmupSearchBar onSelect={onReviewClick} />
           <SeriesIndexNav
             todayGroup={schedule.featuredGroup}
             activeLetter={demoSeriesLetter}
@@ -214,6 +216,7 @@ export default function ScheduleHomeScreen({
               ← Week schedule
             </button>
           </div>
+          <WarmupSearchBar onSelect={onReviewClick} />
           <SeriesIndexNav
             todayGroup={schedule.featuredGroup}
             allActive
