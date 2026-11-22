@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS moves (
 `
 
 type SectionRow = { id: string; name: string; position: number }
-const NAMED_FLOW_IDS = ["attack-series", "ramey-flow", "marvin-flow"]
+const NAMED_FLOW_IDS = ["attack-series", "ramey-flow", "marvin-flow", "preschool-flow"]
 
 type WarmupRow = {
   id: string

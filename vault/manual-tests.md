@@ -10,7 +10,8 @@
 - [ ] Open G3 review. The clip is the 10pwarmups post (about 44s), and the Instagram link is `https://www.instagram.com/p/DYdXgXKTu0K/`.
 - [ ] Open A1 review and a train round. A still of the frame shows with a spinner, then the video replaces it and the spinner is gone.
 - [ ] Week pills are all buttons. On a rest day, open another day, then tap a rest pill. The schedule returns to no warmup for today.
-- [ ] Open All. Attack Series, Ramey Flow, and Marvin Flow are under Named Flows. Series A is only A1-A4.
+- [ ] Open All. Attack Series, Ramey Flow, Marvin Flow, and Preschool Flow are under Named Flows. Series A is only A1-A4.
+- [ ] Open Preschool Flow review. The clip plays (~48s) and Train stays disabled until moves are tagged.
 - [ ] Open an untagged warmup (Ramey Flow, G2, or H2). It is on the schedule. Review plays the clip. Train is disabled on the row and in review.
 - [ ] Scrub a warmup in train or review. Seeking uses a normal network response. The service worker does not cache the mp4.
 - [ ] In the tagger settings, clear Keyboard nudge and type 250. The field stays empty while you delete, then shows 250.

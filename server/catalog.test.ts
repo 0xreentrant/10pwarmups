@@ -67,11 +67,11 @@ describe("warmup catalog", () => {
     const createdRow = catalog.warmups.find(warmup => warmup.id === "I1")
     expect(createdRow?.title).toBe("New Wave")
     expect(createdRow?.moves).toEqual([])
-    for (const id of ["attack-series", "ramey-flow", "marvin-flow"]) {
+    for (const id of ["attack-series", "ramey-flow", "marvin-flow", "preschool-flow"]) {
       expect(catalog.warmups.find(warmup => warmup.id === id)?.sectionId).toBeNull()
     }
     const named = catalog.warmups.filter(warmup => warmup.sectionId == null).map(warmup => warmup.id)
-    expect(named).toEqual(["attack-series", "ramey-flow", "marvin-flow"])
+    expect(named).toEqual(["attack-series", "ramey-flow", "marvin-flow", "preschool-flow"])
     db.close()
   })
 
@@ -108,6 +108,7 @@ describe("warmup catalog", () => {
       INSERT INTO warmups VALUES('attack-series','A','Attack Series',NULL,4,'');
       INSERT INTO warmups VALUES('ramey-flow','A','Ramey Flow',NULL,5,'');
       INSERT INTO warmups VALUES('marvin-flow','A','Marvin Flow',NULL,6,'');
+      INSERT INTO warmups VALUES('preschool-flow','A','Preschool Flow',NULL,7,'');
       INSERT INTO moves VALUES('attack-series',0,'Full Guard','["A"]',NULL,NULL);
     `)
     legacy.close()
@@ -116,7 +117,7 @@ describe("warmup catalog", () => {
     const catalog = readCatalog(db)
     expect(catalog.warmups.find(warmup => warmup.id === "A1")?.sectionId).toBe("A")
     expect(catalog.warmups.find(warmup => warmup.id === "attack-series")?.moves[0]?.text).toBe("Full Guard")
-    for (const id of ["attack-series", "ramey-flow", "marvin-flow"]) {
+    for (const id of ["attack-series", "ramey-flow", "marvin-flow", "preschool-flow"]) {
       expect(catalog.warmups.find(warmup => warmup.id === id)?.sectionId).toBeNull()
     }
     db.close()

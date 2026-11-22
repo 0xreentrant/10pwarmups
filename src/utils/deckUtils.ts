@@ -5,6 +5,7 @@ const NAMED_FLOW_CODES: Record<string, string> = {
   "attack-series": "AS",
   "ramey-flow": "RF",
   "marvin-flow": "MF",
+  "preschool-flow": "PF",
 }
 
 export function deckLabel(deck: Deck): string {

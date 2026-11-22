@@ -9,6 +9,7 @@ const VIDEO_DECK_ID_LIST = [
   "G1", "G2", "G3", "G4",
   "H1", "H2", "H3", "H4",
   "ramey-flow",
+  "preschool-flow",
 ] as const
 
 const VIDEO_DECK_IDS = new Set<string>(VIDEO_DECK_ID_LIST)
