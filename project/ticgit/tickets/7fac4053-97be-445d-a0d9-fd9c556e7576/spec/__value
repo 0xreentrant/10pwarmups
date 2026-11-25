@@ -1,0 +1,6 @@
+# Spec
+
+1. Delete server/catalog.characterization.test.ts
+2. Unit/integration in catalog.test.ts: migrations once-only, special-flow-1 mint, re-open stable, dashed createSection
+3. Golden path: Special Flows visible on /all (or home) from catalog
+4. Tail: delayed GET /api/catalog must not wipe Special Flows after success

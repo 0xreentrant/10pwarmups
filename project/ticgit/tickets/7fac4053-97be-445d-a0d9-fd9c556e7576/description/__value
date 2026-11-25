@@ -1,0 +1,1 @@
+Remove catalog.characterization.test.ts. Keep unit/integration coverage in catalog.test.ts for migrations. Golden path + delayed-catalog tail for Special Flows UI.
