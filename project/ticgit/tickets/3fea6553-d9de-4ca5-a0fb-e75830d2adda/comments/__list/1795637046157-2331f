@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"Done: schema_migrations runner (v1 schema/nullable rebuild, v2 special-flow). Characterization before 4/4; after raw failed only intentional Special Flows deltas (plus one real bug: FK-off inside TX dropped moves - fixed with transaction:false). After suite + catalog/deckUtils green. Admin/home/All use Special Flows / #special-flow."}

@@ -1,0 +1,18 @@
+# Spec: Special Flows via SQLite migrations
+
+## Goal
+Replace open-time catalog kludges with a versioned in-process migration runner, then make Special Flows a real section.
+
+## Behavior
+1. `schema_migrations` table + ordered TS `up(db)` steps on openCatalog.
+2. Migration: create catalog tables (nullable section_id); rebuild if NOT NULL.
+3. Migration: insert section special-flow / Special Flows; attach attack-series, ramey-flow, marvin-flow, preschool-flow.
+4. Delete every-open detachNamedFlows null UPDATE.
+5. Keep seed.sql unchanged; seedIfEmpty after schema migrate.
+6. createSection: letter uppercased; dashed ids lowercase.
+7. nextWarmupId: dashed section ids mint special-flow-1 style.
+8. Admin/home/schedule: Named Flows → Special Flows / #special-flow; A-H schedule unchanged.
+9. Characterization tests: green before refactor; after, only intentional Special Flows deltas change.
+
+## Out of scope
+Slug warmup renames; schedule SeriesId beyond A-H; client localStorage shims; down migrations.

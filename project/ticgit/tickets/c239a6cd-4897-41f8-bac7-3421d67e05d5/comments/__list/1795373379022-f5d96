@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"Originating chat: /home/anon/.cursor/projects/home-anon-projects-dreams-10pwarmups/agent-transcripts/833963db-9208-4d1c-a05a-88704ec32b24/833963db-9208-4d1c-a05a-88704ec32b24.jsonl\n\nPlan: add visible \"Search by move\" label on WarmupSearchBar; wire label htmlFor; drop redundant aria-label; update test + vault/manual-tests."}

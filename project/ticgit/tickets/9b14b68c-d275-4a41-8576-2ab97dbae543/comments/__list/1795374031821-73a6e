@@ -1,0 +1,1 @@
+{"author":"0x7e1e@protonmail.com","body":"Originating chat: /home/anon/.cursor/projects/home-anon-projects-dreams-10pwarmups/agent-transcripts/833963db-9208-4d1c-a05a-88704ec32b24/833963db-9208-4d1c-a05a-88704ec32b24.jsonl\n\nPlan: wire WarmupSearchBar onSelect to onReviewClick (START_REVIEW + /$deckId/review) instead of onDeckSelect. Update vault/manual-tests."}

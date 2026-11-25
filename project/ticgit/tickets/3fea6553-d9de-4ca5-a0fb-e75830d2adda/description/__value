@@ -1,0 +1,1 @@
+Homegrown schema_migrations runner on node:sqlite. Port SCHEMA + detachNamedFlows into versioned migrations. Add Special Flows (id special-flow). Characterization tests before/after.
