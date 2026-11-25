@@ -2,10 +2,15 @@ import DeckRow from "../DeckRow"
 import { DECKS, SERIES } from "../../data/decks"
 import type { SeriesId } from "../../data/warmupSchedule"
 import type { ProgressMap } from "../../types/domain"
+import { isLetterSeriesId, SPECIAL_FLOW_SECTION_ID } from "../../utils/deckUtils"
 import SeriesDeckSection from "./SeriesDeckSection"
 
-function unsectionedDecks() {
-  return DECKS.filter(d => !d.series)
+function letterSeriesList() {
+  return SERIES.filter(series => isLetterSeriesId(series.id))
+}
+
+function specialFlowDecks() {
+  return DECKS.filter(d => d.series === SPECIAL_FLOW_SECTION_ID || !d.series)
 }
 
 function EmptyDeckList() {
@@ -25,11 +30,11 @@ export default function AllDeckSections({
   onDeckClick,
   onReviewClick,
 }: AllDeckSectionsProps) {
-  const namedFlows = unsectionedDecks()
+  const specialFlows = specialFlowDecks()
 
   return (
     <>
-      {SERIES.map(series => (
+      {letterSeriesList().map(series => (
         <SeriesDeckSection
           key={series.id}
           letter={series.id as SeriesId}
@@ -38,16 +43,16 @@ export default function AllDeckSections({
           onReviewClick={onReviewClick}
         />
       ))}
-      <div id="named-flows" className="scroll-mt-3 mb-5">
+      <div id={SPECIAL_FLOW_SECTION_ID} className="scroll-mt-3 mb-5">
         <div className="font-disp font-bold text-[0.7rem] tracking-[0.18em] uppercase text-muted pt-1 pb-1.5 border-b border-border mb-1">
-          Named Flows
+          Special Flows
         </div>
-        {namedFlows.length === 0 ? (
+        {specialFlows.length === 0 ? (
           <EmptyDeckList />
         ) : (
           <table className="w-full table-fixed border-collapse">
             <tbody>
-              {namedFlows.map(deck => (
+              {specialFlows.map(deck => (
                 <DeckRow
                   key={deck.id}
                   deck={deck}

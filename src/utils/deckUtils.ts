@@ -1,11 +1,17 @@
 import { DECKS } from "../data/decks"
 import type { Deck, Move, QuestionOption } from "../types/domain"
 
-const NAMED_FLOW_CODES: Record<string, string> = {
+export const SPECIAL_FLOW_SECTION_ID = "special-flow"
+
+const SPECIAL_FLOW_CODES: Record<string, string> = {
   "attack-series": "AS",
   "ramey-flow": "RF",
   "marvin-flow": "MF",
   "preschool-flow": "PF",
+}
+
+export function isLetterSeriesId(id: string): boolean {
+  return /^[A-Z]$/.test(id)
 }
 
 export function deckLabel(deck: Deck): string {
@@ -13,12 +19,13 @@ export function deckLabel(deck: Deck): string {
 }
 
 export function homeDeckRowLabel(deck: Deck): string {
-  if (deck.series) return deck.id
-  return NAMED_FLOW_CODES[deck.id] ?? deck.name
+  if (deck.series && isLetterSeriesId(deck.series)) return deck.id
+  return SPECIAL_FLOW_CODES[deck.id] ?? deck.name
 }
 
 export function homeSectionHash(deck: Deck): string {
-  return deck.series ? `series-${deck.series}` : "named-flows"
+  if (deck.series && isLetterSeriesId(deck.series)) return `series-${deck.series}`
+  return SPECIAL_FLOW_SECTION_ID
 }
 
 export function getMoveNote(deck: Deck, moveIndex: number): string | null {

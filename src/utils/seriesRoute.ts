@@ -1,6 +1,7 @@
 import { DECKS } from "../data/decks"
 import { getScheduleState, type SeriesId } from "../data/warmupSchedule"
 import type { Deck } from "../types/domain"
+import { isLetterSeriesId, SPECIAL_FLOW_SECTION_ID } from "./deckUtils"
 
 const SERIES_LETTERS = new Set(["A", "B", "C", "D", "E", "F", "G", "H"])
 
@@ -13,7 +14,7 @@ export function defaultWeekSeriesLetter(): SeriesId | null {
 }
 
 export function homePathForDeck(deck: Deck) {
-  if (deck.series) {
+  if (deck.series && isLetterSeriesId(deck.series)) {
     return {
       to: "/series/$letter" as const,
       params: { letter: deck.series as SeriesId },
@@ -21,7 +22,7 @@ export function homePathForDeck(deck: Deck) {
   }
   return {
     to: "/all" as const,
-    hash: "named-flows",
+    hash: SPECIAL_FLOW_SECTION_ID,
     hashScrollIntoView: false as const,
   }
 }

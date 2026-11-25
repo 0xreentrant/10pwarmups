@@ -3,9 +3,14 @@ import DeckRow from "./DeckRow"
 import { DECKS, SERIES } from "../data/decks"
 import type { ProgressMap } from "../types/domain"
 import * as analytics from "../utils/analytics"
+import { isLetterSeriesId, SPECIAL_FLOW_SECTION_ID } from "../utils/deckUtils"
 
-function unsectionedDecks() {
-  return DECKS.filter(d => !d.series)
+function letterSeriesList() {
+  return SERIES.filter(series => isLetterSeriesId(series.id))
+}
+
+function specialFlowDecks() {
+  return DECKS.filter(d => d.series === SPECIAL_FLOW_SECTION_ID || !d.series)
 }
 
 const SERIES_NAV_LINK = "font-disp font-bold text-[0.85rem] tracking-widest uppercase text-muted no-underline transition-colors hover:text-accent"
@@ -51,23 +56,24 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
     return () => window.removeEventListener("scroll", updateScrollTopVisibility)
   }, [])
 
-  const namedFlows = unsectionedDecks()
+  const letters = letterSeriesList()
+  const specialFlows = specialFlowDecks()
 
   return (
     <div className="pt-7 pb-12">
       <h1 className="mb-1">10th Planet</h1>
       <h1 className="mb-1.5 text-accent">Warmup Trainer</h1>
       <p className="text-[11px] text-muted mt-0.5 mb-5 tracking-wide">openthesystem.app</p>
-      <p className="text-[11px] text-muted mt-0.5 mb-8 tracking-widest uppercase">{DECKS.length} decks · {SERIES.length} series</p>
+      <p className="text-[11px] text-muted mt-0.5 mb-8 tracking-widest uppercase">{DECKS.length} decks · {letters.length} series</p>
 
       <nav className="flex justify-between items-center gap-1 mb-7 border-y border-border py-2">
-        {SERIES.map(series => (
+        {letters.map(series => (
           <a key={series.id} href={`#series-${series.id}`} className={SERIES_NAV_LINK}>{series.id}</a>
         ))}
-        {namedFlows.length > 0 && <a href="#named-flows" className={SERIES_NAV_LINK}>Named Flows</a>}
+        {specialFlows.length > 0 && <a href={`#${SPECIAL_FLOW_SECTION_ID}`} className={SERIES_NAV_LINK}>Special Flows</a>}
       </nav>
 
-      {SERIES.map(series => {
+      {letters.map(series => {
         const seriesDecks = DECKS.filter(d => d.series === series.id)
         return (
           <div key={series.id} id={`series-${series.id}`} className="scroll-mt-3 mb-7">
@@ -85,14 +91,14 @@ export default function HomeScreen({ progress, scrollToSectionId, onDeckClick, o
         )
       })}
 
-      {namedFlows.length > 0 && (
-        <div id="named-flows" className="scroll-mt-3 mb-7">
+      {specialFlows.length > 0 && (
+        <div id={SPECIAL_FLOW_SECTION_ID} className="scroll-mt-3 mb-7">
           <div className="font-disp font-bold text-[0.7rem] tracking-[0.18em] uppercase text-muted pt-1 pb-1.5 border-b border-border mb-1">
-            Named Flows
+            Special Flows
           </div>
           <table className="w-full table-fixed border-collapse">
             <tbody>
-              {namedFlows.map(d => (
+              {specialFlows.map(d => (
                 <DeckRow key={d.id} deck={d} progress={progress} onDeckClick={onDeckClick} onReviewClick={onReviewClick} />
               ))}
             </tbody>

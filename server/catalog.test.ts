@@ -68,14 +68,13 @@ describe("warmup catalog", () => {
     expect(createdRow?.title).toBe("New Wave")
     expect(createdRow?.moves).toEqual([])
     for (const id of ["attack-series", "ramey-flow", "marvin-flow", "preschool-flow"]) {
-      expect(catalog.warmups.find(warmup => warmup.id === id)?.sectionId).toBeNull()
+      expect(catalog.warmups.find(warmup => warmup.id === id)?.sectionId).toBe("special-flow")
     }
-    const named = catalog.warmups.filter(warmup => warmup.sectionId == null).map(warmup => warmup.id)
-    expect(named).toEqual(["attack-series", "ramey-flow", "marvin-flow", "preschool-flow"])
+    expect(catalog.sections.find(section => section.id === "special-flow")?.name).toBe("Special Flows")
     db.close()
   })
 
-  it("moves named flows off section A when an older database required a section", () => {
+  it("migrates legacy NOT NULL section_id and attaches special-flow", () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), "10p-catalog-"))
     tmpDirs.push(dir)
     const dbPath = path.join(dir, "warmups.sqlite")
@@ -118,8 +117,40 @@ describe("warmup catalog", () => {
     expect(catalog.warmups.find(warmup => warmup.id === "A1")?.sectionId).toBe("A")
     expect(catalog.warmups.find(warmup => warmup.id === "attack-series")?.moves[0]?.text).toBe("Full Guard")
     for (const id of ["attack-series", "ramey-flow", "marvin-flow", "preschool-flow"]) {
-      expect(catalog.warmups.find(warmup => warmup.id === id)?.sectionId).toBeNull()
+      expect(catalog.warmups.find(warmup => warmup.id === id)?.sectionId).toBe("special-flow")
     }
+    expect(catalog.sections.find(section => section.id === "special-flow")?.name).toBe("Special Flows")
     db.close()
+  })
+
+  it("mints dashed special-flow ids and keeps letter ids", () => {
+    const db = openTemp()
+    expect(createWarmup(db, "Extra Flow", "special-flow")).toBe("special-flow-1")
+    expect(createWarmup(db, "Another", "special-flow")).toBe("special-flow-2")
+    createSection(db, "special-extra", "Extra Special")
+    expect(createWarmup(db, "Slug One", "special-extra")).toBe("special-extra-1")
+    createSection(db, "j", "Judo")
+    expect(createWarmup(db, "Letter", "J")).toBe("J1")
+    db.close()
+  })
+
+  it("applies special-flow migration once across re-open", () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), "10p-catalog-"))
+    tmpDirs.push(dir)
+    const dbPath = path.join(dir, "warmups.sqlite")
+    const first = openCatalog(dbPath)
+    const versions = first.prepare("SELECT version FROM schema_migrations ORDER BY version").all() as { version: number }[]
+    expect(versions.map(row => row.version)).toEqual([1, 2])
+    const before = readCatalog(first)
+    first.close()
+    const second = openCatalog(dbPath)
+    const after = readCatalog(second)
+    expect(after.sections.filter(s => s.id === "special-flow")).toHaveLength(1)
+    expect(after.warmups.filter(w => w.sectionId === "special-flow").map(w => w.id).sort()).toEqual(
+      before.warmups.filter(w => w.sectionId === "special-flow").map(w => w.id).sort(),
+    )
+    const versions2 = second.prepare("SELECT version FROM schema_migrations ORDER BY version").all() as { version: number }[]
+    expect(versions2.map(row => row.version)).toEqual([1, 2])
+    second.close()
   })
 })

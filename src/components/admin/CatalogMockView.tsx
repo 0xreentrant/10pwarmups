@@ -53,7 +53,7 @@ export default function CatalogMockView() {
       .finally(() => setLoaded(true))
   }, [])
 
-  const sectionName = (id: string) => (id ? sections.find(section => section.id === id)?.name ?? id : "Named Flows")
+  const sectionName = (id: string) => (id ? sections.find(section => section.id === id)?.name ?? id : "Special Flows")
 
   function openCreate() {
     setView({
@@ -64,7 +64,12 @@ export default function CatalogMockView() {
   }
 
   function openEdit(entry: Entry) {
-    setView({ kind: "edit", id: entry.id, title: entry.title, sectionId: entry.sectionId })
+    setView({
+      kind: "edit",
+      id: entry.id,
+      title: entry.title,
+      sectionId: entry.sectionId || sections.find(section => section.id === "special-flow")?.id || sections[0]?.id || "A",
+    })
   }
 
   async function saveEdit(id: string, title: string, sectionId: string) {
@@ -421,7 +426,6 @@ function EditScreen({
                   value={draftSection}
                   onChange={event => setDraftSection(event.target.value)}
                 >
-                  {id && <option value="">Named Flows</option>}
                   {sections.map(section => (
                     <option key={section.id} value={section.id}>
                       {section.name}
@@ -490,7 +494,7 @@ function SectionsScreen({
               onChange={event => onId(event.target.value)}
             />
           </label>
-          <p className="ca-help">Letter id used on new warmups, like I.</p>
+          <p className="ca-help">Letter id like I, or a dashed slug like special-flow.</p>
           {sectionError && <p className="ca-error" role="alert">{sectionError}</p>}
           <button type="submit" className="ca-btn ca-btn-primary" disabled={!newSectionId.trim() || !newSectionName.trim()}>
             Add section

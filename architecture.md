@@ -127,7 +127,7 @@ sequenceDiagram
 
 | Concern | Source |
 |---------|--------|
-| Series / decks / moves | SQLite via `GET /api/catalog`. Empty databases load `server/seed.sql`. `src/data/decks.ts` is a cache `applyCatalog` fills. Attack Series, Ramey Flow, Marvin Flow, and Preschool Flow have no section and list under Named Flows. Letter decks stay on A-H |
+| Series / decks / moves | SQLite via `GET /api/catalog`. Empty databases load `server/seed.sql`. `openCatalog` runs versioned TS migrations (`schema_migrations`). Attack Series, Ramey Flow, Marvin Flow, and Preschool Flow live in section `special-flow` (Special Flows). Letter decks stay on A-H |
 | Week rotation | `src/data/warmupSchedule.ts` |
 | Move timestamps | SQLite `moves.start_sec`. `src/data/moveTimestamps.ts` is a cache `applyCatalog` fills (`null` = untagged) |
 | Video URL | `src/utils/deckVideo.ts` → `/videos/{id}.mp4` and `/posters/{id}/{open or move}.webp` |
@@ -217,6 +217,7 @@ Local: Vite stays on `http://localhost:5174` (`strictPort`, including preview an
 | 2026-10-31 | `GET /api/catalog` is not cached by the service worker or the browser. A newer catalog repaints the schedule. |
 | 2026-10-31 | Prod API deploys use SSH user `deploy`. The process still runs as `tenp`. |
 | 2026-11-22 | Preschool Flow is a Named Flow (`preschool-flow` / PF) with a deck video. |
+| 2026-11-25 | Catalog uses in-process `schema_migrations`. Special Flows is section `special-flow`; slug warmups attach on migrate (seed unchanged). |
 
 ## Authoritative files
 

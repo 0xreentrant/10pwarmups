@@ -415,6 +415,13 @@ describe("routing", () => {
     })
   }, 60000)
 
+  it("shows Special Flows on /all from the catalog fixture", async () => {
+    await renderWithRouter(HOME_ALL)
+    expect(await screen.findByText("Special Flows")).toBeInTheDocument()
+    expect(screen.getByText("Attack Series")).toBeInTheDocument()
+    expect(screen.queryByText("Named Flows")).not.toBeInTheDocument()
+  })
+
   it("edits a warmup title and adds a section on the catalog mock", async () => {
     type Warmup = { id: string; sectionId: string; title: string; link: null; note: string; moves: [] }
     type Section = { id: string; name: string }

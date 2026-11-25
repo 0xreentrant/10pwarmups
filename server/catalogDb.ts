@@ -4,6 +4,7 @@ import { DatabaseSync } from "node:sqlite"
 import seedSql from "./seed.sql?raw"
 import { parseTimestampsJson } from "../src/components/tagger/taggerTimestamps"
 import type { Partner } from "../src/types/domain"
+import { migrateCatalog } from "./catalogMigrations"
 
 export type CatalogMove = {
   text: string
@@ -28,33 +29,7 @@ export type CatalogPayload = {
   warmups: CatalogWarmup[]
 }
 
-const SCHEMA = `
-CREATE TABLE IF NOT EXISTS sections (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  position INTEGER NOT NULL
-);
-CREATE TABLE IF NOT EXISTS warmups (
-  id TEXT PRIMARY KEY,
-  section_id TEXT REFERENCES sections(id),
-  title TEXT NOT NULL,
-  link TEXT,
-  position INTEGER NOT NULL,
-  note TEXT NOT NULL DEFAULT ''
-);
-CREATE TABLE IF NOT EXISTS moves (
-  warmup_id TEXT NOT NULL REFERENCES warmups(id) ON DELETE CASCADE,
-  position INTEGER NOT NULL,
-  text TEXT NOT NULL,
-  players TEXT NOT NULL,
-  note TEXT,
-  start_sec REAL,
-  PRIMARY KEY (warmup_id, position)
-);
-`
-
 type SectionRow = { id: string; name: string; position: number }
-const NAMED_FLOW_IDS = ["attack-series", "ramey-flow", "marvin-flow", "preschool-flow"]
 
 type WarmupRow = {
   id: string
@@ -93,47 +68,10 @@ export function openCatalog(dbPath: string): DatabaseSync {
   }
   const db = new DatabaseSync(dbPath)
   db.exec("PRAGMA foreign_keys = ON")
-  db.exec(SCHEMA)
+  migrateCatalog(db, { throughVersion: 1 })
   seedIfEmpty(db)
-  detachNamedFlows(db)
+  migrateCatalog(db)
   return db
-}
-
-function detachNamedFlows(db: DatabaseSync) {
-  const cols = db.prepare("PRAGMA table_info(warmups)").all() as { name: string; notnull: number }[]
-  const section = cols.find(col => col.name === "section_id")
-  const named = NAMED_FLOW_IDS.map(id => `'${id}'`).join(", ")
-  if (section?.notnull) {
-    db.exec("PRAGMA foreign_keys = OFF")
-    db.exec("BEGIN")
-    try {
-      db.exec(`
-        CREATE TABLE warmups_next (
-          id TEXT PRIMARY KEY,
-          section_id TEXT REFERENCES sections(id),
-          title TEXT NOT NULL,
-          link TEXT,
-          position INTEGER NOT NULL,
-          note TEXT NOT NULL DEFAULT ''
-        );
-        INSERT INTO warmups_next (id, section_id, title, link, position, note)
-        SELECT id,
-          CASE WHEN id IN (${named}) THEN NULL ELSE section_id END,
-          title, link, position, note
-        FROM warmups;
-        DROP TABLE warmups;
-        ALTER TABLE warmups_next RENAME TO warmups;
-      `)
-      db.exec("COMMIT")
-    } catch (err) {
-      db.exec("ROLLBACK")
-      db.exec("PRAGMA foreign_keys = ON")
-      throw err
-    }
-    db.exec("PRAGMA foreign_keys = ON")
-    return
-  }
-  db.prepare(`UPDATE warmups SET section_id = NULL WHERE id IN (${named})`).run()
 }
 
 function seedIfEmpty(db: DatabaseSync) {
@@ -193,8 +131,15 @@ function requireSection(db: DatabaseSync, id: string) {
   if (!row) throw new Error(`Unknown section ${id}`)
 }
 
+export function normalizeSectionId(id: string): string {
+  const trimmed = id.trim()
+  if (!trimmed) return ""
+  if (/^[A-Za-z]$/.test(trimmed)) return trimmed.toUpperCase()
+  return trimmed.toLowerCase()
+}
+
 export function createSection(db: DatabaseSync, id: string, name: string): void {
-  const sectionId = id.trim().toUpperCase()
+  const sectionId = normalizeSectionId(id)
   const sectionName = name.trim()
   if (!sectionId || !sectionName) throw new Error("Section id and name are required")
   const existing = db.prepare("SELECT id FROM sections WHERE id = ?").get(sectionId) as { id: string } | undefined
@@ -211,13 +156,15 @@ export function renameSection(db: DatabaseSync, id: string, name: string): void 
 }
 
 export function nextWarmupId(db: DatabaseSync, sectionId: string): string {
+  const dashed = sectionId.includes("-")
+  const prefix = dashed ? `${sectionId}-` : sectionId
   const rows = db.prepare("SELECT id FROM warmups WHERE section_id = ?").all(sectionId) as { id: string }[]
   const nums = rows
-    .filter(row => row.id.startsWith(sectionId))
-    .map(row => Number(row.id.slice(sectionId.length)))
+    .filter(row => row.id.startsWith(prefix))
+    .map(row => Number(row.id.slice(prefix.length)))
     .filter(n => Number.isFinite(n))
   const next = (nums.length > 0 ? Math.max(...nums) : 0) + 1
-  return `${sectionId}${next}`
+  return `${prefix}${next}`
 }
 
 export function createWarmup(db: DatabaseSync, title: string, sectionId: string): string {
